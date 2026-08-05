@@ -1,0 +1,118 @@
+<nav class="sidebar" [class.sidebar--collapsed]="collapsed">
+
+  <!-- Logo + Toggle header -->
+  <div class="sidebar__logo">
+    <button
+      class="sidebar__toggle"
+      (click)="toggleCollapse()"
+      [title]="collapsed ? i18n.t('sidebar.expand') : i18n.t('sidebar.collapse')"
+      id="sidebar-toggle-btn"
+    >
+      @if (collapsed) {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      }
+    </button>
+
+    <div class="sidebar__logo-brand">
+      <div class="sidebar__logo-icon">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#lg)"/>
+          <path d="M8 16l6 6 10-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="sidebar__logo-text">AdminSPA</span>
+    </div>
+  </div>
+
+  <!-- Menu Items Tree -->
+  <ul class="sidebar__menu" role="menu">
+    @for (item of menuItems(); track item.id) {
+        <li class="sidebar__item" role="none">
+          @if (item.children && item.children.length > 0) {
+            <!-- Group Parent Header -->
+            <button
+              class="sidebar__link sidebar__link--group"
+              [class.sidebar__link--group-active]="isGroupActive(item)"
+              (click)="toggleGroup(item.id)"
+              [title]="item.label"
+              role="menuitem"
+            >
+              <span class="sidebar__icon"><app-icon [value]="item.icon" /></span>
+              <span class="sidebar__label">{{ item.label }}</span>
+              <svg
+                class="sidebar__chevron"
+                [class.sidebar__chevron--expanded]="isGroupExpanded(item.id)"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            <!-- Group Children Submenu — inline khi mở rộng, flyout khi thu gọn -->
+            @if (isGroupExpanded(item.id)) {
+              <ul class="sidebar__submenu">
+                @for (child of item.children; track child.id) {
+                    <li class="sidebar__subitem">
+                      <button
+                        class="sidebar__link sidebar__link--child"
+                        [class.sidebar__link--active]="isActive(child)"
+                        (click)="openTab(child)"
+                        [title]="child.label"
+                      >
+                        <span class="sidebar__icon sidebar__icon--child"><app-icon [value]="child.icon" /></span>
+                        <span class="sidebar__label">{{ child.label }}</span>
+                        @if (isActive(child)) {
+                          <span class="sidebar__active-dot"></span>
+                        }
+                      </button>
+                    </li>
+                }
+              </ul>
+            }
+          } @else {
+            <!-- Flat Leaf Menu Item -->
+            <button
+              class="sidebar__link"
+              [class.sidebar__link--active]="isActive(item)"
+              (click)="openTab(item)"
+              [title]="item.label"
+              role="menuitem"
+            >
+              <span class="sidebar__icon"><app-icon [value]="item.icon" /></span>
+              <span class="sidebar__label">{{ item.label }}</span>
+              @if (isActive(item)) {
+                <span class="sidebar__active-dot"></span>
+              }
+            </button>
+          }
+        </li>
+    }
+  </ul>
+
+  <!-- Footer -->
+  <div class="sidebar__footer">
+    <div class="sidebar__user">
+      <div class="sidebar__avatar">{{ (currentUser()?.name ?? '?').charAt(0) }}</div>
+      <div class="sidebar__user-info">
+        <span class="sidebar__user-name">{{ currentUser()?.name ?? i18n.t('topbar.guest') }}</span>
+        <span class="sidebar__user-role">
+          {{ currentUser()?.isAdmin ? i18n.t('sidebar.roleAdmin') : i18n.t('sidebar.roleUser') }}
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>

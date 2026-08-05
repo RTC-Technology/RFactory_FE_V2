@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════════════════════════════
+   AdminSPA – Global Styles
+   Default: Light Theme | Toggle to Dark via [data-theme="dark"]
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ─── Light Theme (Default) ──────────────────────────────────── */
+:root {
+  --bg-base:          #f0f2f5;
+  --bg-content:       #f5f7fa;
+  --sidebar-bg:       rgba(255, 255, 255, 0.92);
+  --tabbar-bg:        rgba(255, 255, 255, 0.95);
+  --card-bg:          #ffffff;
+  --tab-bg:           rgba(0, 0, 0, 0.02);
+  --tab-hover-bg:     rgba(0, 0, 0, 0.04);
+  --tab-active-bg:    #ffffff;
+  --input-bg:         #ffffff;
+
+  --border:           rgba(0, 0, 0, 0.09);
+  --item-hover:       rgba(0, 0, 0, 0.045);
+  --item-active-bg:   rgba(99, 102, 241, 0.09);
+  --close-btn-hover:  rgba(0, 0, 0, 0.08);
+
+  --accent:           #6366f1;
+  --accent-hover:     #4f46e5;
+
+  --text-primary:     #111827;
+  --text-secondary:   #374151;
+  --text-muted:       #9ca3af;
+
+  --shadow-sm:        0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md:        0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Dark Theme ─────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-base:          #0d0f17;
+  --bg-content:       #10121c;
+  --sidebar-bg:       rgba(15, 17, 28, 0.92);
+  --tabbar-bg:        rgba(13, 15, 23, 0.95);
+  --card-bg:          rgba(255, 255, 255, 0.04);
+  --tab-bg:           rgba(255, 255, 255, 0.02);
+  --tab-hover-bg:     rgba(255, 255, 255, 0.055);
+  --tab-active-bg:    rgba(255, 255, 255, 0.08);
+  --input-bg:         rgba(255, 255, 255, 0.06);
+
+  --border:           rgba(255, 255, 255, 0.08);
+  --item-hover:       rgba(255, 255, 255, 0.06);
+  --item-active-bg:   rgba(99, 102, 241, 0.15);
+  --close-btn-hover:  rgba(255, 255, 255, 0.1);
+
+  --accent:           #818cf8;
+  --accent-hover:     #6366f1;
+
+  --text-primary:     #f1f5f9;
+  --text-secondary:   #94a3b8;
+  --text-muted:       #64748b;
+
+  --shadow-sm:        0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md:        0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* ─── Smooth theme transition ────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ─── Selection ──────────────────────────────────────────────── */
+::selection {
+  background: rgba(99, 102, 241, 0.25);
+  color: var(--text-primary);
+}
+
+/* ─── Focus ring ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

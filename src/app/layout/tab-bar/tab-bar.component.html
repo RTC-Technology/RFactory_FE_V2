@@ -1,0 +1,88 @@
+<div class="tab-bar">
+  <!-- Scrollable tabs -->
+  <div class="tab-bar__scroll" #scrollRef>
+    @if (tabs$ | async; as tabs) {
+      @for (tab of tabs; track trackByTab($index, tab)) {
+        <div
+          class="tab"
+          [class.tab--active]="tab.id === activeTabId()"
+          (click)="selectTab(tab)"
+          [title]="tab.title"
+          role="tab"
+          [attr.aria-selected]="tab.id === activeTabId()"
+        >
+          <span class="tab__icon"><app-icon [value]="tab.icon" /></span>
+          <span class="tab__title">{{ tab.title }}</span>
+
+          @if (tab.closeable) {
+            <button
+              class="tab__close"
+              (click)="closeTab($event, tab)"
+              [title]="i18n.t('tabbar.closeTab')"
+              [attr.aria-label]="i18n.t('tabbar.closeTabNamed', { title: tab.title })"
+            >
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="1" y1="1" x2="11" y2="11"/>
+                <line x1="11" y1="1" x2="1" y2="11"/>
+              </svg>
+            </button>
+          }
+
+          @if (tab.id === activeTabId()) {
+            <span class="tab__active-line"></span>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Overflow button — always visible when > 1 tab -->
+  @if (tabs$ | async; as tabs) {
+    @if (tabs.length > 1) {
+      <div class="tab-bar__overflow-wrap" (appClickOutside)="overflowOpen=false">
+        <button
+          class="tab-bar__overflow-btn"
+          (click)="overflowOpen = !overflowOpen"
+          [title]="i18n.t('tabbar.allTabsCount', { count: tabs.length })"
+          [class.tab-bar__overflow-btn--open]="overflowOpen"
+          id="tab-overflow-btn"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+          </svg>
+          <span class="tab-bar__overflow-count">{{ tabs.length }}</span>
+        </button>
+
+        @if (overflowOpen) {
+          <div class="tab-bar__overflow-panel" id="tab-overflow-panel">
+            <div class="overflow-panel__header">{{ i18n.t('tabbar.allTabs') }}</div>
+
+            @for (tab of tabs; track tab.id) {
+              <div
+                class="overflow-item"
+                [class.overflow-item--active]="tab.id === activeTabId()"
+                (click)="selectTab(tab)"
+              >
+                <span class="overflow-item__icon"><app-icon [value]="tab.icon" /></span>
+                <span class="overflow-item__title">{{ tab.title }}</span>
+
+                @if (tab.closeable) {
+                  <button
+                    class="overflow-item__close"
+                    (click)="closeTab($event, tab)"
+                    [title]="i18n.t('common.close')"
+                  >
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <line x1="1" y1="1" x2="11" y2="11"/>
+                      <line x1="11" y1="1" x2="1" y2="11"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

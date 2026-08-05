@@ -1,0 +1,305 @@
+:host { display: flex; height: 100%; }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  height: 100%;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  // Note: NO overflow:hidden here — the flyout submenu (shown when collapsed)
+  // needs to escape the 64px collapsed width. Text-hiding during the width
+  // transition is already self-contained on each label element below.
+  backdrop-filter: blur(20px);
+
+  // ══ COLLAPSED ══════════════════════════════════════════════════════════
+  &--collapsed {
+    width: 64px;
+
+    .sidebar__logo {
+      justify-content: center;
+      padding: 0;
+      gap: 0;
+    }
+    .sidebar__logo-brand {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+      flex: none;
+    }
+
+    .sidebar__link {
+      justify-content: center;
+      padding: 10px 0;
+      gap: 0;
+    }
+    .sidebar__label      { width: 0; opacity: 0; overflow: hidden; flex: none; }
+    .sidebar__chevron    { display: none; }
+    .sidebar__active-dot { display: none; }
+
+    .sidebar__user {
+      justify-content: center;
+      padding: 8px 0;
+      gap: 0;
+    }
+    .sidebar__user-info  { width: 0; opacity: 0; overflow: hidden; flex: none; }
+
+    // ── Flyout submenu — pops out to the right of the collapsed rail ────────
+    .sidebar__submenu {
+      position: absolute;
+      top: 0;
+      left: calc(100% + 8px);
+      z-index: 400;
+      min-width: 200px;
+      margin: 0;
+      padding: 6px;
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(20px);
+      animation: flyoutIn .16s ease;
+    }
+
+    // Children inside the flyout get their own room — undo the icon-only
+    // collapsing rules that apply to the rest of the collapsed rail.
+    .sidebar__link--child {
+      justify-content: flex-start;
+      padding: 8px 10px;
+      gap: 8px;
+    }
+    .sidebar__submenu .sidebar__label      { width: auto; opacity: 1; overflow: visible; flex: 1; }
+    .sidebar__submenu .sidebar__active-dot { display: block; }
+  }
+
+  // ── Logo row ────────────────────────────────────────────────────────────
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    height: 40px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    transition: padding 0.28s, gap 0.28s, justify-content 0.28s;
+  }
+
+  &__toggle {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    svg { width: 16px; height: 16px; }
+    &:hover { background: var(--item-hover); color: var(--text-primary); }
+  }
+
+  &__logo-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+    transition: width .28s, opacity .2s;
+    white-space: nowrap;
+  }
+
+  &__logo-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    svg { width: 100%; height: 100%; }
+  }
+
+  &__logo-text {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.4px;
+  }
+
+  // ── Menu ────────────────────────────────────────────────────────────────
+  &__menu {
+    flex: 1;
+    list-style: none;
+    margin: 0;
+    padding: 6px 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  }
+
+  &__item {
+    position: relative;
+    width: 100%;
+  }
+
+  &__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    transition: background .15s, color .15s, padding .28s, gap .28s, justify-content .28s;
+
+    &:hover { background: var(--item-hover); color: var(--text-primary); }
+
+    &--group {
+      font-weight: 600;
+    }
+
+    &--group-active {
+      color: var(--accent);
+    }
+
+    &--child {
+      padding-left: 28px;
+      font-size: 12.5px;
+    }
+
+    &--active {
+      background: var(--item-active-bg);
+      color: var(--accent);
+      font-weight: 600;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 50%;
+        transform: translateY(-50%);
+        width: 3px; height: 55%;
+        background: var(--accent);
+        border-radius: 0 3px 3px 0;
+      }
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    ::ng-deep svg { width: 16px; height: 16px; }
+
+    &--child {
+      ::ng-deep svg { width: 14px; height: 14px; }
+    }
+  }
+
+  &__label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: width .28s, opacity .2s;
+  }
+
+  &__chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+
+    &--expanded {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__submenu {
+    list-style: none;
+    margin: 2px 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__subitem {
+    width: 100%;
+  }
+
+  &__active-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+
+  // ── Footer ──────────────────────────────────────────────────────────────
+  &__footer {
+    padding: 6px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .15s, padding .28s, gap .28s;
+    &:hover { background: var(--item-hover); }
+  }
+
+  &__avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__user-info {
+    overflow: hidden;
+    transition: width .28s, opacity .2s;
+    white-space: nowrap;
+  }
+
+  &__user-name  { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  &__user-role  { font-size: 10.5px; color: var(--text-muted); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes flyoutIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}

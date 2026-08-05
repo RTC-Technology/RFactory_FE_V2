@@ -1,0 +1,284 @@
+<div class="page">
+
+  <!-- ─── Header ────────────────────────────────────────────────────────── -->
+  <header class="page__header">
+    <div class="page__heading">
+      <h1 class="page__title">{{ i18n.t('menu.title') }}</h1>
+      <p class="page__sub">{{ i18n.t('menu.subtitle', { depth: maxDepth }) }}</p>
+    </div>
+
+    <div class="page__actions">
+      <button pButton type="button" severity="secondary" outlined [disabled]="loading()" (click)="reload()">
+        <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span pButtonLabel>{{ i18n.t('common.reload') }}</span>
+      </button>
+      <button pButton type="button" (click)="openCreate()">
+        <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span pButtonLabel>{{ i18n.t('menu.add') }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Stats ─────────────────────────────────────────────────────────── -->
+  <section class="stats">
+    <div class="stat">
+      <span class="stat__label">{{ i18n.t('menu.stat.total') }}</span>
+      <span class="stat__value">{{ stats().total }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat__label">{{ i18n.t('menu.stat.groups') }}</span>
+      <span class="stat__value">{{ stats().groups }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat__label">{{ i18n.t('menu.stat.pages') }}</span>
+      <span class="stat__value">{{ stats().pages }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat__label">{{ i18n.t('menu.stat.secured') }}</span>
+      <span class="stat__value">{{ stats().secured }}</span>
+      <span class="stat__hint">{{ i18n.t('menu.stat.public', { count: stats().total - stats().secured }) }}</span>
+    </div>
+    <div class="stat" [class.stat--warn]="stats().problems > 0">
+      <span class="stat__label">{{ i18n.t('menu.stat.problems') }}</span>
+      <span class="stat__value">{{ stats().problems }}</span>
+      <span class="stat__hint">{{ i18n.t('menu.stat.problemsHint') }}</span>
+    </div>
+  </section>
+
+  <!-- ─── Tree ──────────────────────────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel__toolbar">
+      <input
+        class="search"
+        type="search"
+        [placeholder]="i18n.t('menu.search')"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+      <div class="chips" role="group">
+        @for (filter of typeFilters; track filter.value) {
+          <button
+            type="button"
+            class="chip"
+            [class.chip--active]="typeFilter() === filter.value"
+            (click)="typeFilter.set(filter.value)"
+          >{{ i18n.t(filter.labelKey) }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <p-treeTable [value]="nodes()" [loading]="loading()" [showGridlines]="true" class="menu-tree">
+      <ng-template #header>
+        <tr>
+          <th class="col-name">{{ i18n.t('menu.column') }}</th>
+          <th class="col-route">{{ i18n.t('menu.route') }}</th>
+          <th class="col-perm">{{ i18n.t('menu.permission') }}</th>
+          <th class="col-order">{{ i18n.t('menu.order') }}</th>
+          <th class="col-actions">{{ i18n.t('common.actions') }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-rowNode let-row="rowData">
+        <tr [ttRow]="rowNode">
+          <td class="col-name">
+            <div class="cell-name">
+              <p-treeTableToggler [rowNode]="rowNode" />
+              <span class="cell-name__icon"><app-icon [value]="row.icon" /></span>
+              <span class="cell-name__label">{{ row.label }}</span>
+
+              @if (!row.route) {
+                <p-tag severity="secondary" [value]="i18n.t('menu.tag.group')" [rounded]="true" />
+              }
+              @if (row.orphaned) {
+                <p-tag
+                  severity="danger" [value]="i18n.t('menu.tag.orphan')" [rounded]="true"
+                  [pTooltip]="i18n.t('menu.tag.orphanHint')"
+                  tooltipPosition="top"
+                />
+              }
+              @if (row.unreachable) {
+                <p-tag
+                  severity="warn" [value]="i18n.t('menu.tag.hidden')" [rounded]="true"
+                  [pTooltip]="i18n.t('menu.tag.hiddenHint', { depth: row.depth, max: maxDepth })"
+                  tooltipPosition="top"
+                />
+              }
+            </div>
+          </td>
+
+          <td class="col-route">
+            @if (row.route) {
+              <code class="route">{{ row.route }}</code>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+
+          <td class="col-perm">
+            @if (row.functionId) {
+              <p-tag severity="info" [value]="'Function #' + row.functionId" [rounded]="true" />
+            } @else {
+              <span class="muted">{{ i18n.t('menu.public') }}</span>
+            }
+          </td>
+
+          <td class="col-order">
+            <span class="muted">{{ row.order ?? '—' }}</span>
+          </td>
+
+          <td class="col-actions">
+            <div class="row-actions">
+              @if (canAddChild(row)) {
+                <button
+                  pButton type="button" severity="secondary" text size="small"
+                  [attr.aria-label]="i18n.t('menu.addChild')" [pTooltip]="i18n.t('menu.addChild')" tooltipPosition="top"
+                  (click)="openCreate(row.id)"
+                >
+                  <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              }
+              <button
+                pButton type="button" severity="secondary" text size="small"
+                [attr.aria-label]="i18n.t('common.edit')" [pTooltip]="i18n.t('common.edit')" tooltipPosition="top"
+                (click)="openEdit(row)"
+              >
+                <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                </svg>
+              </button>
+              <button
+                pButton type="button" severity="secondary" text size="small"
+                [attr.aria-label]="i18n.t('common.moveUp')" [pTooltip]="i18n.t('common.moveUp')" tooltipPosition="top"
+                [disabled]="row.index === 0" (click)="move(row, -1)"
+              >
+                <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+                </svg>
+              </button>
+              <button
+                pButton type="button" severity="secondary" text size="small"
+                [attr.aria-label]="i18n.t('common.moveDown')" [pTooltip]="i18n.t('common.moveDown')" tooltipPosition="top"
+                [disabled]="row.index === row.siblingCount - 1" (click)="move(row, 1)"
+              >
+                <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+                </svg>
+              </button>
+              <button
+                pButton type="button" severity="danger" text size="small"
+                [attr.aria-label]="i18n.t('common.delete')" [pTooltip]="i18n.t('common.delete')" tooltipPosition="top"
+                (click)="askDelete(row)"
+              >
+                <svg pButtonIcon class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              @if (search() || typeFilter() !== 'all') {
+                <p class="empty__title">{{ i18n.t('menu.empty.filtered') }}</p>
+                <p class="empty__sub">{{ i18n.t('menu.empty.filteredHint') }}</p>
+              } @else {
+                <p class="empty__title">{{ i18n.t('menu.empty.none') }}</p>
+                <p class="empty__sub">{{ i18n.t('menu.empty.noneHint') }}</p>
+              }
+            </div>
+          </td>
+        </tr>
+        </ng-template>
+      </p-treeTable>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="editingId() ? i18n.t('menu.dialog.edit') : i18n.t('menu.dialog.add')"
+  [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '520px' }"
+  styleClass="menu-dialog"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="menu-label">{{ i18n.t('menu.field.label') }} <span class="req">*</span></label>
+      <input pInputText id="menu-label" name="label" [(ngModel)]="form.label" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="menu-route">{{ i18n.t('menu.route') }}</label>
+      <input pInputText id="menu-route" name="route" [(ngModel)]="form.route" placeholder="/dashboard" autocomplete="off" />
+      <small class="hint">{{ i18n.t('menu.field.routeHint') }}</small>
+    </div>
+
+    <div class="field">
+      <label for="menu-parent">{{ i18n.t('menu.field.parent') }}</label>
+      <p-select
+        inputId="menu-parent" [options]="parentOptions()" optionLabel="label" optionValue="value"
+        [(ngModel)]="form.parentId" [placeholder]="i18n.t('menu.field.parentRoot')" appendTo="body" class="w-full"
+      />
+      <small class="hint">{{ i18n.t('menu.field.parentHint') }}</small>
+    </div>
+
+    <div class="field">
+      <label for="menu-function">{{ i18n.t('menu.permission') }}</label>
+      <p-select
+        inputId="menu-function" [options]="functionOptions()" optionLabel="label" optionValue="value"
+        [(ngModel)]="form.functionId" [filter]="true" filterBy="label"
+        [placeholder]="i18n.t('menu.field.functionPublic')" appendTo="body" class="w-full"
+      />
+      <small class="hint">{{ i18n.t('menu.field.functionHint') }}</small>
+    </div>
+
+    <div class="field">
+      <label for="menu-icon">{{ i18n.t('menu.field.icon') }}</label>
+      <div class="icon-row">
+        <span class="icon-row__preview"><app-icon [value]="form.icon" /></span>
+        <input pInputText id="menu-icon" name="icon" [(ngModel)]="form.icon"
+               [placeholder]="i18n.t('menu.field.iconHint')" autocomplete="off" />
+      </div>
+      <div class="icon-presets">
+        @for (preset of iconPresets; track preset.name) {
+          <button
+            type="button" class="icon-preset"
+            [class.icon-preset--active]="form.icon === preset.markup"
+            [attr.aria-label]="preset.name" [pTooltip]="preset.name" tooltipPosition="top"
+            (click)="applyIconPreset(preset.markup)"
+          ><app-icon [value]="preset.markup" /></button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="bottom-right" />

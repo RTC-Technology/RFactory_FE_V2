@@ -1,0 +1,27 @@
+<div class="shell">
+  <app-sidebar></app-sidebar>
+
+  <div class="shell__main">
+    <!-- Header row: tabs (flex:1) + action icons (flex-shrink:0) -->
+    <div class="shell__header">
+      <app-tab-bar></app-tab-bar>
+      <app-topbar></app-topbar>
+    </div>
+
+    <main class="shell__content">
+      @if (hasTabs()) {
+        <router-outlet></router-outlet>
+      } @else {
+        <div class="shell__empty">
+          <div class="shell__empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+          </div>
+          <p>{{ i18n.t('shell.noTabs') }}</p>
+        </div>
+      }
+    </main>
+  </div>
+</div>

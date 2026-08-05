@@ -1,0 +1,241 @@
+:host {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.tab-bar {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  // Note: NO overflow:hidden on the row itself — the overflow-panel dropdown
+  // (a child of __overflow-wrap) needs to escape this box to be visible.
+  // Horizontal clipping of the tab strip is handled by __scroll below.
+
+  // ── Scrollable tab strip ───────────────────────────────────────────────
+  &__scroll {
+    display: flex;
+    align-items: stretch;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  // ── Overflow button ────────────────────────────────────────────────────
+  &__overflow-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+  }
+
+  &__overflow-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    transition: background .15s, color .15s;
+
+    svg { width: 16px; height: 16px; }
+
+    &:hover { background: var(--tab-hover-bg); color: var(--text-primary); }
+
+    &--open {
+      background: var(--tab-hover-bg);
+      color: var(--text-primary);
+    }
+  }
+
+  &__overflow-count {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: inherit;
+    min-width: 14px;
+    text-align: center;
+  }
+
+  // ── Overflow panel (dropdown) ──────────────────────────────────────────
+  &__overflow-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    z-index: 300;
+    animation: dropIn .16s ease;
+    backdrop-filter: blur(20px);
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  }
+}
+
+// ── Overflow panel internals ───────────────────────────────────────────────
+.overflow-panel__header {
+  padding: 8px 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--item-hover); }
+
+  &--active {
+    background: var(--item-active-bg);
+    .overflow-item__title { color: var(--accent); font-weight: 600; }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 16px; height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    ::ng-deep svg { width: 14px; height: 14px; }
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .15s, background .15s;
+    padding: 2px;
+
+    svg { width: 9px; height: 9px; }
+    &:hover { background: color-mix(in srgb,#ef4444 15%,transparent); color: #ef4444; }
+  }
+
+  &:hover &__close { opacity: 1; }
+}
+
+// ── Individual tabs ────────────────────────────────────────────────────────
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  min-width: 110px;
+  max-width: 180px;
+  height: 100%;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  background: var(--tab-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+  user-select: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--tab-hover-bg);
+    color: var(--text-primary);
+    .tab__close { opacity: 1; }
+  }
+
+  &--active {
+    background: var(--tab-active-bg) !important;
+    color: var(--text-primary) !important;
+    .tab__close { opacity: 1; }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 14px; height: 14px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+    ::ng-deep svg { width: 13px; height: 13px; }
+  }
+
+  &__title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s, background .15s, color .15s;
+    padding: 2px;
+
+    svg { width: 9px; height: 9px; }
+    &:hover { background: color-mix(in srgb,#ef4444 15%,transparent); color: #ef4444; }
+  }
+
+  &__active-line {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    animation: slideIn .18s ease;
+  }
+}
+
+@keyframes dropIn {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform:scaleX(0); opacity:0; }
+  to   { transform:scaleX(1); opacity:1; }
+}

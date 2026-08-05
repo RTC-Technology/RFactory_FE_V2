@@ -1,0 +1,94 @@
+<div class="topbar">
+  <!-- Language -->
+  <button id="topbar-lang-btn" class="topbar__btn topbar__btn--lang"
+          (click)="i18n.toggle()" [title]="i18n.t('topbar.language')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+    <span>{{ i18n.lang().toUpperCase() }}</span>
+  </button>
+
+  <!-- Theme -->
+  <button id="topbar-theme-btn" class="topbar__btn"
+          (click)="toggleTheme()" [title]="isDark() ? i18n.t('topbar.lightMode') : i18n.t('topbar.darkMode')">
+    @if (isDark()) {
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    } @else {
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    }
+  </button>
+
+  <!-- Notifications -->
+  <div class="topbar__drop-wrap" (appClickOutside)="notifOpen=false">
+    <button id="topbar-notif-btn" class="topbar__btn"
+            (click)="notifOpen=!notifOpen; profileOpen=false" [title]="i18n.t('topbar.notifications')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      @if (notifCount() > 0) {
+        <span class="topbar__badge">{{ notifCount() }}</span>
+      }
+    </button>
+    @if (notifOpen) {
+      <div class="topbar__dropdown notif-panel">
+        <div class="drop-header">
+          <span>{{ i18n.t('topbar.notifications') }}</span>
+          <button class="drop-clear" (click)="notifCount.set(0); notifOpen=false">
+            {{ i18n.t('topbar.markAllRead') }}
+          </button>
+        </div>
+        @for (n of notifications; track n.key) {
+          <div class="notif-row">
+            <span class="notif-dot" [style.background]="n.color"></span>
+            <div>
+              <div class="notif-text">{{ i18n.t(n.key) }}</div>
+              <div class="notif-time">{{ i18n.t(n.timeKey, { n: n.n }) }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Divider -->
+  <span class="topbar__sep"></span>
+
+  <!-- Profile -->
+  <div class="topbar__drop-wrap" (appClickOutside)="profileOpen=false">
+    <button id="topbar-profile-btn" class="topbar__profile-btn"
+            (click)="profileOpen=!profileOpen; notifOpen=false">
+      <div class="topbar__avatar">{{ (currentUser()?.name ?? '?').charAt(0) }}</div>
+      <svg class="topbar__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    @if (profileOpen) {
+      <div class="topbar__dropdown profile-panel">
+        <div class="profile-head">
+          <div class="topbar__avatar topbar__avatar--lg">{{ (currentUser()?.name ?? '?').charAt(0) }}</div>
+          <div>
+            <div class="profile-name">{{ currentUser()?.name ?? i18n.t('topbar.guest') }}</div>
+            <div class="profile-email">{{ currentUser()?.email }}</div>
+          </div>
+        </div>
+        <hr class="profile-hr"/>
+        @for (item of profileMenu; track item.id) {
+          <button class="profile-item" [class.danger]="item.danger" (click)="onProfileAction(item.id)">
+            <span class="profile-item__icon"><app-icon [value]="item.icon" /></span>{{ i18n.t(item.labelKey) }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
