@@ -1,0 +1,14 @@
+/* Master-detail: permission groups on the left, the permissions inside the selected
+   group on the right. Groups nest, so the left table indents by depth. */
+
+@use '../../shared/styles/master-detail';
+@use '../../shared/styles/tree-cell';
+
+.col-desc { width: 220px; }
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 13px;
+}

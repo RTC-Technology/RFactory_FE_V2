@@ -1,0 +1,249 @@
+<!-- Toolbar is identical for both panels apart from which entity it acts on. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+  <div class="toolbar">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+        <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+      </svg>
+      <span>{{ i18n.t('common.add') }}</span>
+    </button>
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+      </svg>
+      <span>{{ i18n.t('common.edit') }}</span>
+    </button>
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+      <span>{{ i18n.t('common.delete') }}</span>
+    </button>
+
+    @if (showReload) {
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+      <button *appHasPermission="syncPerm" type="button" class="tool" [disabled]="syncing()"
+              [title]="i18n.t('fn.sync.hint')" (click)="syncCatalog()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 3v6l3-3"/><path d="M12 21v-6l-3 3"/>
+          <path d="M3.5 9a9 9 0 0 1 14-3.5"/><path d="M20.5 15a9 9 0 0 1-14 3.5"/>
+        </svg>
+        <span>{{ i18n.t('fn.sync') }}</span>
+      </button>
+    }
+
+    <input
+      class="tool-search"
+      type="search"
+      [placeholder]="i18n.t('common.search')"
+      [attr.aria-label]="i18n.t('common.search')"
+      (input)="applyFilter(kind, $any($event.target).value)"
+    />
+  </div>
+</ng-template>
+
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('function:split-x', [45,55])" [minSizes]="[25, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('function:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: FunctionGroup ────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('fn.group') }}</h2>
+        @if (tree.parentIds().size > 0) {
+          <button
+            type="button" class="tree-all"
+            [title]="tree.allCollapsed() ? i18n.t('fn.expandAll') : i18n.t('fn.collapseAll')"
+            [attr.aria-label]="tree.allCollapsed() ? i18n.t('fn.expandAll') : i18n.t('fn.collapseAll')"
+            (click)="tree.toggleAll()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              @if (tree.allCollapsed()) {
+                <polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>
+              } @else {
+                <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
+              }
+            </svg>
+          </button>
+        }
+        <span class="panel__count">{{ groupRows().length }}</span>
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'group', perms: perms.functionGroup, canAdd: true, hasSelection: !!selectedGroup(), showReload: true }" />
+
+      <div class="table-scroll">
+        <p-table
+          #groupTable [value]="tree.visibleRows()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.group" (onFilter)="onFiltered('group', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('fn.groupCode') }}</th>
+              <th>{{ i18n.t('fn.groupName') }}</th>
+              <th class="col-desc">{{ i18n.t('fn.description') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedGroup()?.id === row.id"
+                (click)="selectGroup(row)" (dblclick)="openEdit('group')">
+              <!-- Nesting is shown by indenting the code, the column that carries the
+                   hierarchy's meaning. Leaves get a spacer so codes stay aligned with
+                   the ones that do carry a toggle. -->
+              <td class="col-code" [style.padding-left.px]="8 + row.depth * 16">
+                <span class="tree-cell">
+                  @if (tree.hasChildren(row.id)) {
+                    <button
+                      type="button" class="tree-toggle"
+                      [title]="tree.isCollapsed(row.id) ? i18n.t('fn.expand') : i18n.t('fn.collapse')"
+                      [attr.aria-expanded]="!tree.isCollapsed(row.id)"
+                      (click)="toggleCollapse(row.id, $event)"
+                    >
+                      <svg
+                        class="tree-toggle__ico" [class.tree-toggle__ico--open]="!tree.isCollapsed(row.id)"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  } @else {
+                    <span class="tree-spacer"></span>
+                  }
+                  {{ row.code }}
+                </span>
+              </td>
+              <td>{{ row.name }}</td>
+              <td class="col-desc">
+                @if (row.description) {
+                  {{ row.description }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="3"><p class="empty">{{ i18n.t('fn.empty.group') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail: Function ─────────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('fn.function') }}</h2>
+        @if (selectedGroup(); as group) {
+          <span class="panel__scope">{{ i18n.t('fn.scopeOf', { name: group.name }) }}</span>
+          <span class="panel__count">{{ functions().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'function', perms: perms.function, canAdd: !!selectedGroup(), hasSelection: !!selectedFunction() }" />
+
+      @if (ungroupedCount() > 0) {
+        <!-- Belong to no group, so no panel on this screen can reach them. -->
+        <p class="notice">{{ i18n.t('fn.ungroupedNotice', { count: ungroupedCount() }) }}</p>
+      }
+
+      <div class="table-scroll">
+        <p-table
+          #functionTable [value]="functions()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.function" (onFilter)="onFiltered('function', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('fn.functionCode') }}</th>
+              <th>{{ i18n.t('fn.functionName') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedFunction()?.id === row.id"
+                (click)="selectFunction(row)" (dblclick)="openEdit('function')">
+              <td class="col-code">{{ row.functionCode }}</td>
+              <td>{{ row.functionName }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="2">
+                <p class="empty">
+                  {{ selectedGroup() ? i18n.t('fn.empty.function') : i18n.t('fn.empty.functionHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+  </p-splitter>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '480px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="fn-code">{{ i18n.t('common.code') }} <span class="req">*</span></label>
+      <input pInputText id="fn-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="fn-name">{{ i18n.t('common.name') }} <span class="req">*</span></label>
+      <input pInputText id="fn-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    @if (dialogKind() === 'group') {
+      <div class="field">
+        <label for="fn-parent">{{ i18n.t('fn.parent') }}</label>
+        <p-select
+          inputId="fn-parent" [options]="parentOptions()" optionLabel="label" optionValue="value"
+          [(ngModel)]="form.parentId" [filter]="true" filterBy="label"
+          [placeholder]="i18n.t('fn.parentRoot')" appendTo="body" class="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label for="fn-desc">{{ i18n.t('fn.description') }}</label>
+        <textarea pTextarea id="fn-desc" name="description" rows="3"
+                  [(ngModel)]="form.description"></textarea>
+      </div>
+    }
+
+    @if (dialogKind() === 'function' && selectedGroup(); as group) {
+      <p class="form__scope">{{ i18n.t('fn.scope.function', { name: group.name }) }}</p>
+    }
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

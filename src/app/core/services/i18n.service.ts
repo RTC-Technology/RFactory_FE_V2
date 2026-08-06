@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Lang, TRANSLATIONS } from '../i18n/translations';
+import { SecureStorageService } from './secure-storage.service';
 
 const STORAGE_KEY = 'app:lang';
 const DEFAULT_LANG: Lang = 'vi';
@@ -17,6 +18,8 @@ const DEFAULT_LANG: Lang = 'vi';
  */
 @Injectable({ providedIn: 'root' })
 export class I18nService {
+  private readonly storage = inject(SecureStorageService);
+
   private readonly _lang = signal<Lang>(this._restore());
   readonly lang = this._lang.asReadonly();
 
@@ -27,7 +30,7 @@ export class I18nService {
   setLang(lang: Lang): void {
     if (lang === this._lang()) return;
     this._lang.set(lang);
-    localStorage.setItem(STORAGE_KEY, lang);
+    this.storage.set(STORAGE_KEY, lang);
     this._applyDocumentLang();
   }
 
@@ -52,7 +55,7 @@ export class I18nService {
   }
 
   private _restore(): Lang {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = this.storage.get<string>(STORAGE_KEY);
     return saved === 'vi' || saved === 'en' ? saved : DEFAULT_LANG;
   }
 

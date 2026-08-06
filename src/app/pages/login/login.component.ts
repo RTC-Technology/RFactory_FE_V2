@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { I18nService } from '../../core/services/i18n.service';
 
@@ -49,12 +50,6 @@ import { I18nService } from '../../core/services/i18n.service';
           </button>
         </form>
 
-        <div class="demo-accounts">
-          <span class="demo-accounts__label">{{ i18n.t('login.demoAccounts') }}</span>
-          @for (acc of demoAccounts; track acc.username) {
-            <button type="button" class="demo-chip" (click)="fillDemo(acc)">{{ i18n.t(acc.labelKey) }}</button>
-          }
-        </div>
       </div>
     </div>
   `,
@@ -99,13 +94,6 @@ import { I18nService } from '../../core/services/i18n.service';
     .btn { padding: 10px 20px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; &:hover:not(:disabled) { opacity: .85; } &:disabled { opacity: .6; cursor: not-allowed; } }
     .btn--primary { background: var(--accent); color: #fff; }
     .btn--block { width: 100%; margin-top: 4px; }
-    .demo-accounts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
-    .demo-accounts__label { font-size: 11px; color: var(--text-muted); width: 100%; margin-bottom: 2px; }
-    .demo-chip {
-      font-size: 11px; padding: 5px 10px; border-radius: 20px; border: 1px solid var(--border);
-      background: var(--input-bg); color: var(--text-secondary); cursor: pointer; transition: background .15s;
-      &:hover { background: var(--item-hover); color: var(--text-primary); }
-    }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   `],
 })
@@ -120,17 +108,6 @@ export class LoginComponent {
   loading = signal(false);
   error = signal('');
 
-  readonly demoAccounts = [
-    { username: 'admin', password: '1', labelKey: 'login.demo.admin' },
-    { username: 'editor', password: 'editor123', labelKey: 'login.demo.editor' },
-    { username: 'viewer', password: 'viewer123', labelKey: 'login.demo.viewer' },
-  ];
-
-  fillDemo(acc: { username: string; password: string }): void {
-    this.username = acc.username;
-    this.password = acc.password;
-  }
-
   submit(): void {
     if (!this.username.trim() || !this.password.trim()) {
       this.error.set(this.i18n.t('login.errorEmpty'));
@@ -138,15 +115,22 @@ export class LoginComponent {
     }
     this.loading.set(true);
     this.error.set('');
-    this.authService.login({ username: this.username.trim(), password: this.password }).subscribe({
-      next: () => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
-        this.router.navigateByUrl(returnUrl);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.error.set(err.error?.message || this.i18n.t('login.errorFailed'));
-      },
-    });
+
+    this.authService.login({ username: this.username.trim(), password: this.password })
+      .pipe(
+        // Released on every exit, success included. The success path navigates away and
+        // the component is normally destroyed, but a guard can bounce the return URL
+        // straight back here — and then a flag only cleared on error leaves the form
+        // stuck reading "signing in…" with the button disabled.
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe({
+        next: () => {
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
+          this.router.navigateByUrl(returnUrl);
+        },
+        error: (err: HttpErrorResponse) =>
+          this.error.set(err.error?.message || this.i18n.t('login.errorFailed')),
+      });
   }
 }

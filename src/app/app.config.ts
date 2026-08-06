@@ -8,7 +8,7 @@ import { routes } from './app.routes';
 import { TabReuseStrategy } from './core/strategies/tab-reuse.strategy';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-import { TokenStorageService } from './core/services/token-storage.service';
+import { SecureStorageService } from './core/services/secure-storage.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,8 +16,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
-    // Decrypt/restore the persisted session before the router's guards run.
-    provideAppInitializer(() => inject(TokenStorageService).init()),
+    // Decrypt everything persisted before the router's guards run — they, the auth
+    // interceptor and the language service all read synchronously.
+    provideAppInitializer(() => inject(SecureStorageService).init()),
     providePrimeNG({
       theme: {
         preset: Aura,

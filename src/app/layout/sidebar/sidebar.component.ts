@@ -1,5 +1,6 @@
-import { Component, HostBinding, inject } from '@angular/core';
+import { Component, HostBinding, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouteAccessService } from '../../core/auth/route-access.service';
 import { MenuService } from '../../core/services/menu.service';
 import { TabService } from '../../core/services/tab.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -18,13 +19,40 @@ export class SidebarComponent {
   private readonly menuService = inject(MenuService);
   private readonly tabService = inject(TabService);
   private readonly authService = inject(AuthService);
+  private readonly routeAccess = inject(RouteAccessService);
   readonly i18n = inject(I18nService);
 
   readonly activeTabId = this.tabService.activeTabId;
   readonly currentUser = this.authService.currentUser;
 
-  /** GET /api/auth/menus đã lọc theo IsAdmin/FunctionId ở backend rồi, nên chỉ cần hiển thị nguyên cây trả về. */
-  readonly menuItems = this.menuService.menuItems;
+  /**
+   * GET /api/auth/menus đã lọc theo IsAdmin/FunctionId, nhưng đó chỉ là cái cổng admin
+   * đặt trên *bản ghi menu*. Một menu công khai trỏ tới route có gán quyền vẫn lọt qua:
+   * sidebar hiện nó, bấm vào thì guard chặn. Lọc thêm theo chính yêu cầu của route để
+   * người dùng không bao giờ thấy mục dẫn tới màn hình họ không vào được.
+   */
+  readonly menuItems = computed(() => this._prune(this.menuService.menuItems()));
+
+  private _prune(items: MenuItem[]): MenuItem[] {
+    const kept: MenuItem[] = [];
+
+    for (const item of items) {
+      const children = item.children?.length ? this._prune(item.children) : undefined;
+
+      // Nhóm cha không có route riêng: giữ lại chỉ khi còn ít nhất một menu con vào được,
+      // nếu không nó là header bấm vào chẳng xổ ra gì.
+      if (!item.route) {
+        if (children?.length) kept.push({ ...item, children });
+        continue;
+      }
+
+      if (this.routeAccess.canAccess(item.route)) {
+        kept.push(children?.length ? { ...item, children } : { ...item, children: undefined });
+      }
+    }
+
+    return kept;
+  }
 
   collapsed = false;
   /** Tracks which group ids are expanded in the tree */

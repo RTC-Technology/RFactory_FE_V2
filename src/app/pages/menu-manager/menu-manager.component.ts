@@ -15,8 +15,10 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeTableModule } from 'primeng/treetable';
+import { PERMISSIONS } from '../../core/auth/permissions';
 import { FunctionApiService } from '../../core/services/function-api.service';
 import { I18nService } from '../../core/services/i18n.service';
+import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { MAX_MENU_DEPTH, MenuFormValue, MenuService } from '../../core/services/menu.service';
 import { MenuItem } from '../../domain/models/menu-item.model';
 import { IconComponent } from '../../shared/components/icon.component';
@@ -44,6 +46,7 @@ interface MenuRow extends MenuItem {
     TreeTableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, SelectModule, SelectButtonModule, IconFieldModule, InputIconModule,
     TagModule, TooltipModule,
+    HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './menu-manager.component.html',
@@ -55,6 +58,8 @@ export class MenuManagerComponent implements OnInit {
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
+
+  readonly perms = PERMISSIONS;
 
   readonly loading = this.menuService.catalogueLoading;
   readonly maxDepth = MAX_MENU_DEPTH;
@@ -116,7 +121,7 @@ export class MenuManagerComponent implements OnInit {
 
   readonly functionOptions = computed(() => [
     { label: this.i18n.t('menu.field.functionPublic'), value: null },
-    ...this.functionApi.functions().map(fn => ({
+    ...this.functionApi.items().map(fn => ({
       label: `${fn.functionCode} — ${fn.functionName}`,
       value: String(fn.id),
     })),

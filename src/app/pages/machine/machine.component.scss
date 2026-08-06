@@ -1,0 +1,8 @@
+/* Master-detail: MachineType on the left, the machines classified under it on the right.
+   Note this is a classification pairing, not containment — a machine's physical home is
+   its Line, picked separately in the dialog. */
+
+@use '../../shared/styles/master-detail';
+
+/* Wide enough for "Area / Line", which is how a machine's location is shown. */
+.col-line { width: 200px; }

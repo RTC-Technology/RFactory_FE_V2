@@ -81,14 +81,25 @@ body {
   color: var(--text-primary);
   background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
-  transition: background 0.25s ease, color 0.25s ease;
+
+  /* Fallback only, for browsers without the View Transitions API — everywhere else the
+     cross-fade below covers the whole page and this never gets a chance to show. */
+  transition: background-color 0.2s ease;
 }
 
-/* ─── Smooth theme transition ────────────────────────────────── */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 0.2s;
-  transition-timing-function: ease;
+/* ─── Theme transition ───────────────────────────────────────── */
+/* Flipping the theme is a single cross-fade of the page, driven by
+   document.startViewTransition() in TopbarComponent.
+   There is deliberately NO universal `* { transition: background-color, border-color,
+   color, box-shadow }` rule here. That made every element in the document start four
+   simultaneous property animations on each flip; on a screen holding a PrimeNG table
+   it meant thousands of animations and a full repaint every frame for the whole
+   duration, which is what made the switch stutter. A view transition cross-fades two
+   snapshots on the compositor instead, so the cost no longer scales with DOM size. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease;
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────── */
@@ -117,4 +128,14 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ─── Toasts ─────────────────────────────────────────────────── */
+/* PrimeNG pins a top-right toast at `top: 20px` through an inline style, which drops it
+   straight onto the 40px shell header and covers the topbar's own buttons. Clearing the
+   header needs !important — nothing else outranks an inline style.
+   Global rather than per-page: toast placement is app chrome, and the three screens that
+   raise toasts would each have to repeat it otherwise. */
+.p-toast.p-toast-top-right {
+  top: 52px !important;
 }

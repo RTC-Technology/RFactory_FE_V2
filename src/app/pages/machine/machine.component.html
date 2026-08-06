@@ -1,0 +1,213 @@
+<!-- Toolbar is identical for both panels apart from which entity it acts on. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+  <div class="toolbar">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+        <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+      </svg>
+      <span>{{ i18n.t('common.add') }}</span>
+    </button>
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+      </svg>
+      <span>{{ i18n.t('common.edit') }}</span>
+    </button>
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+      <span>{{ i18n.t('common.delete') }}</span>
+    </button>
+
+    @if (showReload) {
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+    }
+
+    <input
+      class="tool-search"
+      type="search"
+      [placeholder]="i18n.t('common.search')"
+      [attr.aria-label]="i18n.t('common.search')"
+      (input)="applyFilter(kind, $any($event.target).value)"
+    />
+  </div>
+</ng-template>
+
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('machine:split-x', [38,62])" [minSizes]="[20, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('machine:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: MachineType ──────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('machine.type') }}</h2>
+        <span class="panel__count">{{ types().length }}</span>
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'type', perms: perms.machineType, canAdd: true, hasSelection: !!selectedType(), showReload: true }" />
+
+      <div class="table-scroll">
+        <p-table
+          #typeTable [value]="types()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.type" (onFilter)="onFiltered('type', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('machine.typeCode') }}</th>
+              <th>{{ i18n.t('machine.typeName') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedType()?.id === row.id"
+                (click)="selectType(row)" (dblclick)="openEdit('type')">
+              <td class="col-code">{{ row.machineTypeCode }}</td>
+              <td>{{ row.machineTypeName }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="2"><p class="empty">{{ i18n.t('machine.empty.type') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail: Machine ──────────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('machine.machine') }}</h2>
+        @if (selectedType(); as type) {
+          <span class="panel__scope">{{ i18n.t('machine.scopeOf', { name: type.machineTypeName }) }}</span>
+          <span class="panel__count">{{ machines().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'machine', perms: perms.machine, canAdd: !!selectedType(), hasSelection: !!selectedMachine() }" />
+
+      @if (untypedCount() > 0) {
+        <!-- These belong to no type, so no panel on this screen can reach them. -->
+        <p class="notice">{{ i18n.t('machine.untypedNotice', { count: untypedCount() }) }}</p>
+      }
+
+      <div class="table-scroll">
+        <p-table
+          #machineTable [value]="machines()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.machine" (onFilter)="onFiltered('machine', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('machine.machineCode') }}</th>
+              <th>{{ i18n.t('machine.machineName') }}</th>
+              <th class="col-line">{{ i18n.t('machine.line') }}</th>
+              <th class="col-status">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedMachine()?.id === row.id"
+                (click)="selectMachine(row)" (dblclick)="openEdit('machine')">
+              <td class="col-code">{{ row.machineCode }}</td>
+              <td>{{ row.machineName }}</td>
+              <td class="col-line">
+                @if (lineLabel(row.lineId); as label) {
+                  {{ label }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-status">
+                @if (statusOf(row.status); as status) {
+                  <p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4">
+                <p class="empty">
+                  {{ selectedType() ? i18n.t('machine.empty.machine') : i18n.t('machine.empty.machineHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+  </p-splitter>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '460px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="eq-code">{{ i18n.t('common.code') }} <span class="req">*</span></label>
+      <input pInputText id="eq-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="eq-name">{{ i18n.t('common.name') }} <span class="req">*</span></label>
+      <input pInputText id="eq-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    @if (dialogKind() === 'machine') {
+      <div class="field">
+        <label for="eq-line">{{ i18n.t('machine.line') }}</label>
+        <p-select
+          inputId="eq-line" [options]="lineOptions()" optionLabel="label" optionValue="value"
+          [(ngModel)]="form.lineId" [filter]="true" filterBy="label"
+          [placeholder]="i18n.t('machine.lineUnset')" appendTo="body" class="w-full"
+        />
+        <small class="hint">{{ i18n.t('machine.lineHint') }}</small>
+      </div>
+
+      <div class="field">
+        <label for="eq-status">{{ i18n.t('common.status') }}</label>
+        <p-select
+          inputId="eq-status" [options]="statuses()" optionLabel="label" optionValue="value"
+          [(ngModel)]="form.status" [showClear]="true" [placeholder]="i18n.t('plant.status.unset')"
+          appendTo="body" class="w-full"
+        />
+      </div>
+
+      @if (selectedType(); as type) {
+        <p class="form__scope">{{ i18n.t('machine.scope.machine', { name: type.machineTypeName }) }}</p>
+      }
+    }
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

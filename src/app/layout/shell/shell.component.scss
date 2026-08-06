@@ -36,6 +36,15 @@
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(20px);
 
+    // `backdrop-filter` makes this a stacking context, so the z-index the topbar and
+    // tab-bar dropdowns carry only competes *inside* the header. The header itself was
+    // left at `z-index: auto` and sits before .shell__content in the DOM, so the whole
+    // content pane — a page's sticky table header included — painted over those panels.
+    // Lifting the header as a unit is what fixes it; raising the panels cannot.
+    // Stays below the sidebar flyout (400), which should still win over both.
+    position: relative;
+    z-index: 20;
+
     app-tab-bar { flex: 1; min-width: 0; }
     app-topbar  { flex-shrink: 0; }
   }

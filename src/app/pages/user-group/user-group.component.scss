@@ -1,0 +1,99 @@
+/* Master-detail: user groups on the left; the permissions they grant over the users
+   they contain on the right. Both assignment sets are edited in picker dialogs. */
+
+@use '../../shared/styles/master-detail';
+
+.col-fn-code { width: 240px; }
+.col-org     { width: 180px; }
+.col-login   { width: 130px; }
+.col-remove  { width: 44px; }
+.col-pick    { width: 44px; text-align: center; }
+
+.mono {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.row-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, #ef4444 14%, transparent); }
+  svg { width: 14px; height: 14px; }
+}
+
+/* ─── Picker dialogs ───────────────────────────────────────────────────── */
+.picker { display: flex; flex-direction: column; gap: 12px; }
+
+.picker__bar { display: flex; align-items: center; gap: 10px; }
+.picker__search {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--text-muted); }
+}
+.link-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+/* Capped so a long catalogue scrolls inside the dialog instead of pushing it past the
+   viewport, which would put the footer buttons out of reach. */
+.picker__list {
+  max-height: 46vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.picker__list--table { overflow: auto; }
+
+.perm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  &:last-child { border-bottom: 0; }
+  &:hover { background: var(--item-hover); }
+}
+.perm-row--group {
+  font-weight: 600;
+  background: color-mix(in srgb, var(--text-muted) 7%, transparent);
+}
+.perm-row__name { flex: 1; min-width: 0; }
+.perm-row__code { flex-shrink: 0; }
+
+/* Inside a dialog the grid is already framed by .picker__list. */
+:host ::ng-deep .picker__list .grid .p-datatable-thead > tr > th {
+  background: var(--card-bg);
+}

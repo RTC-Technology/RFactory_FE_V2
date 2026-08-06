@@ -22,8 +22,26 @@ export class TopbarComponent implements OnInit {
   ngOnInit(): void { this._applyTheme(); }
 
   toggleTheme(): void {
-    this.isDark.update(v => !v);
-    this._applyTheme();
+    const flip = () => {
+      this.isDark.update(v => !v);
+      this._applyTheme();
+    };
+
+    // A view transition cross-fades one snapshot of the page against another on the
+    // compositor, so the work is the same whether the screen holds a handful of
+    // elements or a full table — unlike per-element CSS transitions, which is what the
+    // old universal rule in styles.scss did (see the note there).
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (!doc.startViewTransition || this._prefersReducedMotion()) {
+      flip();
+      return;
+    }
+
+    doc.startViewTransition(flip);
+  }
+
+  private _prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   private _applyTheme(): void {

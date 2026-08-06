@@ -1,0 +1,355 @@
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('user-group:split-x', [36,64])" [minSizes]="[22, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('user-group:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: user groups ──────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('ug.group') }}</h2>
+        <span class="panel__count">{{ groups().length }}</span>
+      </div>
+
+      <div class="toolbar">
+        <button *appHasPermission="perms.userGroup.add" type="button" class="tool" (click)="openCreate()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+            <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+          </svg>
+          <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.userGroup.edit" type="button" class="tool" [disabled]="!selectedGroup()" (click)="openEdit()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+            <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+          </svg>
+          <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.userGroup.delete" type="button" class="tool tool--danger" [disabled]="!selectedGroup()" (click)="askDelete()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+          </svg>
+          <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+
+        <input
+          class="tool-search" type="search"
+          [placeholder]="i18n.t('common.search')" [attr.aria-label]="i18n.t('common.search')"
+          (input)="applyFilter($any($event.target).value)"
+        />
+      </div>
+
+      <div class="table-scroll">
+        <p-table
+          #groupTable [value]="groups()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields" (onFilter)="onFiltered($event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('ug.groupCode') }}</th>
+              <th>{{ i18n.t('ug.groupName') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedGroup()?.id === row.id"
+                (click)="selectGroup(row)" (dblclick)="openEdit()">
+              <td class="col-code">{{ row.code }}</td>
+              <td>{{ row.name }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="2"><p class="empty">{{ i18n.t('ug.empty.group') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail: rights over members ──────────────────────────────────── -->
+    <ng-template #panel>
+    <p-splitter
+      class="workspace__right" layout="vertical" [panelSizes]="split.sizes('user-group:split-y', [52,48])" [minSizes]="[20, 20]" [gutterSize]="6"
+      (onResizeEnd)="split.save('user-group:split-y', $event.sizes)"
+    >
+
+      <!-- Assigned permissions -->
+      <ng-template #panel>
+      <section class="panel">
+        <div class="panel__head">
+          <h2 class="panel__title">{{ i18n.t('ug.rights') }}</h2>
+          @if (selectedGroup(); as group) {
+            <span class="panel__scope">{{ i18n.t('ug.scopeOf', { name: group.name }) }}</span>
+            <span class="panel__count">{{ assignedFunctions().length }}</span>
+          }
+        </div>
+
+        <div class="toolbar">
+          <!-- Rights and membership are edits of the group, so they ride on the same code. -->
+          <button *appHasPermission="perms.userGroup.edit" type="button" class="tool"
+                  [disabled]="!selectedGroup()" (click)="openRights()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>
+            </svg>
+            <span>{{ i18n.t('ug.assignRights') }}</span>
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <p-table [value]="assignedFunctions()" [showGridlines]="true" class="grid">
+            <ng-template #header>
+              <tr>
+                <th class="col-fn-code">{{ i18n.t('fn.functionCode') }}</th>
+                <th>{{ i18n.t('fn.functionName') }}</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td class="col-fn-code"><code class="mono">{{ row.functionCode }}</code></td>
+                <td>{{ row.functionName }}</td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="2">
+                  <p class="empty">
+                    {{ selectedGroup() ? i18n.t('ug.empty.rights') : i18n.t('ug.empty.rightsHint') }}
+                  </p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </section>
+      </ng-template>
+
+      <!-- Members -->
+      <ng-template #panel>
+      <section class="panel">
+        <div class="panel__head">
+          <h2 class="panel__title">{{ i18n.t('ug.members') }}</h2>
+          @if (selectedGroup(); as group) {
+            <span class="panel__scope">{{ i18n.t('ug.scopeOf', { name: group.name }) }}</span>
+            <span class="panel__count">{{ members().length }}</span>
+          }
+        </div>
+
+        <div class="toolbar">
+          <button *appHasPermission="perms.userGroup.edit" type="button" class="tool"
+                  [disabled]="!selectedGroup()" (click)="openMembers()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+            <span>{{ i18n.t('ug.assignMembers') }}</span>
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <p-table [value]="members()" [showGridlines]="true" class="grid">
+            <ng-template #header>
+              <tr>
+                <th class="col-code">{{ i18n.t('org.userCode') }}</th>
+                <th>{{ i18n.t('org.fullName') }}</th>
+                <th class="col-org">{{ i18n.t('org.org') }}</th>
+                <th class="col-remove"></th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td class="col-code">{{ row.code }}</td>
+                <td>{{ row.fullName }}</td>
+                <td class="col-org">
+                  @if (orgName(row.organizationId); as name) {
+                    {{ name }}
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="col-remove">
+                  <button *appHasPermission="perms.userGroup.edit" type="button" class="row-remove"
+                          [title]="i18n.t('common.delete')" (click)="removeMember(row)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="4">
+                  <p class="empty">
+                    {{ selectedGroup() ? i18n.t('ug.empty.members') : i18n.t('ug.empty.membersHint') }}
+                  </p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </section>
+      </ng-template>
+
+    </p-splitter>
+    </ng-template>
+
+  </p-splitter>
+</div>
+
+<!-- ─── Group create / edit ─────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '440px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+    <div class="field">
+      <label for="ug-code">{{ i18n.t('ug.groupCode') }} <span class="req">*</span></label>
+      <input pInputText id="ug-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="ug-name">{{ i18n.t('ug.groupName') }} <span class="req">*</span></label>
+      <input pInputText id="ug-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ─── Permission picker ───────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="rightsOpen()" (visibleChange)="rightsOpen.set($event)"
+  [header]="i18n.t('ug.dialog.rights', { name: selectedGroup()?.name ?? '' })"
+  [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '620px' }"
+>
+  <div class="picker">
+    <div class="picker__bar">
+      <input
+        class="picker__search" type="search"
+        [placeholder]="i18n.t('ug.searchRights')"
+        [ngModel]="rightsSearch()" (ngModelChange)="rightsSearch.set($event)"
+      />
+      <button type="button" class="link-btn" (click)="setAllRights(true)">{{ i18n.t('ug.selectAll') }}</button>
+      <button type="button" class="link-btn" (click)="setAllRights(false)">{{ i18n.t('ug.clearAll') }}</button>
+    </div>
+
+    <div class="picker__list">
+      @for (row of visiblePermissionRows(); track row.kind + '-' + row.id) {
+        <label class="perm-row" [class.perm-row--group]="row.kind === 'group'"
+               [style.padding-left.px]="12 + row.depth * 18">
+          <p-checkbox
+            [binary]="true" [ngModel]="isRowChecked(row)" (ngModelChange)="toggleRow(row, $event)"
+            [indeterminate]="isRowPartial(row)" [disabled]="row.functionIds.length === 0"
+          />
+          <span class="perm-row__name">{{ row.name }}</span>
+          @if (row.kind === 'function') {
+            <code class="mono perm-row__code">{{ row.code }}</code>
+          }
+        </label>
+      } @empty {
+        <p class="empty">{{ i18n.t('ug.noFunctions') }}</p>
+      }
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="rightsSaving()" (click)="rightsOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="rightsSaving()" (click)="saveRights()">
+      <span pButtonLabel>
+        {{ rightsSaving() ? i18n.t('common.saving') : i18n.t('ug.selectedCount', { count: rightsSelectedCount() }) }}
+      </span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ─── Member picker ───────────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="membersOpen()" (visibleChange)="membersOpen.set($event)"
+  [header]="i18n.t('ug.dialog.members', { name: selectedGroup()?.name ?? '' })"
+  [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '720px' }"
+>
+  <div class="picker">
+    <div class="picker__bar">
+      <input
+        class="picker__search" type="search"
+        [placeholder]="i18n.t('ug.searchUsers')"
+        [ngModel]="membersSearch()" (ngModelChange)="membersSearch.set($event)"
+      />
+      <button type="button" class="link-btn" (click)="setAllVisibleUsers(true)">{{ i18n.t('ug.selectAll') }}</button>
+      <button type="button" class="link-btn" (click)="setAllVisibleUsers(false)">{{ i18n.t('ug.clearAll') }}</button>
+    </div>
+
+    <div class="picker__list picker__list--table">
+      <p-table [value]="visibleUsers()" [showGridlines]="true" class="grid">
+        <ng-template #header>
+          <tr>
+            <th class="col-pick"></th>
+            <th class="col-code">{{ i18n.t('org.userCode') }}</th>
+            <th class="col-login">{{ i18n.t('org.loginName') }}</th>
+            <th>{{ i18n.t('org.fullName') }}</th>
+            <th class="col-org">{{ i18n.t('org.org') }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr class="row" (click)="toggleUser(row.id, !isUserChecked(row.id))">
+            <td class="col-pick">
+              <p-checkbox
+                [binary]="true" [ngModel]="isUserChecked(row.id)"
+                (ngModelChange)="toggleUser(row.id, $event)"
+              />
+            </td>
+            <td class="col-code">{{ row.code }}</td>
+            <td class="col-login">{{ row.loginName }}</td>
+            <td>{{ row.fullName }}</td>
+            <td class="col-org">
+              @if (orgName(row.organizationId); as name) {
+                {{ name }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr><td colspan="5"><p class="empty">{{ i18n.t('org.empty.org') }}</p></td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="membersSaving()" (click)="membersOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="membersSaving()" (click)="saveMembers()">
+      <span pButtonLabel>
+        {{ membersSaving() ? i18n.t('common.saving') : i18n.t('ug.selectedCount', { count: membersSelectedCount() }) }}
+      </span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

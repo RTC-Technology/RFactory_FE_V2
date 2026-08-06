@@ -1,0 +1,52 @@
+/* Expand/collapse affordances for the flat tables that render a hierarchy by indenting
+   (permission groups, organizations). Pairs with CollapsibleTree in shared/utils. */
+
+.tree-cell { display: flex; align-items: center; gap: 4px; }
+
+.tree-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, currentColor 15%, transparent); }
+}
+.tree-toggle__ico {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s ease;
+}
+.tree-toggle__ico--open { transform: rotate(90deg); }
+
+/* Keeps codes on leaf rows lined up with codes that sit next to a toggle. */
+.tree-spacer { width: 18px; flex-shrink: 0; }
+
+.tree-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: var(--item-hover); color: var(--text-primary); }
+  svg { width: 13px; height: 13px; }
+}
+
+/* The indent is applied inline per row, so the shared centre alignment for header cells
+   must not follow into the body. */
+.col-code { text-align: left; }

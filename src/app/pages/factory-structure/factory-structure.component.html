@@ -1,23 +1,23 @@
 <!-- Toolbar is identical for all three panels apart from which entity it acts on.
      `showReload` is set only on the master panel: reloading refetches all three lists,
      so it belongs to the page, not to any one detail grid. -->
-<ng-template #toolbar let-kind="kind" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
   <div class="toolbar">
-    <button type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
       <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
         <rect x="3" y="3" width="12" height="14" rx="1.5"/>
         <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
       </svg>
       <span>{{ i18n.t('common.add') }}</span>
     </button>
-    <button type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
       <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
         <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
         <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
       </svg>
       <span>{{ i18n.t('common.edit') }}</span>
     </button>
-    <button type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
       <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
       </svg>
@@ -50,8 +50,8 @@
        `stateKey` persists whatever the user drags to, so the layout survives closing
        the tab and coming back. -->
   <p-splitter
-    class="workspace" [panelSizes]="[42, 58]" [minSizes]="[20, 30]" [gutterSize]="6"
-    stateKey="factory-structure:split-x" stateStorage="local"
+    class="workspace" [panelSizes]="split.sizes('factory-structure:split-x', [42,58])" [minSizes]="[20, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('factory-structure:split-x', $event.sizes)"
   >
 
     <!-- ─── Master: Factory ──────────────────────────────────────────────── -->
@@ -62,7 +62,7 @@
         <span class="panel__count">{{ factories().length }}</span>
       </div>
       <ng-container
-        *ngTemplateOutlet="toolbar; context: { kind: 'factory', canAdd: true, hasSelection: !!selectedFactory(), showReload: true }" />
+        *ngTemplateOutlet="toolbar; context: { kind: 'factory', perms: perms.factory, canAdd: true, hasSelection: !!selectedFactory(), showReload: true }" />
 
       <div class="table-scroll">
         <p-table
@@ -92,8 +92,8 @@
     <!-- ─── Detail column: Area over Line ────────────────────────────────── -->
     <ng-template #panel>
     <p-splitter
-      class="workspace__right" layout="vertical" [panelSizes]="[50, 50]" [minSizes]="[20, 20]" [gutterSize]="6"
-      stateKey="factory-structure:split-y" stateStorage="local"
+      class="workspace__right" layout="vertical" [panelSizes]="split.sizes('factory-structure:split-y', [50,50])" [minSizes]="[20, 20]" [gutterSize]="6"
+      (onResizeEnd)="split.save('factory-structure:split-y', $event.sizes)"
     >
 
     <ng-template #panel>
@@ -106,7 +106,7 @@
         }
       </div>
       <ng-container
-        *ngTemplateOutlet="toolbar; context: { kind: 'area', canAdd: !!selectedFactory(), hasSelection: !!selectedArea() }" />
+        *ngTemplateOutlet="toolbar; context: { kind: 'area', perms: perms.area, canAdd: !!selectedFactory(), hasSelection: !!selectedArea() }" />
 
       <div class="table-scroll">
         <p-table
@@ -150,7 +150,7 @@
         }
       </div>
       <ng-container
-        *ngTemplateOutlet="toolbar; context: { kind: 'line', canAdd: !!selectedArea(), hasSelection: !!selectedLine() }" />
+        *ngTemplateOutlet="toolbar; context: { kind: 'line', perms: perms.line, canAdd: !!selectedArea(), hasSelection: !!selectedLine() }" />
 
       <div class="table-scroll">
         <p-table
@@ -252,4 +252,4 @@
 </p-dialog>
 
 <p-confirmDialog />
-<p-toast position="bottom-right" />
+<p-toast position="top-right" />

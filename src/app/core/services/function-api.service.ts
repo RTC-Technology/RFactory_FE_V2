@@ -1,28 +1,30 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
-import { Observable, map, tap } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../domain/models/api-response.model';
-import { FunctionDto } from '../../domain/models/function-dto.model';
-
-const FUNCTIONS_URL = `${environment.apiUrl}/administration/functions`;
+import {
+  FunctionDto, FunctionGroupDto, FunctionGroupRequest, FunctionRequest, PermissionSyncResult,
+} from '../../domain/models/function-dto.model';
+import { CrudApiService } from './crud-api.service';
 
 /**
- * Read-only access to the function (permission) catalogue. A menu item's
- * `functionId` points here: null = public, otherwise only users holding that
- * function see the item (see MenuService.GetMenusForUserAsync on the backend).
+ * The permission catalogue. A menu item's `functionId` points at a Function here:
+ * null means the item is public, otherwise only holders of that function see it
+ * (see MenuService.GetMenusForUserAsync on the backend).
  */
 @Injectable({ providedIn: 'root' })
-export class FunctionApiService {
-  private readonly http = inject(HttpClient);
+export class FunctionApiService extends CrudApiService<FunctionDto, FunctionRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/administration/functions`;
 
-  private readonly _functions = signal<FunctionDto[]>([]);
-  readonly functions = this._functions.asReadonly();
-
-  load(): Observable<FunctionDto[]> {
-    return this.http.get<ApiResponse<FunctionDto[]>>(FUNCTIONS_URL).pipe(
-      map(res => res.data ?? []),
-      tap(items => this._functions.set(items)),
-    );
+  /** Writes any catalogue entry the database is missing. Additive — safe to re-run. */
+  syncCatalog(): Observable<PermissionSyncResult> {
+    return this.http
+      .post<ApiResponse<PermissionSyncResult>>(`${this.baseUrl}/sync-catalog`, {})
+      .pipe(map(res => res.data));
   }
+}
+
+@Injectable({ providedIn: 'root' })
+export class FunctionGroupApiService extends CrudApiService<FunctionGroupDto, FunctionGroupRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/administration/function-groups`;
 }

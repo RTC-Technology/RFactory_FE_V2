@@ -19,9 +19,14 @@ export class TabReuseStrategy implements RouteReuseStrategy {
   /**
    * Có nên detach (lưu cache) route hiện tại không?
    * → Có nếu route có component (là leaf route, không phải layout)
+   *
+   * Trừ route khai báo `data: { reuse: false }`. Cache này tồn tại để giữ state khi
+   * chuyển tab, nên route nằm ngoài hệ thống tab không được vào: /login từng bị cache
+   * lại nguyên trạng đang-submit, và lần đăng xuất kế tiếp attach lại đúng instance đó
+   * với nút bấm vẫn khoá.
    */
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
-    return !!route.component;
+    return route.data['reuse'] !== false && !!route.component;
   }
 
   /**

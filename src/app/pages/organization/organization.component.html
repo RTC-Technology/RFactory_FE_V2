@@ -1,0 +1,278 @@
+<!-- Toolbar is identical for both panels apart from which entity it acts on. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+  <div class="toolbar">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+        <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+      </svg>
+      <span>{{ i18n.t('common.add') }}</span>
+    </button>
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+      </svg>
+      <span>{{ i18n.t('common.edit') }}</span>
+    </button>
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+      <span>{{ i18n.t('common.delete') }}</span>
+    </button>
+
+    @if (showReload) {
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+    }
+
+    <input
+      class="tool-search"
+      type="search"
+      [placeholder]="i18n.t('common.search')"
+      [attr.aria-label]="i18n.t('common.search')"
+      (input)="applyFilter(kind, $any($event.target).value)"
+    />
+  </div>
+</ng-template>
+
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('organization:split-x', [42,58])" [minSizes]="[25, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('organization:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: Organization ─────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('org.org') }}</h2>
+        @if (tree.parentIds().size > 0) {
+          <button
+            type="button" class="tree-all"
+            [title]="tree.allCollapsed() ? i18n.t('org.expandAll') : i18n.t('org.collapseAll')"
+            [attr.aria-label]="tree.allCollapsed() ? i18n.t('org.expandAll') : i18n.t('org.collapseAll')"
+            (click)="tree.toggleAll()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              @if (tree.allCollapsed()) {
+                <polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>
+              } @else {
+                <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
+              }
+            </svg>
+          </button>
+        }
+        <span class="panel__count">{{ orgRows().length }}</span>
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'org', perms: perms.organization, canAdd: true, hasSelection: !!selectedOrg(), showReload: true }" />
+
+      <div class="table-scroll">
+        <p-table
+          #orgTable [value]="tree.visibleRows()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.org" (onFilter)="onFiltered('org', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('org.orgCode') }}</th>
+              <th>{{ i18n.t('org.orgName') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedOrg()?.id === row.id"
+                (click)="selectOrg(row)" (dblclick)="openEdit('org')">
+              <!-- Nesting is shown by indenting the code, the column that carries the
+                   hierarchy's meaning. Leaves get a spacer so codes stay aligned with
+                   the ones that do carry a toggle. -->
+              <td class="col-code" [style.padding-left.px]="8 + row.depth * 16">
+                <span class="tree-cell">
+                  @if (tree.hasChildren(row.id)) {
+                    <button
+                      type="button" class="tree-toggle"
+                      [title]="tree.isCollapsed(row.id) ? i18n.t('org.expand') : i18n.t('org.collapse')"
+                      [attr.aria-expanded]="!tree.isCollapsed(row.id)"
+                      (click)="toggleCollapse(row.id, $event)"
+                    >
+                      <svg
+                        class="tree-toggle__ico" [class.tree-toggle__ico--open]="!tree.isCollapsed(row.id)"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  } @else {
+                    <span class="tree-spacer"></span>
+                  }
+                  {{ row.organizationCode }}
+                </span>
+              </td>
+              <td>{{ row.organizationName }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="2"><p class="empty">{{ i18n.t('org.empty.org') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail: User ─────────────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('org.user') }}</h2>
+        @if (selectedOrg(); as org) {
+          <span class="panel__scope">{{ i18n.t('org.scopeOf', { name: org.organizationName }) }}</span>
+          <span class="panel__count">{{ users().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'user', perms: perms.user, canAdd: !!selectedOrg(), hasSelection: !!selectedUser() }" />
+
+      @if (unassignedCount() > 0) {
+        <!-- Belong to no organization, so no panel on this screen can reach them. -->
+        <p class="notice">{{ i18n.t('org.unassignedNotice', { count: unassignedCount() }) }}</p>
+      }
+
+      <div class="table-scroll">
+        <p-table
+          #userTable [value]="users()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.user" (onFilter)="onFiltered('user', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('org.userCode') }}</th>
+              <th class="col-login">{{ i18n.t('org.loginName') }}</th>
+              <th>{{ i18n.t('org.fullName') }}</th>
+              <th class="col-email">{{ i18n.t('org.email') }}</th>
+              <th class="col-role">{{ i18n.t('org.role') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedUser()?.id === row.id"
+                (click)="selectUser(row)" (dblclick)="openEdit('user')">
+              <td class="col-code">{{ row.code }}</td>
+              <td class="col-login">{{ row.loginName }}</td>
+              <td>{{ row.fullName }}</td>
+              <td class="col-email">
+                @if (row.email) {
+                  {{ row.email }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-role">
+                @if (row.isAdmin) {
+                  <p-tag severity="warn" [value]="i18n.t('org.badge.admin')" [rounded]="true" />
+                } @else {
+                  <span class="muted">{{ i18n.t('sidebar.roleUser') }}</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="5">
+                <p class="empty">
+                  {{ selectedOrg() ? i18n.t('org.empty.user') : i18n.t('org.empty.userHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+  </p-splitter>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '480px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="org-code">{{ i18n.t(dialogKind() === 'org' ? 'common.code' : 'org.userCode') }}
+        <span class="req">*</span></label>
+      <input pInputText id="org-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="org-name">{{ i18n.t(dialogKind() === 'org' ? 'common.name' : 'org.fullName') }}
+        <span class="req">*</span></label>
+      <input pInputText id="org-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    @if (dialogKind() === 'org') {
+      <div class="field">
+        <label for="org-parent">{{ i18n.t('org.parent') }}</label>
+        <p-select
+          inputId="org-parent" [options]="parentOptions()" optionLabel="label" optionValue="value"
+          [(ngModel)]="form.parentId" [filter]="true" filterBy="label"
+          [placeholder]="i18n.t('org.parentRoot')" appendTo="body" class="w-full"
+        />
+      </div>
+    } @else {
+      <div class="field">
+        <label for="org-login">{{ i18n.t('org.loginName') }} <span class="req">*</span></label>
+        <input pInputText id="org-login" name="loginName" [(ngModel)]="form.loginName" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="org-password">
+          {{ i18n.t('org.password') }}
+          @if (!editingId()) { <span class="req">*</span> }
+        </label>
+        <input pInputText type="password" id="org-password" name="password"
+               [(ngModel)]="form.password" autocomplete="new-password" />
+        @if (editingId()) {
+          <small class="hint">{{ i18n.t('org.passwordKeepHint') }}</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="org-email">{{ i18n.t('org.email') }}</label>
+        <input pInputText type="email" id="org-email" name="email"
+               [(ngModel)]="form.email" autocomplete="off" />
+      </div>
+
+      <div class="field field--inline">
+        <p-toggleswitch inputId="org-admin" [(ngModel)]="form.isAdmin" />
+        <div>
+          <label for="org-admin">{{ i18n.t('org.isAdmin') }}</label>
+          <small class="hint">{{ i18n.t('org.isAdminHint') }}</small>
+        </div>
+      </div>
+
+      @if (selectedOrg(); as org) {
+        <p class="form__scope">{{ i18n.t('org.scope.user', { name: org.organizationName }) }}</p>
+      }
+    }
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

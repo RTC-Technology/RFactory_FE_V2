@@ -14,8 +14,11 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { PERMISSIONS } from '../../core/auth/permissions';
 import { I18nService } from '../../core/services/i18n.service';
+import { SplitStateService } from '../../core/services/split-state.service';
 import { AreaApiService, FactoryApiService, LineApiService } from '../../core/services/master-data-api.service';
+import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import {
   AreaDto, FactoryDto, LineDto, LINE_STATUSES, lineStatusOf,
 } from '../../domain/models/master-data.model';
@@ -44,6 +47,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
     CommonModule, FormsModule,
     TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, SelectModule, TagModule, TooltipModule,
+    HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './factory-structure.component.html',
@@ -56,6 +60,11 @@ export class FactoryStructureComponent implements OnInit {
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
+  /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
+  readonly split = inject(SplitStateService);
+
+  /** Passed into the shared toolbar template so each panel gates its own buttons. */
+  readonly perms = PERMISSIONS;
 
   readonly statusOf = lineStatusOf;
 

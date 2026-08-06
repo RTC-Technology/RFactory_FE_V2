@@ -1,0 +1,18 @@
+/* Master-detail: organizations on the left, the users inside the selected unit on the
+   right. Units nest, so the left table indents by depth. */
+
+@use '../../shared/styles/master-detail';
+@use '../../shared/styles/tree-cell';
+
+.col-login { width: 140px; }
+.col-email { width: 200px; }
+.col-role  { width: 110px; }
+
+/* Toggle switch and its label sit side by side rather than stacked. */
+.field--inline {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+
+  label { display: block; margin-bottom: 2px; }
+}

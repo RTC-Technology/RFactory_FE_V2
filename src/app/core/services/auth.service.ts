@@ -50,13 +50,36 @@ export class AuthService {
     return this._refreshInFlight$;
   }
 
-  /** checkPermission: superadmins (isAdmin) hold every permission implicitly. */
+  /**
+   * Superadmins (isAdmin) hold every permission implicitly; everyone else is checked
+   * against the function codes the backend resolved from their user groups.
+   *
+   * Matching ignores case, because the codes are typed by hand on the permission screen
+   * and the backend already de-duplicates them case-insensitively — a route asking for
+   * `user.manage` must not miss a stored `User.Manage`.
+   */
   hasPermission(required: string | string[], mode: PermissionMode = 'any'): boolean {
+    return this.missingPermissions(required, mode).length === 0;
+  }
+
+  /**
+   * Which of `required` the user is short of — empty when they are allowed through.
+   *
+   * Exists so a denial can name the codes to grant. "You lack permission" on a screen
+   * that quietly needs three of them is a dead end for whoever has to fix the account.
+   *
+   * Under `any` a single miss is not a shortfall, so nothing is reported until every
+   * option has failed — and then all of them are, since any one would do.
+   */
+  missingPermissions(required: string | string[], mode: PermissionMode = 'any'): string[] {
     const list = Array.isArray(required) ? required : [required];
-    if (list.length === 0) return true;
-    if (this._user()?.isAdmin) return true;
-    const perms = this.permissions();
-    return mode === 'all' ? list.every(p => perms.includes(p)) : list.some(p => perms.includes(p));
+    if (list.length === 0 || this._user()?.isAdmin) return [];
+
+    const held = new Set(this.permissions().map(code => code.toLowerCase()));
+    const missing = list.filter(code => !held.has(code.toLowerCase()));
+
+    if (mode === 'all') return missing;
+    return missing.length === list.length ? list : [];
   }
 
   private _applySession(user: AuthUser, tokens: AuthTokens): void {
