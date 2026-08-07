@@ -1,0 +1,135 @@
+<div class="page">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">{{ i18n.t('ptype.title') }}</h2>
+      <span class="panel__count">{{ types().length }}</span>
+    </div>
+
+    <div class="toolbar">
+      <button *appHasPermission="perms.add" type="button" class="tool" (click)="openCreate()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+          <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+        </svg>
+        <span>{{ i18n.t('common.add') }}</span>
+      </button>
+      <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!selected()" (click)="openEdit()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+          <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+        </svg>
+        <span>{{ i18n.t('common.edit') }}</span>
+      </button>
+      <button *appHasPermission="perms.delete" type="button" class="tool tool--danger"
+              [disabled]="!selected()" (click)="askDelete()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+        </svg>
+        <span>{{ i18n.t('common.delete') }}</span>
+      </button>
+
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+
+      <input class="tool-search" type="search"
+             [placeholder]="i18n.t('common.search')" [attr.aria-label]="i18n.t('common.search')"
+             (input)="applyFilter($any($event.target).value)" />
+    </div>
+
+    <div class="table-scroll">
+      <p-table
+        #typeTable [value]="types()" [showGridlines]="true" class="grid"
+        [globalFilterFields]="filterFields" (onFilter)="onFiltered($event.filteredValue)">
+        <ng-template #header>
+          <tr>
+            <th class="col-order">{{ i18n.t('ptype.order') }}</th>
+            <th class="col-code">{{ i18n.t('ptype.code') }}</th>
+            <th>{{ i18n.t('ptype.name') }}</th>
+            <th class="col-desc">{{ i18n.t('ptype.desc') }}</th>
+            <th class="col-state">{{ i18n.t('common.status') }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr class="row" [class.row--selected]="selected()?.id === row.id"
+              (click)="select(row)" (dblclick)="openEdit()">
+            <td class="col-order">{{ row.sortOrder ?? '—' }}</td>
+            <td class="col-code">{{ row.productTypeCode }}</td>
+            <td>{{ row.productTypeName }}</td>
+            <td class="col-desc">
+              @if (row.description) {
+                {{ row.description }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="col-state">
+              @if (row.isActive) {
+                <p-tag severity="success" [value]="i18n.t('ptype.active')" [rounded]="true" />
+              } @else {
+                <span class="muted">{{ i18n.t('ptype.inactive') }}</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr><td colspan="5"><p class="empty">{{ i18n.t('ptype.empty') }}</p></td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</div>
+
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '460px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="pt-code">{{ i18n.t('ptype.code') }} <span class="req">*</span></label>
+      <input pInputText id="pt-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="pt-name">{{ i18n.t('ptype.name') }} <span class="req">*</span></label>
+      <input pInputText id="pt-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="pt-desc">{{ i18n.t('ptype.desc') }}</label>
+      <textarea pTextarea id="pt-desc" name="description" rows="3" [(ngModel)]="form.description"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="pt-order">{{ i18n.t('ptype.order') }}</label>
+      <input pInputText type="number" min="0" id="pt-order" name="sortOrder" [(ngModel)]="form.sortOrder" />
+    </div>
+
+    <div class="field field--inline">
+      <p-toggleswitch inputId="pt-active" [(ngModel)]="form.isActive" />
+      <label for="pt-active">{{ i18n.t('ptype.activeField') }}</label>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

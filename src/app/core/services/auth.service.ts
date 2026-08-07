@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, finalize, map, shareReplay, tap, throwError } from 'rxjs';
+import { Observable, finalize, map, shareReplay, tap } from 'rxjs';
 import { AuthTokens, AuthUser, LoginCredentials } from '../../domain/models/auth.model';
 import { AuthApiService } from './auth-api.service';
 import { TokenStorageService } from './token-storage.service';
@@ -35,12 +35,14 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Asks the server for a new access token. Nothing is passed in: the refresh token is an
+   * httpOnly cookie the browser attaches by itself, so this code has no way to read it and
+   * no way to check it up front — a missing or expired cookie comes back as a 401.
+   */
   refreshAccessToken(): Observable<AuthTokens> {
-    const refreshToken = this.tokenStorage.getRefreshToken();
-    if (!refreshToken) return throwError(() => new Error('Không có refresh token.'));
-
     if (!this._refreshInFlight$) {
-      this._refreshInFlight$ = this.api.refresh(refreshToken).pipe(
+      this._refreshInFlight$ = this.api.refresh().pipe(
         tap(({ user, tokens }) => this._applySession(user, tokens)),
         map(({ tokens }) => tokens),
         finalize(() => { this._refreshInFlight$ = null; }),

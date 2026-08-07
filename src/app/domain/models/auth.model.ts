@@ -5,13 +5,17 @@ export interface AuthUser {
   email: string;
   /** True for superadmins — bypasses permission checks everywhere (see AuthService.hasPermission). */
   isAdmin: boolean;
-  /** FunctionCode values granted to this user. Empty for non-admins until UserGroup rights are wired up. */
+  /** FunctionCode values this user's groups grant. Admins bypass checks regardless. */
   permissions: string[];
 }
 
+/**
+ * Only the access token. The refresh token lives in an httpOnly cookie the browser
+ * attaches to /api/auth by itself — it is deliberately unreachable from JavaScript, so
+ * there is nothing here to hold.
+ */
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
 }
 
 export interface LoginCredentials {

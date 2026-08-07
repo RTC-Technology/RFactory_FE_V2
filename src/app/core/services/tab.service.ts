@@ -41,11 +41,29 @@ export class TabService {
   }
 
   /**
+   * True khi URL vừa điều hướng tới nằm *trong* shell — tức là có thanh tab để đồng bộ.
+   *
+   * ShellComponent gắn ở route rỗng cấp cao nhất, /login là anh em bên cạnh nó và render
+   * toàn màn hình, không có thanh tab nào. Service này là singleton nên nó vẫn sống sót
+   * khi shell bị destroy: một lần đăng xuất (hoặc phiên hết hạn đá về /login) vẫn bắn ra
+   * NavigationEnd, và nếu không lọc thì "Login" được thêm vào strip như một tab bình
+   * thường — đúng cái tab thừa xuất hiện cạnh Dashboard sau khi đăng nhập lại.
+   *
+   * Kiểm theo cấu trúc chứ không hard-code '/login': thêm route công khai nào nữa
+   * (quên mật khẩu, đăng ký…) thì nó tự đứng ngoài mà không phải nhớ sửa ở đây.
+   */
+  private _isInsideShell(): boolean {
+    return this.router.routerState.snapshot.root.firstChild?.routeConfig?.path === '';
+  }
+
+  /**
    * Focuses the tab owning `url`, opening one when nothing matches.
    *
    * Deliberately does not navigate: it runs *because* a navigation just finished.
    */
   private _syncWithUrl(url: string): void {
+    if (!this._isInsideShell()) return;
+
     const route = url.split(/[?#]/, 1)[0];
 
     const existing = this.tabs.find(t => t.route === route);
@@ -161,6 +179,21 @@ export class TabService {
       // chuyển tab trước đó rồi, nên xóa ngay là an toàn.
       this._clearRouteCache(closedTab.route);
     }
+  }
+
+  /**
+   * Xoá sạch strip và toàn bộ state component đang cache. Gọi khi đăng xuất.
+   *
+   * Khác `closeAll()` ở chỗ không giữ lại tab đầu và không điều hướng: người dùng đang
+   * rời khỏi shell. Service là singleton nên nếu không dọn, tài khoản đăng nhập kế tiếp
+   * kế thừa nguyên si tab của tài khoản trước — kèm cả instance component còn giữ dữ
+   * liệu cũ trong cache của TabReuseStrategy.
+   */
+  reset(): void {
+    this._tabs.next([]);
+    this.activeTabId.set('');
+    const strategy = this.reuseStrategy as TabReuseStrategy;
+    if (typeof strategy.clearAll === 'function') strategy.clearAll();
   }
 
   closeAll(): void {

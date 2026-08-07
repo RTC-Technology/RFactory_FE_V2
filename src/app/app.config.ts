@@ -14,7 +14,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // Order matters: authInterceptor attaches the token and refreshes proactively;
+    // errorInterceptor sits behind it and catches a 401 that still slipped through —
+    // a token the server revoked early, or one that expired mid-flight. It was imported
+    // but never registered, which left no fallback at all.
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
     // Decrypt everything persisted before the router's guards run — they, the auth
     // interceptor and the language service all read synchronously.

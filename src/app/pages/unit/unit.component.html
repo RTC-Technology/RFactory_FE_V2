@@ -1,0 +1,361 @@
+<!-- Toolbar is identical for all three panels apart from which entity it acts on. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload" let-showSearch="showSearch">
+  <div class="toolbar">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+        <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+      </svg>
+      <span>{{ i18n.t('common.add') }}</span>
+    </button>
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+      </svg>
+      <span>{{ i18n.t('common.edit') }}</span>
+    </button>
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+      <span>{{ i18n.t('common.delete') }}</span>
+    </button>
+
+    @if (showReload) {
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+    }
+
+    @if (showSearch) {
+      <input class="tool-search" type="search"
+             [placeholder]="i18n.t('common.search')" [attr.aria-label]="i18n.t('common.search')"
+             (input)="applyFilter(kind, $any($event.target).value)" />
+    }
+  </div>
+</ng-template>
+
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('unit:split-x', [40,60])" [minSizes]="[25, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('unit:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: category ─────────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('unit.category') }}</h2>
+        <span class="panel__count">{{ categories().length }}</span>
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'category', perms: perms.unitCategory, canAdd: true, hasSelection: !!selectedCategory(), showReload: true, showSearch: true }" />
+
+      <div class="table-scroll">
+        <p-table
+          #categoryTable [value]="categories()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.category" (onFilter)="onFiltered('category', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('unit.categoryCode') }}</th>
+              <th>{{ i18n.t('unit.categoryName') }}</th>
+              <th class="col-state">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedCategory()?.id === row.id"
+                (click)="selectCategory(row)" (dblclick)="openEdit('category')">
+              <td class="col-code">{{ row.unitCategoryCode }}</td>
+              <td>
+                {{ row.unitCategoryName }}
+                @if (row.description) {
+                  <span class="muted"> · {{ row.description }}</span>
+                }
+              </td>
+              <td class="col-state">
+                @if (row.isActive) {
+                  <p-tag severity="success" [value]="i18n.t('unit.active')" [rounded]="true" />
+                } @else {
+                  <span class="muted">{{ i18n.t('unit.inactive') }}</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="3"><p class="empty">{{ i18n.t('unit.empty.category') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail column: units over their conversions ──────────────────── -->
+    <ng-template #panel>
+    <p-splitter
+      class="workspace__right" layout="vertical"
+      [panelSizes]="split.sizes('unit:split-y', [50,50])" [minSizes]="[20, 20]" [gutterSize]="6"
+      (onResizeEnd)="split.save('unit:split-y', $event.sizes)"
+    >
+
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('unit.unit') }}</h2>
+        @if (selectedCategory(); as category) {
+          <span class="panel__scope">{{ i18n.t('unit.scopeOf', { name: category.unitCategoryName }) }}</span>
+          <span class="panel__count">{{ units().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'unit', perms: perms.unit, canAdd: !!selectedCategory(), hasSelection: !!selectedUnit(), showSearch: true }" />
+
+      @if (unassignedUnits() > 0) {
+        <p class="notice">{{ i18n.t('unit.unassignedNotice', { count: unassignedUnits() }) }}</p>
+      }
+
+      <div class="table-scroll">
+        <p-table
+          #unitTable [value]="units()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.unit" (onFilter)="onFiltered('unit', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('unit.code') }}</th>
+              <th>{{ i18n.t('unit.name') }}</th>
+              <th class="col-sym">{{ i18n.t('unit.symbol') }}</th>
+              <th class="col-dec">{{ i18n.t('unit.decimals') }}</th>
+              <th class="col-state">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedUnit()?.id === row.id"
+                (click)="selectUnit(row)" (dblclick)="openEdit('unit')">
+              <td class="col-code">
+                {{ row.unitCode }}
+                @if (row.isBaseUnit) {
+                  <p-tag severity="info" [value]="i18n.t('unit.baseUnitTag')" [rounded]="true" />
+                }
+              </td>
+              <td>{{ row.unitName }}</td>
+              <td class="col-sym">{{ row.symbol || '—' }}</td>
+              <td class="col-dec">{{ row.decimalPlaces ?? '—' }}</td>
+              <td class="col-state">
+                @if (row.isActive) {
+                  <p-tag severity="success" [value]="i18n.t('unit.active')" [rounded]="true" />
+                } @else {
+                  <span class="muted">{{ i18n.t('unit.inactive') }}</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="5">
+                <p class="empty">
+                  {{ selectedCategory() ? i18n.t('unit.empty.unit') : i18n.t('unit.empty.unitHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('unit.conversion') }}</h2>
+        @if (selectedUnit(); as unit) {
+          <span class="panel__scope">{{ i18n.t('unit.scopeOf', { name: unit.unitName }) }}</span>
+          <span class="panel__count">{{ conversions().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'conversion', perms: perms.unitConversion, canAdd: !!selectedUnit(), hasSelection: !!selectedConversion() }" />
+
+      <div class="table-scroll">
+        <p-table [value]="conversions()" [showGridlines]="true" class="grid">
+          <ng-template #header>
+            <tr>
+              <th class="col-unitref">{{ i18n.t('unit.to') }}</th>
+              <th class="col-num">{{ i18n.t('unit.multiply') }}</th>
+              <th class="col-num">{{ i18n.t('unit.divide') }}</th>
+              <th>{{ i18n.t('unit.factor') }}</th>
+              <th class="col-state">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedConversion()?.id === row.id"
+                (click)="selectConversion(row)" (dblclick)="openEdit('conversion')">
+              <td class="col-unitref">{{ unitLabel(row.toUnitId) || '—' }}</td>
+              <td class="col-num">{{ row.multiplyValue ?? '—' }}</td>
+              <td class="col-num">{{ row.divideValue ?? '—' }}</td>
+              <td>
+                @if (factorOf(row); as factor) {
+                  <span class="factor">
+                    {{ i18n.t('unit.preview', {
+                        from: unitLabel(selectedUnit()?.id),
+                        factor: factor | number: '1.0-6',
+                        to: unitLabel(row.toUnitId)
+                      }) }}
+                  </span>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-state">
+                @if (row.isActive) {
+                  <p-tag severity="success" [value]="i18n.t('unit.active')" [rounded]="true" />
+                } @else {
+                  <span class="muted">{{ i18n.t('unit.inactive') }}</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="5">
+                <p class="empty">
+                  {{ selectedUnit() ? i18n.t('unit.empty.conversion') : i18n.t('unit.empty.conversionHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    </p-splitter>
+    </ng-template>
+
+  </p-splitter>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '500px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    @if (dialogKind() === 'category') {
+      <div class="field">
+        <label for="uc-code">{{ i18n.t('unit.categoryCode') }} <span class="req">*</span></label>
+        <input pInputText id="uc-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="uc-name">{{ i18n.t('unit.categoryName') }} <span class="req">*</span></label>
+        <input pInputText id="uc-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="uc-desc">{{ i18n.t('unit.desc') }}</label>
+        <textarea pTextarea id="uc-desc" name="description" rows="2" [(ngModel)]="form.description"></textarea>
+      </div>
+    }
+
+    @if (dialogKind() === 'unit') {
+      <div class="field-row">
+        <div class="field">
+          <label for="u-code">{{ i18n.t('unit.code') }} <span class="req">*</span></label>
+          <input pInputText id="u-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="u-symbol">{{ i18n.t('unit.symbol') }}</label>
+          <input pInputText id="u-symbol" name="symbol" [(ngModel)]="form.symbol" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="u-name">{{ i18n.t('unit.name') }} <span class="req">*</span></label>
+        <input pInputText id="u-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="u-dec">{{ i18n.t('unit.decimals') }}</label>
+        <input pInputText type="number" min="0" max="6" id="u-dec" name="decimalPlaces"
+               [(ngModel)]="form.decimalPlaces" />
+      </div>
+
+      <div class="field field--inline">
+        <p-toggleswitch inputId="u-base" [(ngModel)]="form.isBaseUnit" />
+        <div>
+          <label for="u-base">{{ i18n.t('unit.baseUnit') }}</label>
+          <small class="hint">{{ i18n.t('unit.baseUnitHint') }}</small>
+        </div>
+      </div>
+
+      @if (selectedCategory(); as category) {
+        <p class="form__scope">{{ i18n.t('unit.scope.unit', { name: category.unitCategoryName }) }}</p>
+      }
+    }
+
+    @if (dialogKind() === 'conversion') {
+      <div class="field">
+        <label for="c-to">{{ i18n.t('unit.to') }} <span class="req">*</span></label>
+        <p-select inputId="c-to" [options]="toUnitOptions()" optionLabel="label" optionValue="value"
+                  [(ngModel)]="form.toUnitId" (ngModelChange)="onRatioChange()"
+                  [filter]="true" filterBy="label" appendTo="body" class="w-full" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="c-mul">{{ i18n.t('unit.multiply') }}</label>
+          <input pInputText type="number" step="any" id="c-mul" name="multiplyValue"
+                 [(ngModel)]="form.multiplyValue" (ngModelChange)="onRatioChange()" />
+        </div>
+        <div class="field">
+          <label for="c-div">{{ i18n.t('unit.divide') }}</label>
+          <input pInputText type="number" step="any" id="c-div" name="divideValue"
+                 [(ngModel)]="form.divideValue" (ngModelChange)="onRatioChange()" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="c-formula">{{ i18n.t('unit.formula') }}</label>
+        <p-select inputId="c-formula" [options]="formulaOptions()" optionLabel="label" optionValue="value"
+                  [(ngModel)]="form.formulaType" (ngModelChange)="onRatioChange()"
+                  appendTo="body" class="w-full" />
+      </div>
+
+      @if (conversionPreview(); as preview) {
+        <p class="preview">
+          {{ i18n.t('unit.preview', {
+              from: preview.from, factor: preview.factor | number: '1.0-6', to: preview.to
+            }) }}
+        </p>
+      }
+
+      @if (selectedUnit(); as unit) {
+        <p class="form__scope">{{ i18n.t('unit.scope.conversion', { name: unit.unitName }) }}</p>
+      }
+    }
+
+    <div class="field field--inline">
+      <p-toggleswitch inputId="u-active" [(ngModel)]="form.isActive" />
+      <label for="u-active">{{ i18n.t('unit.activeField') }}</label>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

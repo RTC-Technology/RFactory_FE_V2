@@ -4,7 +4,7 @@ import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
 
 /**
  * Renders a menu/tab icon from either form `MenuItem.icon`/`Tab.icon` can hold:
- * a path/URL ("/assets/icons/x.svg", "https://…") → `<img>`, or inline SVG
+ * a path/URL ("/icons/x.svg", "https://…") → `<img>`, or inline SVG
  * markup ("<svg …>…</svg>") → sanitized innerHTML. Detected by whether the
  * value starts with '<' — good enough since nothing else legitimately does.
  *

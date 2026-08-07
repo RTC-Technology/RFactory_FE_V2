@@ -5,16 +5,18 @@ import { SecureStorageService } from './secure-storage.service';
 interface StoredSession {
   user: AuthUser | null;
   accessToken: string | null;
-  refreshToken: string | null;
 }
 
 const STORAGE_KEY = 'auth:session';
-const EMPTY_SESSION: StoredSession = { user: null, accessToken: null, refreshToken: null };
+const EMPTY_SESSION: StoredSession = { user: null, accessToken: null };
 
 /**
  * The signed-in session. Persistence, encryption and the synchronous read path all live
  * in SecureStorageService, which is initialised before the router runs — guards and the
  * auth interceptor read this synchronously and cannot await a decrypt.
+ *
+ * Holds no refresh token: that one is an httpOnly cookie, deliberately out of reach of
+ * this code. Only the short-lived access token is kept here.
  */
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
@@ -28,10 +30,6 @@ export class TokenStorageService {
     return this._session.accessToken;
   }
 
-  getRefreshToken(): string | null {
-    return this._session.refreshToken;
-  }
-
   getUser(): AuthUser | null {
     return this._session.user;
   }
@@ -40,7 +38,6 @@ export class TokenStorageService {
     this.storage.set(STORAGE_KEY, {
       user,
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
     } satisfies StoredSession);
   }
 

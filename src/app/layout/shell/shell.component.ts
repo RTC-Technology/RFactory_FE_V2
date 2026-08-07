@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -15,7 +15,7 @@ import { I18nService } from '../../core/services/i18n.service';
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
-export class ShellComponent implements OnInit {
+export class ShellComponent implements OnInit, OnDestroy {
   private readonly tabService = inject(TabService);
   private readonly menuService = inject(MenuService);
   readonly i18n = inject(I18nService);
@@ -32,5 +32,16 @@ export class ShellComponent implements OnInit {
       next: () => this.tabService.applyMenuLabels(),
       error: () => {},
     });
+  }
+
+  /**
+   * Rời khỏi shell chỉ xảy ra khi phiên kết thúc — /login là route duy nhất nằm ngoài nó.
+   * Menu và thanh tab đều nằm trong service singleton nên chúng sống dai hơn component
+   * này; dọn ở đây để lần đăng nhập sau bắt đầu từ trạng thái trắng thay vì thừa hưởng
+   * tab và menu của người vừa đăng xuất.
+   */
+  ngOnDestroy(): void {
+    this.tabService.reset();
+    this.menuService.clear();
   }
 }

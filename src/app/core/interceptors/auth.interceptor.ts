@@ -6,6 +6,16 @@ import { TokenStorageService } from '../services/token-storage.service';
 import { isAuthEndpoint } from '../services/auth-api.service';
 import { isJwtExpired } from '../utils/jwt.util';
 
+/**
+ * How early a token counts as spent.
+ *
+ * Wide enough to cover the round trip plus clock drift between browser and server: a
+ * request that leaves with three seconds of validity left can easily arrive after the
+ * token has died. Access tokens last 30 minutes, so spending the last minute of each one
+ * costs nothing.
+ */
+const REFRESH_SKEW_SECONDS = 60;
+
 /** Attaches the bearer access token to outgoing requests, proactively refreshing it first if it's about to expire. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (isAuthEndpoint(req.url)) return next(req);
@@ -14,7 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = tokenStorage.getAccessToken();
   if (!token) return next(req);
 
-  if (!isJwtExpired(token, 5)) {
+  if (!isJwtExpired(token, REFRESH_SKEW_SECONDS)) {
     return next(withAuthHeader(req, token));
   }
 

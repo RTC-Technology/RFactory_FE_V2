@@ -24,9 +24,16 @@ export class TabReuseStrategy implements RouteReuseStrategy {
    * chuyển tab, nên route nằm ngoài hệ thống tab không được vào: /login từng bị cache
    * lại nguyên trạng đang-submit, và lần đăng xuất kế tiếp attach lại đúng instance đó
    * với nút bấm vẫn khoá.
+   *
+   * Và trừ chính ShellComponent. Nó là layout bọc ngoài, không chiếm segment URL nào
+   * nên `_getKey()` trả về chuỗi rỗng — cache nó lại là sai ở hai điểm: rời sang
+   * /login thì shell bị *detach* chứ không destroy, quay lại thì router attach lại
+   * đúng instance cũ nên `ngOnInit` không chạy lần hai và menu không bao giờ được
+   * tải lại; tệ hơn, toàn bộ cây component (kèm dữ liệu của người dùng trước) sống
+   * sót qua một lượt đăng xuất — đăng nhập bằng tài khoản khác vẫn thấy màn hình cũ.
    */
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
-    return route.data['reuse'] !== false && !!route.component;
+    return route.data['reuse'] !== false && !!route.component && this._getKey(route) !== '';
   }
 
   /**

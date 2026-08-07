@@ -21,7 +21,7 @@ import { Lang } from '../../core/i18n/translations';
           <h3>{{ i18n.t('settings.general') }}</h3>
           <div class="form-group">
             <label>{{ i18n.t('settings.appName') }}</label>
-            <input class="form-input" value="AdminSPA"/>
+            <input class="form-input" value="RFactory MES"/>
           </div>
           <div class="form-group">
             <label>{{ i18n.t('settings.theme') }}</label>

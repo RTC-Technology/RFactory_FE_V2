@@ -115,6 +115,19 @@ export class MenuService {
     );
   }
 
+  /**
+   * Quên cây menu của phiên vừa kết thúc.
+   *
+   * Service là singleton, sống lâu hơn shell. Không dọn thì tài khoản kế tiếp nhìn thấy
+   * menu của tài khoản trước trong khoảnh khắc giữa lúc sidebar render và lúc
+   * GET /api/auth/menus trả về — mà nếu request đó hỏng thì "khoảnh khắc" ấy là vĩnh viễn.
+   */
+  clear(): void {
+    this._items.set([]);
+    this._catalogue.set([]);
+    this._error.set(null);
+  }
+
   /** Loads the full catalogue for the Menu Manager. */
   loadCatalogue(): Observable<MenuItem[]> {
     this._catalogueLoading.set(true);

@@ -60,6 +60,39 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'units',
+        loadComponent: () =>
+          import('./pages/unit/unit.component').then(m => m.UnitComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.unitCategory.view, PERMISSIONS.unit.view, PERMISSIONS.unitConversion.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
+      {
+        path: 'product-types',
+        loadComponent: () =>
+          import('./pages/product-type/product-type.component').then(m => m.ProductTypeComponent),
+        canActivate: [permissionGuard],
+        data: { permissions: [PERMISSIONS.productType.view] },
+      },
+      {
+        // Reads types and units to label and pick, plus BOMs and their lines.
+        path: 'products',
+        loadComponent: () =>
+          import('./pages/product/product.component').then(m => m.ProductComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.product.view, PERMISSIONS.productType.view, PERMISSIONS.unit.view,
+            PERMISSIONS.bom.view, PERMISSIONS.bomDetail.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
+      {
         path: 'shifts',
         loadComponent: () =>
           import('./pages/shift/shift.component').then(m => m.ShiftComponent),

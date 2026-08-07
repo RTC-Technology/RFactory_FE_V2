@@ -27,9 +27,9 @@ export function isAuthEndpoint(url: string): boolean {
   return BYPASS_INTERCEPTOR_PATHS.includes(path);
 }
 
+/** Mirrors AuthTokenResponse — no refresh token by design; see AuthController. */
 interface AuthResponseDto {
   accessToken: string;
-  refreshToken: string;
   expiresAt: string;
 }
 
@@ -50,14 +50,17 @@ function toAuthUser(profile: UserProfileDto): AuthUser {
 }
 
 function toAuthTokens(dto: AuthResponseDto): AuthTokens {
-  return { accessToken: dto.accessToken, refreshToken: dto.refreshToken };
+  return { accessToken: dto.accessToken };
 }
 
 /**
- * Real backend calls for RFactory.API's /api/auth endpoints. login()/refresh()
- * only return a token pair — the user profile is fetched right after (using the
- * fresh access token) via GET /api/auth/me so AuthService gets a full AuthSession
- * in one call, same shape the old mock returned.
+ * Real backend calls for RFactory.API's /api/auth endpoints. login()/refresh() return an
+ * access token only — the user profile is fetched right after (using the fresh access
+ * token) via GET /api/auth/me so AuthService gets a full AuthSession in one call.
+ *
+ * These three endpoints are the only ones sent `withCredentials`, which is what makes the
+ * browser attach and accept the refresh cookie. Everything else stays credential-free, so
+ * the cookie is never carried to endpoints that have no business seeing it.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
@@ -68,18 +71,22 @@ export class AuthApiService {
       .post<ApiResponse<AuthResponseDto>>(`${AUTH_API_BASE}/login`, {
         loginName: credentials.username,
         password: credentials.password,
-      })
+      }, { withCredentials: true })
       .pipe(switchMap(res => this._withProfile(res.data)));
   }
 
-  refresh(refreshToken: string): Observable<AuthSession> {
+  /** Takes no argument: the token travels in the cookie, out of reach of this code. */
+  refresh(): Observable<AuthSession> {
     return this.http
-      .post<ApiResponse<AuthResponseDto>>(`${AUTH_API_BASE}/refresh-token`, { refreshToken })
+      .post<ApiResponse<AuthResponseDto>>(`${AUTH_API_BASE}/refresh-token`, {}, { withCredentials: true })
       .pipe(switchMap(res => this._withProfile(res.data)));
   }
 
+  /** Credentialed so the server can expire the cookie in its response. */
   logout(): void {
-    this.http.post<ApiResponse<unknown>>(`${AUTH_API_BASE}/logout`, {}).subscribe({ error: () => {} });
+    this.http
+      .post<ApiResponse<unknown>>(`${AUTH_API_BASE}/logout`, {}, { withCredentials: true })
+      .subscribe({ error: () => {} });
   }
 
   /** Fetches the profile using the just-issued access token, then pairs it with the tokens. */

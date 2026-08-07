@@ -43,15 +43,19 @@ export class I18nService {
    * An unknown key returns itself — loud enough to spot in review, quiet enough
    * not to break a screen over a missing string.
    */
-  t(key: string, params?: Record<string, string | number>): string {
+  t(key: string, params?: Record<string, string | number | null | undefined>): string {
     const entry = TRANSLATIONS[key];
     if (!entry) return key;
 
     const text = entry[this._lang()] ?? key;
     if (!params) return text;
 
-    return text.replace(/\{(\w+)\}/g, (match, name: string) =>
-      name in params ? String(params[name]) : match);
+    return text.replace(/\{(\w+)\}/g, (match, name: string) => {
+      if (!(name in params)) return match;
+      // Angular's number/date pipes return `string | null`, so a null here means the
+      // value could not be formatted — render nothing rather than the word "null".
+      return params[name] == null ? '' : String(params[name]);
+    });
   }
 
   private _restore(): Lang {

@@ -15,18 +15,7 @@ import { I18nService } from '../../core/services/i18n.service';
     <div class="login-shell">
       <div class="login-card">
         <div class="login-brand">
-          <div class="login-brand__icon">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="32" height="32" rx="8" fill="url(#lg)"/>
-              <path d="M8 16l6 6 10-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <span class="login-brand__text">AdminSPA</span>
+          <img class="login-brand__logo" src="logo/login-logo.png" alt="RFactory MES" />
         </div>
 
         <h1 class="login-title">{{ i18n.t('login.title') }}</h1>
@@ -72,10 +61,10 @@ import { I18nService } from '../../core/services/i18n.service';
       backdrop-filter: blur(20px);
       animation: fadeUp .3s ease;
     }
-    .login-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
-    .login-brand__icon { width: 28px; height: 28px; flex-shrink: 0; }
-    .login-brand__icon svg { width: 100%; height: 100%; }
-    .login-brand__text { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; }
+    .login-brand { display: flex; justify-content: center; margin-bottom: 24px; }
+    /* Width-bound: the source is 1200px wide, so height follows the aspect ratio and the
+       browser downscales once rather than the layout guessing. */
+    .login-brand__logo { width: 190px; height: auto; max-width: 100%; }
     .login-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
     .login-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; }
     .login-error {

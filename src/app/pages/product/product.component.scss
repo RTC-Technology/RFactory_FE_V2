@@ -1,0 +1,36 @@
+/* Master-detail three deep: products on the left, the selected product's BOMs top right,
+   and the selected BOM's components below them. */
+
+@use '../../shared/styles/master-detail';
+
+.col-type    { width: 150px; }
+.col-unit    { width: 80px;  text-align: center; }
+.col-state   { width: 110px; }
+.col-version { width: 100px; text-align: center; }
+.col-qty     { width: 110px; text-align: right; }
+
+/* Scopes the whole list rather than acting on a row, so it lives in the panel header. */
+.type-filter {
+  margin-left: 8px;
+  min-width: 0;
+  max-width: 200px;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+  > .field { flex: 1; min-width: 0; }
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  label { margin: 0; }
+}
+
+:host ::ng-deep .type-filter .p-select {
+  height: 26px;
+  font-size: 12px;
+  .p-select-label { padding-block: 2px; }
+}

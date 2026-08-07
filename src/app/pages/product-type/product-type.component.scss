@@ -1,0 +1,25 @@
+/* Single-panel declaration screen. Reuses the shared master-detail chrome so it sits
+   beside the other declaration screens without a second look. */
+
+@use '../../shared/styles/master-detail';
+
+/* No splitter here — the one panel takes the whole page. */
+.page > .panel { flex: 1; min-height: 0; }
+
+.col-order { width: 80px;  text-align: center; }
+.col-desc  { width: 280px; }
+.col-state { width: 130px; }
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  label { margin: 0; }
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 13px;
+}
