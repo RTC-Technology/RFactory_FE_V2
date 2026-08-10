@@ -100,26 +100,26 @@
 
     <div class="field">
       <label for="pt-code">{{ i18n.t('ptype.code') }} <span class="req">*</span></label>
-      <input pInputText id="pt-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+      <input pInputText id="pt-code" name="code" [(ngModel)]="form.receiptNo" autocomplete="off" />
     </div>
 
     <div class="field">
       <label for="pt-name">{{ i18n.t('ptype.name') }} <span class="req">*</span></label>
-      <input pInputText id="pt-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+      <input pInputText id="pt-name" name="name" [(ngModel)]="form.warehouseId" autocomplete="off" />
     </div>
 
     <div class="field">
       <label for="pt-desc">{{ i18n.t('ptype.desc') }}</label>
-      <textarea pTextarea id="pt-desc" name="description" rows="3" [(ngModel)]="form.description"></textarea>
+      <textarea pTextarea id="pt-desc" name="description" rows="3" [(ngModel)]="form.supplierId"></textarea>
     </div>
 
     <div class="field">
       <label for="pt-order">{{ i18n.t('ptype.order') }}</label>
-      <input pInputText type="number" min="0" id="pt-order" name="sortOrder" [(ngModel)]="form.sortOrder" />
+      <input pInputText type="number" min="0" id="pt-order" name="sortOrder" [(ngModel)]="form.receiptType" />
     </div>
 
     <div class="field field--inline">
-      <p-toggleswitch inputId="pt-active" [(ngModel)]="form.isActive" />
+      <p-toggleswitch inputId="pt-active" [(ngModel)]="form.referenceId" />
       <label for="pt-active">{{ i18n.t('ptype.activeField') }}</label>
     </div>
   </div>

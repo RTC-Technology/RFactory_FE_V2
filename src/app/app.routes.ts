@@ -156,6 +156,17 @@ export const routes: Routes = [
         },
       },
 
+
+      {
+        path: 'goods-receipt',
+        loadComponent: () =>
+          import('./pages/goods-receipt/goods-receipt.component').then(m => m.GoodsReceiptComponent),
+        canActivate: [permissionGuard],
+        data: { permissions: [PERMISSIONS.productType.view] },
+      },
+
+
+
       {
         path: 'forbidden',
         loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
