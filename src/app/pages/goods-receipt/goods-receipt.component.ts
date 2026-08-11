@@ -12,7 +12,9 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { I18nService } from '../../core/services/i18n.service';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { GoodsReceiptApiService, GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-api.service';
-import { GOODS_RECEIPT_TYPES, GoodsReceiptDetailDto, GoodsReceiptDto } from '../../domain/models/goods-receipt.model';
+import {
+  GOODS_RECEIPT_TYPES, GoodsReceiptDetailDto, GoodsReceiptDto, GoodsReceiptRequest,
+} from '../../domain/models/goods-receipt.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,10 +28,10 @@ import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
 
 type EntityKind = 'goodsReceipt' | 'goodsReceiptDetail';
-const LABEL_KEYS: Record<EntityKind, string> = {
-  goodsReceipt: 'goodsReceipt.lower',
-  goodsReceiptDetail: 'goodsReceiptDetail.lower',
-};
+
+/** `<input type="datetime-local">` accepts nothing else — a space instead of the `T` and
+ *  the browser silently blanks the field, which used to leave the date box empty. */
+const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
 
 
 @Component({
@@ -38,7 +40,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   imports: [
     CommonModule, FormsModule,
     TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
-    InputTextModule, SelectModule, TagModule, ToggleSwitchModule,
+    InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
     HasPermissionDirective, PanelModule, CardModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -57,11 +59,8 @@ export class GoodsReceiptComponent implements OnInit {
   readonly split = inject(SplitStateService);
 
   readonly perms = PERMISSIONS;
-  // readonly statusOf = productStatusOf;
-  // readonly requiredQty = requiredQuantity;
 
   readonly loading = computed(() => this.goodsReceiptApi.loading() || this.goodsReceiptDetailApi.loading());
-  private _tempDetailId = 0;
 
   /** Ordered the way the product screen's type picker will show them. */
   readonly types = computed(() =>
@@ -71,10 +70,6 @@ export class GoodsReceiptComponent implements OnInit {
 
 
   // ─── Lookups ────────────────────────────────────────────────────────────────
-
-  // typeName(id?: number | null): string {
-  //   return this.typeApi.items().find(t => t.id === id)?.productTypeName ?? '';
-  // }
 
   unitLabel(id?: number | null): string {
     const unit = this.unitApi.items().find(u => u.id === id);
@@ -86,37 +81,19 @@ export class GoodsReceiptComponent implements OnInit {
     return product ? `${product.productCode} · ${product.productName}` : '';
   }
 
-  /** Only active types can be picked; inactive ones stay visible on rows that already use them. */
-  // readonly typeOptions = computed(() => [
-  //   { label: this.i18n.t('product.noType'), value: null },
-  //   ...this.typeApi.items()
-  //     .filter(t => t.isActive)
-  //     .sort((a, b) => (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER))
-  //     .map(t => ({ label: `${t.productTypeCode} · ${t.productTypeName}`, value: t.id })),
-  // ]);
-
-  readonly unitOptions = computed(() => [
-    { label: this.i18n.t('product.status.unset'), value: null },
-    ...this.unitApi.items()
+  readonly unitOptions = computed(() =>
+    this.unitApi.items()
       .filter(u => u.isActive)
-      .map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })),
-  ]);
+      .map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })));
 
-  readonly productOptions = computed(() => [
-    { label: 'Chọn sản phẩm', value: null },
-    ...this.productApi.items().map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })),
-  ]);
+  /** Feeds the per-row picker in the detail grid — `filterBy` searches both code and name,
+   *  so the label carries the two fields an operator types. */
+  readonly productOptions = computed(() =>
+    this.productApi.items()
+      .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
 
   readonly typeOptions = computed(() =>
     GOODS_RECEIPT_TYPES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
-
-  /** Every product except the one the BOM builds — see `_validate` for why. */
-  // readonly componentOptions = computed(() => {
-  //   const ownerId = this.selectedProduct()?.id;
-  //   return this.productApi.items()
-  //     .filter(p => p.id !== ownerId)
-  //     .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id }));
-  // });
 
   // ─── Selection ──────────────────────────────────────────────────────────────
 
@@ -139,19 +116,7 @@ export class GoodsReceiptComponent implements OnInit {
     return this.goodsReceiptDetailApi.items().filter(b => b.goodsReceiptId === receiptId);
   });
 
-  readonly dialogReceiptDetail = computed(() => {
-    const existing = this.editingId() == null
-      ? []
-      : (() => {
-        const receiptId = this.selectedReceipt()?.id;
-        return receiptId == null ? [] : this.goodsReceiptDetailApi.items().filter(b => b.goodsReceiptId === receiptId);
-      })();
-
-    return [...existing, ...this.dialogDraftDetails()];
-  });
-
-
-  /** BOMs the backend holds with no product. No panel here can reach them. */
+  /** Receipts the backend holds with no id. No panel here can reach them. */
   readonly unassignedReceipts = computed(() =>
     this.goodsReceiptApi.items().filter(b => b.id == null).length);
 
@@ -165,9 +130,6 @@ export class GoodsReceiptComponent implements OnInit {
       const details = this.receiptDetail();
       untracked(() => this.selectedDetail.set(this._reconcile(this.selectedDetail(), details)));
     });
-    // Narrowing the type filter can hide the selected product, which would leave the BOM
-    // panels driven from off-screen.
-
   }
 
   ngOnInit(): void {
@@ -175,9 +137,13 @@ export class GoodsReceiptComponent implements OnInit {
   }
 
   reload(): void {
+    // Products and units are not just labels here — the detail grid's row pickers are
+    // driven from them, so an empty list would leave every line unfillable.
     forkJoin({
       receipt: this.goodsReceiptApi.load(),
       details: this.goodsReceiptDetailApi.load(),
+      products: this.productApi.load(),
+      units: this.unitApi.load(),
     }).subscribe({
       error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
     });
@@ -223,28 +189,41 @@ export class GoodsReceiptComponent implements OnInit {
   readonly editingId = signal<number | null>(null);
   readonly saving = signal(false);
   readonly formError = signal('');
-  readonly dialogDraftDetails = signal<GoodsReceiptDetailDto[]>([]);
   form = this._emptyForm();
-  detailForm = this._emptyDetailForm();
 
-  penCreate(): void {
-    this.editingId.set(null);
-    this.formError.set('');
-    this.form = { ...this._emptyForm(), receiptNo: this._nextReceiptNo() };
-    this.dialogOpen.set(true);
-  }
+  /**
+   * Working copy of the receipt's lines while the dialog is open. Editing happens in the
+   * grid itself, so these must be clones — binding straight to `goodsReceiptDetailApi.items()`
+   * would rewrite the service's cache before anything reached the server, and cancelling
+   * would leave the page showing edits that were never saved.
+   *
+   * Lines the operator adds get a negative id so the grid can key them apart; `_saveReceipt`
+   * sends those as 0, which the backend reads as "new".
+   */
+  readonly detailRows = signal<GoodsReceiptDetailDto[]>([]);
+  private _tempDetailId = 0;
 
   readonly dialogTitle = computed(() =>
     this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
-      entity: this.i18n.t('ptype.lower'),
+      entity: this.i18n.t('goodsReceipt.lower'),
     }));
+
+  /**
+   * Running total of the lines — the number the operator checks against the delivery note.
+   * A method rather than a `computed`: the grid edits row objects in place so the array
+   * identity never changes, and rebuilding it on every keystroke would re-render the rows
+   * and pull focus out of the cell being typed into.
+   */
+  detailTotal(): number {
+    return this.detailRows().reduce((sum, row) => sum + (row.receivedQty ?? 0) * (row.unitPrice ?? 0), 0);
+  }
 
   openCreate(): void {
     this.editingId.set(null);
     this.formError.set('');
-    this.dialogDraftDetails.set([]);
-    this.detailForm = this._emptyDetailForm();
     this.form = { ...this._emptyForm(), receiptNo: this._nextReceiptNo() };
+    // A receipt with no line is meaningless, so start the operator on one.
+    this.detailRows.set([this._emptyDetailRow()]);
     this.dialogOpen.set(true);
   }
 
@@ -256,66 +235,55 @@ export class GoodsReceiptComponent implements OnInit {
     this.form = {
       receiptNo: row.receiptNo ?? '',
       warehouseId: row.warehouseId ?? 0,
-      supplierId: row.supplierId ?? 0,
+      supplierId: row.supplierId ?? null,
       referenceType: row.referenceType?.trim() ?? '',
-      referenceId: row.referenceId ?? 0,
-      receiptDate: row.receiptDate,
+      referenceId: row.referenceId ?? null,
+      receiptDate: this._toLocalInput(row.receiptDate),
       remark: row.remark?.trim() || '',
-      receiptType: row.receiptType ?? 0,
+      receiptType: row.receiptType ?? 1,
+      // Carried untouched: the backend maps the whole payload onto the entity, so leaving
+      // these out of the PUT would blank the approval and posting trail.
+      approvedBy: row.approvedBy ?? null,
+      approvedDate: row.approvedDate ?? null,
+      postedBy: row.postedBy ?? null,
+      postedDate: row.postedDate ?? null,
     };
-    this.dialogDraftDetails.set([]);
-    this.detailForm = this._emptyDetailForm();
+    this.detailRows.set(
+      this.goodsReceiptDetailApi.items()
+        .filter(d => d.goodsReceiptId === row.id)
+        .map(d => ({ ...d })));
     this.dialogOpen.set(true);
   }
 
-  // save(): void {
-  //   const code = this.form.receiptNo.trim();
-  //   // const name = this.form.name.trim();
-  //   if (!code) { this.formError.set(this.i18n.t('plant.err.codeRequired')); return; }
-  //   // if (!name) { this.formError.set(this.i18n.t('plant.err.nameRequired')); return; }
+  // ─── Detail grid ────────────────────────────────────────────────────────────
 
-  //   const clash = this.types().find(
-  //     t => t.receiptNo.toLowerCase() === code.toLowerCase() && t.id !== this.editingId(),
-  //   );
-  //   if (clash) { this.formError.set(this.i18n.t('plant.err.codeTaken', { code })); return; }
+  addDetailRow(): void {
+    this.detailRows.update(rows => [...rows, this._emptyDetailRow()]);
+  }
 
-  //   this.saving.set(true);
-  //   this.formError.set('');
+  removeDetailRow(row: GoodsReceiptDetailDto): void {
+    // No bookkeeping for lines the server already stores: the save sends the whole set and
+    // the backend deletes whatever is missing from it.
+    this.detailRows.update(rows => rows.filter(r => r !== row));
+  }
 
-  //   const id = this.editingId();
+  /** Picking a product pulls in its default unit; the operator can still override it. */
+  onDetailProductChange(row: GoodsReceiptDetailDto, productId: number | null): void {
+    row.productId = productId ?? 0;
+    const product = this.productApi.items().find(p => p.id === productId);
+    row.unitId = product?.defaultUnitId ?? row.unitId;
+  }
 
-  //   const body = {
-  //     receiptNo: this.form.receiptNo,
-  //     warehouseId: this.form.warehouseId,
-  //     supplierId: this.form.supplierId,
-  //     referenceType: this.form.referenceType?.trim() || null,
-  //     referenceId: this.form.referenceId,
-  //     receiptDate: this.form.receiptDate,
-  //     remark: this.form.remark?.trim() || null,
-  //     receiptType: 1,
-  //   };
-  //   const request: Observable<unknown> = id ? this.goodsReceiptApi.update(id, body) : this.goodsReceiptApi.create(body);
+  /** Received quantity tracks the ordered one until someone edits it apart. */
+  onDetailQuantityChange(row: GoodsReceiptDetailDto, quantity: number | null): void {
+    const next = quantity ?? 0;
+    if (row.receivedQty === row.quantity) row.receivedQty = next;
+    row.quantity = next;
+  }
 
-  //   request.subscribe({
-  //     next: () => {
-  //       this.saving.set(false);
-  //       this.dialogOpen.set(false);
-  //       this.reload();
-  //       this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
-  //         entity: this.i18n.t('ptype.lower'),
-  //       }));
-  //     },
-  //     error: (err: HttpErrorResponse) => {
-  //       this.saving.set(false);
-  //       this.formError.set(err.error?.message
-  //         || this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('ptype.lower') }));
-  //     },
-  //   });
-  // }
 
   save(): void {
-    // const kind = this.dialogKind();
-    const error = this._validate();
+    const error = this._validate() || this._validateDetails();
     if (error) {
       this.formError.set(error);
       return;
@@ -325,15 +293,10 @@ export class GoodsReceiptComponent implements OnInit {
     this.formError.set('');
 
     const id = this.editingId();
-    const request = this._buildRequest(id);
-    if (!request) {
-      this.saving.set(false);
-      return;
-    }
 
-    // console.log('dialogReceiptDetail:', this.dialogReceiptDetail());
-
-    request.subscribe({
+    // One call carrying the header and every line: the backend writes them in a single
+    // transaction, so a rejected line cannot leave a receipt behind.
+    this._saveReceipt(id).subscribe({
       next: () => {
         this.saving.set(false);
         this.dialogOpen.set(false);
@@ -378,20 +341,23 @@ export class GoodsReceiptComponent implements OnInit {
     return {
       receiptNo: '',
       warehouseId: 0,
-      supplierId: 0,
+      supplierId: null as number | null,
       referenceType: '',
-      referenceId: 0,
-      receiptDate: formatDate(new Date(), 'yyyy-MM-dd HH:mm', 'en-US'),
+      referenceId: null as number | null,
+      receiptDate: formatDate(new Date(), DATETIME_LOCAL, 'en-US'),
       remark: '',
-      receiptType: 1
+      receiptType: 1,
+      approvedBy: null as number | null,
+      approvedDate: null as string | null,
+      postedBy: null as number | null,
+      postedDate: null as string | null,
     };
-
   }
 
-  private _emptyDetailForm() {
+  private _emptyDetailRow(): GoodsReceiptDetailDto {
     return {
-      id: this._tempDetailId--,
-      goodsReceiptId: this.selectedReceipt()?.id ?? 0,
+      id: --this._tempDetailId,
+      goodsReceiptId: this.editingId() ?? 0,
       productId: 0,
       unitId: 0,
       locationId: null,
@@ -404,11 +370,16 @@ export class GoodsReceiptComponent implements OnInit {
     };
   }
 
+  /** The backend sends an ISO string with seconds and an offset; the input wants neither. */
+  private _toLocalInput(value: string | null | undefined): string {
+    if (!value) return '';
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? '' : formatDate(date, DATETIME_LOCAL, 'en-US');
+  }
 
   private _nextReceiptNo(): string {
     const prefix = 'GD';
 
-    // const now = new Date();
     const datePart = formatDate(new Date(), 'yyyyMMdd', 'en-US');
     const prefixWithDate = `${prefix}_${datePart}_`;
 
@@ -416,7 +387,6 @@ export class GoodsReceiptComponent implements OnInit {
       r.receiptNo.startsWith(prefixWithDate),
     );
 
-    // console.log('existing:', existing);
     let stt = 1;
 
     if (existing.length > 0) {
@@ -429,8 +399,6 @@ export class GoodsReceiptComponent implements OnInit {
           return match ? Number(match[1]) : 0;
         })
         .filter(n => n > 0);
-
-      // console.log('numbers:', numbers);
 
       if (numbers.length > 0) {
         stt = Math.max(...numbers) + 1;
@@ -447,10 +415,6 @@ export class GoodsReceiptComponent implements OnInit {
     if (!receiptNo) {
       return this.i18n.t('goodsReceipt.err.receiptNoRequired');
     }
-
-    // if (!this.form.warehouseId) {
-    //   return this.i18n.t('goodsReceipt.err.warehouseIdRequired');
-    // }
 
     if (!this.form.receiptDate) {
       return this.i18n.t('goodsReceipt.err.receiptDateRequired');
@@ -472,16 +436,55 @@ export class GoodsReceiptComponent implements OnInit {
       : '';
   }
 
-  private _buildRequest(id: number | null): Observable<unknown> | null {
-    const body = {
-      receiptNo: this.form.receiptNo,
+  /** Reports the first bad line by its position — the operator reads the grid by row, not by id. */
+  private _validateDetails(): string {
+    const rows = this.detailRows();
+    if (rows.length === 0) return this.i18n.t('goodsReceiptDetail.err.linesRequired');
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const line = i + 1;
+
+      if (!row.productId) return this.i18n.t('goodsReceiptDetail.err.productRequired', { line });
+      if (!row.unitId) return this.i18n.t('goodsReceiptDetail.err.unitRequired', { line });
+      if (!(row.quantity > 0)) return this.i18n.t('goodsReceiptDetail.err.quantityRequired', { line });
+      if (row.receivedQty == null || row.receivedQty < 0) {
+        return this.i18n.t('goodsReceiptDetail.err.receivedQtyInvalid', { line });
+      }
+    }
+
+    return '';
+  }
+
+  private _saveReceipt(id: number | null): Observable<GoodsReceiptDto> {
+    const body: GoodsReceiptRequest = {
+      receiptNo: this.form.receiptNo.trim(),
       warehouseId: this.form.warehouseId,
       supplierId: this.form.supplierId,
       referenceType: this.form.referenceType?.trim() || null,
       referenceId: this.form.referenceId,
       receiptDate: this.form.receiptDate,
       remark: this.form.remark?.trim() || null,
+      approvedBy: this.form.approvedBy,
+      approvedDate: this.form.approvedDate,
+      postedBy: this.form.postedBy,
+      postedDate: this.form.postedDate,
       receiptType: this.form.receiptType ?? 1,
+      // The whole line set every time: the backend replaces what it holds, which is how a
+      // line the operator removed from the grid gets deleted.
+      goodsReceiptDetails: this.detailRows().map(row => ({
+        // Drafts carry a negative id so the grid can key them; the server reads 0 as "new".
+        id: row.id > 0 ? row.id : 0,
+        productId: row.productId,
+        unitId: row.unitId,
+        locationId: row.locationId ?? null,
+        lotNo: row.lotNo?.trim() || null,
+        serialNo: row.serialNo?.trim() || null,
+        quantity: row.quantity,
+        receivedQty: row.receivedQty,
+        unitPrice: row.unitPrice ?? null,
+        remark: row.remark?.trim() || null,
+      })),
     };
     return id ? this.goodsReceiptApi.update(id, body) : this.goodsReceiptApi.create(body);
   }
@@ -502,12 +505,5 @@ export class GoodsReceiptComponent implements OnInit {
       detail: err?.error?.message || detail,
       life: 4500,
     });
-  }
-
-  addDetail(): void {
-    this.dialogDraftDetails.update(details => [
-      ...details,
-      this._emptyDetailForm(),
-    ]);
   }
 }

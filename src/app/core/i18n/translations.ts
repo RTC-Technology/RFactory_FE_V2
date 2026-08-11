@@ -669,4 +669,33 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'goodsReceiptDetail.emptyLine': { vi: 'Phiếu nhập này chưa có thành phần nào.', en: 'This goods receipt has no details yet.' },
   'goodsReceiptDetail.emptyLineHint': { vi: 'Chọn một phiếu nhập ở panel phía trên.', en: 'Pick a goods receipt in the panel above.' },
 
+  'goodsReceiptDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+  'goodsReceiptDetail.removeLine': { vi: 'Xoá dòng', en: 'Remove line' },
+  'goodsReceiptDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+  'goodsReceiptDetail.selectProduct': { vi: 'Chọn sản phẩm…', en: 'Pick a product…' },
+  'goodsReceiptDetail.selectUnit': { vi: 'Chọn ĐVT…', en: 'Pick a unit…' },
+  'goodsReceiptDetail.noProduct': { vi: 'Không tìm thấy sản phẩm.', en: 'No product found.' },
+  'goodsReceiptDetail.total': { vi: 'Tổng tiền', en: 'Total' },
+
+  'goodsReceiptDetail.err.linesRequired': {
+    vi: 'Phiếu nhập phải có ít nhất một sản phẩm.',
+    en: 'A goods receipt needs at least one product line.',
+  },
+  'goodsReceiptDetail.err.productRequired': {
+    vi: 'Dòng {line}: chưa chọn sản phẩm.',
+    en: 'Line {line}: no product selected.',
+  },
+  'goodsReceiptDetail.err.unitRequired': {
+    vi: 'Dòng {line}: chưa chọn đơn vị tính.',
+    en: 'Line {line}: no unit selected.',
+  },
+  'goodsReceiptDetail.err.quantityRequired': {
+    vi: 'Dòng {line}: số lượng phải lớn hơn 0.',
+    en: 'Line {line}: quantity must be greater than 0.',
+  },
+  'goodsReceiptDetail.err.receivedQtyInvalid': {
+    vi: 'Dòng {line}: số lượng thực nhận không hợp lệ.',
+    en: 'Line {line}: received quantity is not valid.',
+  },
+
 };

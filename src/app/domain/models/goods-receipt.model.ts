@@ -38,7 +38,32 @@ export interface GoodsReceiptDetailDto {
 }
 
 
-export type GoodsReceiptRequest = Omit<GoodsReceiptDto, 'id'>;
+/**
+ * Một dòng gửi kèm phiếu nhập. `id` bằng 0 là dòng mới; giá trị khác phải là dòng đang
+ * thuộc chính phiếu đó. Không có `goodsReceiptId` — phiếu chứa payload tự gán.
+ */
+export interface GoodsReceiptLineRequest {
+       id: number;
+       productId: number;
+       unitId: number;
+       locationId?: number | null;
+       lotNo?: string | null;
+       serialNo?: string | null;
+       quantity: number;
+       receivedQty: number;
+       unitPrice?: number | null;
+       remark?: string | null;
+}
+
+export type GoodsReceiptRequest = Omit<GoodsReceiptDto, 'id'> & {
+       /**
+        * Toàn bộ danh sách dòng, thay thế những gì phiếu đang có: dòng vắng mặt sẽ bị xoá.
+        * Bỏ trống (undefined) nếu chỉ sửa phần đầu phiếu — mảng rỗng nghĩa là "phiếu này
+        * không còn dòng nào".
+        */
+       goodsReceiptDetails?: GoodsReceiptLineRequest[];
+};
+
 export type GoodsReceiptDetailRequest = Omit<GoodsReceiptDetailDto, 'id'>;
 
 
