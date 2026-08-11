@@ -24,6 +24,8 @@ import {
   BomDetailDto, BomDto, PRODUCT_STATUSES, ProductDto, productStatusOf, requiredQuantity,
 } from '../../domain/models/product.model';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
+// import { InputTextModule } from 'primeng/inputtext';
+
 
 type EntityKind = 'product' | 'bom' | 'line';
 
@@ -347,7 +349,7 @@ export class ProductComponent implements OnInit {
 
     const label = kind === 'product' ? (row as ProductDto).productName
       : kind === 'bom' ? (row as BomDto).bomName
-      : this.productLabel((row as BomDetailDto).productId);
+        : this.productLabel((row as BomDetailDto).productId);
 
     this.confirm.confirm({
       header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(LABEL_KEYS[kind]) }),
@@ -479,5 +481,13 @@ export class ProductComponent implements OnInit {
       detail: err?.error?.message || detail,
       life: 4500,
     });
+  }
+
+
+  visible: boolean = false;
+  username: string = '';
+  email: string = '';
+  showDialog() {
+    this.visible = true;
   }
 }
