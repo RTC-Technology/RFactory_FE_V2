@@ -11,13 +11,13 @@ import { CrudApiService } from './crud-api.service';
   providedIn: 'root',
 })
 export class GoodsReceiptApiService extends CrudApiService<GoodsReceiptDto, GoodsReceiptRequest> {
-  protected readonly baseUrl = `${environment.apiUrl}/product/product-types`;
+  protected readonly baseUrl = `${environment.apiUrl}/goods-receipt`;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class GoodsReceiptDetailApiService extends CrudApiService<GoodsReceiptDetailDto, GoodsReceiptDetailRequest> {
-  protected readonly baseUrl = `${environment.apiUrl}/product/product-types`;
+  protected readonly baseUrl = `${environment.apiUrl}/goods-receipt-detail`;
 }
 

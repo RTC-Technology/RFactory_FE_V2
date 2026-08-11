@@ -40,3 +40,27 @@ export interface GoodsReceiptDetailDto {
 
 export type GoodsReceiptRequest = Omit<GoodsReceiptDto, 'id'>;
 export type GoodsReceiptDetailRequest = Omit<GoodsReceiptDetailDto, 'id'>;
+
+
+export const GOODS_RECEIPT_TYPES = [
+       {
+              labelKey: 'goodsReceipt.receiptType.purchase',
+              value: 1,
+       },
+       {
+              labelKey: 'goodsReceipt.receiptType.production',
+              value: 2,
+       },
+       {
+              labelKey: 'goodsReceipt.receiptType.return',
+              value: 3,
+       },
+       {
+              labelKey: 'goodsReceipt.receiptType.transferIn',
+              value: 4,
+       },
+       {
+              labelKey: 'goodsReceipt.receiptType.adjustment',
+              value: 5,
+       },
+];
