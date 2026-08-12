@@ -32,6 +32,8 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     vi: 'Thao tác này không hoàn tác được.',
     en: 'This action cannot be undone.',
   },
+  'common.approve': { vi: 'Duyệt', en: 'Approve' },
+  'common.unapprove': { vi: 'Hủy duyệt', en: 'Unapprove' },
 
   // ─── Topbar ───────────────────────────────────────────────────────────────
   'topbar.language': { vi: 'Ngôn ngữ', en: 'Language' },
@@ -255,6 +257,13 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'plant.ok.deleted': { vi: 'Đã xoá "{label}".', en: 'Deleted "{label}".' },
   'plant.confirm.title': { vi: 'Xoá {entity}', en: 'Delete {entity}' },
   'plant.confirm.message': { vi: 'Xoá "{label}"?', en: 'Delete "{label}"?' },
+
+  'plant.confirm.approve.title': { vi: 'Duyệt {entity}', en: 'Approve {entity}' },
+  'plant.confirm.approve.message': { vi: 'Duyệt "{label}"?', en: 'Approve "{label}"?' },
+
+  'plant.confirm.unapprove.title': { vi: 'Hủy duyệt {entity}', en: 'Unapprove {entity}' },
+  'plant.confirm.unapprove.message': { vi: 'Hủy duyệt "{label}"?', en: 'Unapprove "{label}"?' },
+
 
   // ─── Unit of measure ──────────────────────────────────────────────────────
   'unit.category': { vi: 'Nhóm đơn vị', en: 'Unit category' },
@@ -676,6 +685,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'goodsReceiptDetail.selectUnit': { vi: 'Chọn ĐVT…', en: 'Pick a unit…' },
   'goodsReceiptDetail.noProduct': { vi: 'Không tìm thấy sản phẩm.', en: 'No product found.' },
   'goodsReceiptDetail.total': { vi: 'Tổng tiền', en: 'Total' },
+  'goodsReceiptDetail.selectLocation': { vi: 'Chọn vị trí kho…', en: 'Pick a location…' },
 
   'goodsReceiptDetail.err.linesRequired': {
     vi: 'Phiếu nhập phải có ít nhất một sản phẩm.',
