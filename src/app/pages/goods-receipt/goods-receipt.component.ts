@@ -390,7 +390,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
           this.dialogOpen.set(false);
           this.reload();
           this._ok(this.i18n.t(isApprove ? 'plant.ok.approved' : 'plant.ok.unapproved', {
-            entity: this.i18n.t('goodsReceipt.lower'),
+            label: row.receiptNo
           }));
         },
         error: (err: HttpErrorResponse) => {

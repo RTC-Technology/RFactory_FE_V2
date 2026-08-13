@@ -255,6 +255,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'plant.ok.created': { vi: 'Đã thêm {entity}.', en: 'Added the {entity}.' },
   'plant.ok.updated': { vi: 'Đã cập nhật {entity}.', en: 'Updated the {entity}.' },
   'plant.ok.deleted': { vi: 'Đã xoá "{label}".', en: 'Deleted "{label}".' },
+  'plant.ok.approved': { vi: 'Đã duyệt "{label}".', en: 'Approved "{label}".' },
+  'plant.ok.unapproved': { vi: 'Đã hủy duyệt "{label}".', en: 'Unapproved "{label}".' },
+
+
   'plant.confirm.title': { vi: 'Xoá {entity}', en: 'Delete {entity}' },
   'plant.confirm.message': { vi: 'Xoá "{label}"?', en: 'Delete "{label}"?' },
 
