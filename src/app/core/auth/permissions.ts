@@ -38,6 +38,9 @@ export const PERMISSIONS = {
   warehouseZone: crud('warehouse-zone'),
   warehouseLocation: crud('warehouse-location'),
   goodsReceipt: crud('goods-receipt'),
+  warehouse: crud('warehouse'),
+  warehouseZone: crud('warehouse-zone'),
+  warehouseLocation: crud('warehouse-location'),
   goodsReceiptDetail: crud('goods-receipt-detail'),
   settings: {
     view: 'settings.view',

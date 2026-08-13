@@ -1,0 +1,310 @@
+<!-- Toolbar is identical for all three panels apart from which entity it acts on.
+     `showReload` is set only on the master panel: reloading refetches all three lists,
+     so it belongs to the page, not to any one detail grid. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+  <div class="toolbar">
+    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+        <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+      </svg>
+      <span>{{ i18n.t('common.add') }}</span>
+    </button>
+    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+      </svg>
+      <span>{{ i18n.t('common.edit') }}</span>
+    </button>
+    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete(kind)">
+      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+      <span>{{ i18n.t('common.delete') }}</span>
+    </button>
+
+    @if (showReload) {
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+    }
+
+    <input
+      class="tool-search"
+      type="search"
+      [placeholder]="i18n.t('common.search')"
+      [attr.aria-label]="i18n.t('common.search')"
+      (input)="applyFilter(kind, $any($event.target).value)"
+    />
+  </div>
+</ng-template>
+
+<div class="page">
+  <p-splitter
+    class="workspace" [panelSizes]="split.sizes('warehouse:split-x', [42,58])" [minSizes]="[20, 30]" [gutterSize]="6"
+    (onResizeEnd)="split.save('warehouse:split-x', $event.sizes)"
+  >
+
+    <!-- ─── Master: Warehouse ──────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('wh.warehouse') }}</h2>
+        <span class="panel__count">{{ warehouses().length }}</span>
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'warehouse', perms: perms.warehouse, canAdd: true, hasSelection: !!selectedWarehouse(), showReload: true }" />
+
+      <div class="table-scroll">
+        <p-table
+          #warehouseTable [value]="warehouses()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.warehouse" (onFilter)="onFiltered('warehouse', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('wh.warehouseCode') }}</th>
+              <th>{{ i18n.t('wh.warehouseName') }}</th>
+              <th class="col-type">{{ i18n.t('wh.warehouseType') }}</th>
+              <th class="col-active">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedWarehouse()?.id === row.id"
+                (click)="selectWarehouse(row)" (dblclick)="openEdit('warehouse')">
+              <td class="col-code">{{ row.warehouseCode }}</td>
+              <td>{{ row.warehouseName }}</td>
+              <td class="col-type">
+                @if (typeOf(row.warehouseType); as wType) {
+                  <p-tag [severity]="wType.severity" [value]="i18n.t(wType.labelKey)" [rounded]="true" />
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-active">
+                @if (row.isActive != null) {
+                  <p-tag [severity]="row.isActive ? 'success' : 'danger'"
+                         [value]="i18n.t(row.isActive ? 'wh.active' : 'wh.inactive')" [rounded]="true" />
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="4"><p class="empty">{{ i18n.t('wh.empty.warehouse') }}</p></td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail column: Zone over Location ──────────────────────────── -->
+    <ng-template #panel>
+    <p-splitter
+      class="workspace__right" layout="vertical" [panelSizes]="split.sizes('warehouse:split-y', [50,50])" [minSizes]="[20, 20]" [gutterSize]="6"
+      (onResizeEnd)="split.save('warehouse:split-y', $event.sizes)"
+    >
+
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('wh.zone') }}</h2>
+        @if (selectedWarehouse(); as wh) {
+          <span class="panel__scope">{{ i18n.t('wh.scopeOf', { name: wh.warehouseName }) }}</span>
+          <span class="panel__count">{{ zones().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'zone', perms: perms.warehouseZone, canAdd: !!selectedWarehouse(), hasSelection: !!selectedZone() }" />
+
+      <div class="table-scroll">
+        <p-table
+          #zoneTable [value]="zones()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.zone" (onFilter)="onFiltered('zone', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('wh.zoneCode') }}</th>
+              <th>{{ i18n.t('wh.zoneName') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedZone()?.id === row.id"
+                (click)="selectZone(row)" (dblclick)="openEdit('zone')">
+              <td class="col-code">{{ row.warehouseZoneCode }}</td>
+              <td>{{ row.warehouseZoneName }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="2">
+                <p class="empty">
+                  {{ selectedWarehouse() ? i18n.t('wh.empty.zone') : i18n.t('wh.empty.zoneHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    <!-- ─── Detail 2: Location ──────────────────────────────────────────── -->
+    <ng-template #panel>
+    <section class="panel">
+      <div class="panel__head">
+        <h2 class="panel__title">{{ i18n.t('wh.location') }}</h2>
+        @if (selectedZone(); as zone) {
+          <span class="panel__scope">{{ i18n.t('wh.scopeOf', { name: zone.warehouseZoneName }) }}</span>
+          <span class="panel__count">{{ locations().length }}</span>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="toolbar; context: { kind: 'location', perms: perms.warehouseLocation, canAdd: !!selectedZone(), hasSelection: !!selectedLocation() }" />
+
+      <div class="table-scroll">
+        <p-table
+          #locationTable [value]="locations()" [showGridlines]="true" class="grid"
+          [globalFilterFields]="filterFields.location" (onFilter)="onFiltered('location', $event.filteredValue)">
+          <ng-template #header>
+            <tr>
+              <th class="col-code">{{ i18n.t('wh.locationCode') }}</th>
+              <th>{{ i18n.t('wh.locationName') }}</th>
+              <th class="col-capacity">{{ i18n.t('wh.maxCapacity') }}</th>
+              <th class="col-picking">{{ i18n.t('wh.picking') }}</th>
+              <th class="col-active">{{ i18n.t('common.status') }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-row>
+            <tr class="row" [class.row--selected]="selectedLocation()?.id === row.id"
+                (click)="selectLocation(row)" (dblclick)="openEdit('location')">
+              <td class="col-code">{{ row.warehouseLocationCode }}</td>
+              <td>{{ row.warehouseLocationName }}</td>
+              <td class="col-capacity">{{ row.maxCapacity ?? '—' }}</td>
+              <td class="col-picking">
+                @if (row.isPickingLocation != null) {
+                  <p-tag [severity]="row.isPickingLocation ? 'success' : 'secondary'"
+                         [value]="i18n.t(row.isPickingLocation ? 'common.yes' : 'common.no')" [rounded]="true" />
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="col-active">
+                @if (row.isActive != null) {
+                  <p-tag [severity]="row.isActive ? 'success' : 'danger'"
+                         [value]="i18n.t(row.isActive ? 'wh.active' : 'wh.inactive')" [rounded]="true" />
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="5">
+                <p class="empty">
+                  {{ selectedZone() ? i18n.t('wh.empty.location') : i18n.t('wh.empty.locationHint') }}
+                </p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+    </ng-template>
+
+    </p-splitter>
+    </ng-template>
+  </p-splitter>
+</div>
+
+<!-- ─── Create / Edit dialog ────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+  [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '500px' }"
+>
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="entity-code">{{ i18n.t('common.code') }} <span class="req">*</span></label>
+      <input pInputText id="entity-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="entity-name">{{ i18n.t('common.name') }} <span class="req">*</span></label>
+      <input pInputText id="entity-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    @if (dialogKind() === 'warehouse') {
+      <div class="field">
+        <label for="entity-type">{{ i18n.t('wh.warehouseType') }}</label>
+        <p-select
+          inputId="entity-type" [options]="warehouseTypes()" optionLabel="label" optionValue="value"
+          [(ngModel)]="form.warehouseType" [showClear]="true" [placeholder]="i18n.t('wh.type.unset')"
+          appendTo="body" class="w-full"
+        />
+      </div>
+      <div class="field">
+        <label for="entity-desc">{{ i18n.t('wh.description') }}</label>
+        <textarea pTextarea id="entity-desc" name="description" [(ngModel)]="form.description"
+                  rows="3" autocomplete="off"></textarea>
+      </div>
+      <div class="field field--checkbox">
+        <p-checkbox inputId="entity-active" [(ngModel)]="form.isActive" [binary]="true" />
+        <label for="entity-active">{{ i18n.t('wh.isActive') }}</label>
+      </div>
+    }
+
+    @if (dialogKind() === 'zone') {
+      <div class="field">
+        <label for="entity-desc">{{ i18n.t('wh.description') }}</label>
+        <textarea pTextarea id="entity-desc" name="description" [(ngModel)]="form.description"
+                  rows="3" autocomplete="off"></textarea>
+      </div>
+    }
+
+    @if (dialogKind() === 'location') {
+      <div class="field">
+        <label for="entity-capacity">{{ i18n.t('wh.maxCapacity') }}</label>
+        <p-inputNumber inputId="entity-capacity" [(ngModel)]="form.maxCapacity"
+                       mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2"
+                       [min]="0" [placeholder]="i18n.t('wh.capacityPlaceholder')" class="w-full" />
+      </div>
+      <div class="field field--checkbox">
+        <p-checkbox inputId="entity-picking" [(ngModel)]="form.isPickingLocation" [binary]="true" />
+        <label for="entity-picking">{{ i18n.t('wh.isPickingLocation') }}</label>
+      </div>
+      <div class="field field--checkbox">
+        <p-checkbox inputId="entity-loc-active" [(ngModel)]="form.isActive" [binary]="true" />
+        <label for="entity-loc-active">{{ i18n.t('wh.isActive') }}</label>
+      </div>
+    }
+
+    @if (dialogKind() === 'zone' && selectedWarehouse(); as wh) {
+      <p class="form__scope">{{ i18n.t('wh.scope.zone', { name: wh.warehouseName }) }}</p>
+    }
+    @if (dialogKind() === 'location' && selectedZone(); as zone) {
+      <p class="form__scope">{{ i18n.t('wh.scope.location', { name: zone.warehouseZoneName }) }}</p>
+    }
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
