@@ -1,0 +1,208 @@
+<div class="page">
+    <section class="panel">
+        <!-- <div class="panel__head">
+      <h2 class="panel__title">{{ i18n.t('ptype.title') }}</h2>
+      <span class="panel__count">{{ types().length }}</span>
+    </div> -->
+
+        <div class="toolbar">
+            @if (canAdd()) {
+            <button type="button" class="tool" (click)="openCreate()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                    <line x1="19" y1="9" x2="19" y2="17" />
+                    <line x1="15" y1="13" x2="23" y2="13" />
+                </svg>
+                <span>{{ i18n.t('common.add') }}</span>
+            </button>
+            }
+            @if (canEdit()) {
+            <button type="button" class="tool" [disabled]="!selected()" (click)="openEdit()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 3h9l4 4v3" />
+                    <path d="M4 3v18h13v-6" />
+                    <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+                </svg>
+                <span>{{ i18n.t('common.edit') }}</span>
+            </button>
+            }
+            @if (canDelete()) {
+            <button type="button" class="tool tool--danger" [disabled]="!selected()" (click)="askDelete()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+                <span>{{ i18n.t('common.delete') }}</span>
+            </button>
+            }
+
+            <span class="tool__sep"></span>
+            <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                <span>{{ i18n.t('common.reload') }}</span>
+            </button>
+
+            <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+                [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter($any($event.target).value)" />
+        </div>
+
+        <div class="table-scroll">
+            <p-table #supplierTable [value]="suppliers()" [showGridlines]="true" class="grid"
+                [globalFilterFields]="filterFields" (onFilter)="onFiltered($event.filteredValue)">
+                <ng-template #header>
+                    <tr>
+                        <th class="col-supplier-code">{{ i18n.t('supplier.supplierCode') }}</th>
+                        <th class="col-supplier-name">{{ i18n.t('supplier.supplierName') }}</th>
+                        <th class="col-short-name">{{ i18n.t('supplier.shortName') }}</th>
+                        <th class="col-tax-code">{{ i18n.t('supplier.taxCode') }}</th>
+                        <th class="col-supplier-type">{{ i18n.t('supplier.supplierType') }}</th>
+                        <th class="col-phone">{{ i18n.t('supplier.phone') }}</th>
+                        <th class="col-email">{{ i18n.t('supplier.email') }}</th>
+                        <th class="col-website">{{ i18n.t('supplier.website') }}</th>
+                        <th class="col-contact-person">{{ i18n.t('supplier.contactPerson') }}</th>
+                        <th class="col-payment-term">{{ i18n.t('supplier.paymentTerm') }}</th>
+                        <th class="col-currency-code">{{ i18n.t('supplier.currencyCode') }}</th>
+                        <th class="col-status">{{ i18n.t('supplier.status') }}</th>
+                        <th class="col-description">{{ i18n.t('supplier.description') }}</th>
+
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row" [class.row--selected]="selected()?.id === row.id" (click)="select(row)"
+                        (dblclick)="openEdit()">
+                        <td class="col-supplier-code">{{ row.supplierCode ?? '—' }}</td>
+                        <td class="col-supplier-name">{{ row.supplierName ?? '—' }}</td>
+                        <td class="col-short-name">{{ row.shortName ?? '—' }}</td>
+                        <td class="col-tax-code">{{ row.taxCode ?? '—' }}</td>
+                        <td class="col-supplier-type">{{ row.supplierType ?? '—' }}</td>
+                        <td class="col-phone">{{ row.phone ?? '—' }}</td>
+                        <td class="col-email">{{ row.email ?? '—' }}</td>
+                        <td class="col-website">{{ row.website ?? '—' }}</td>
+                        <td class="col-contact-person">{{ row.contactPerson ?? '—' }}</td>
+                        <td class="col-payment-term">{{ row.paymentTerm ?? '—' }}</td>
+                        <td class="col-currency-code">{{ row.currencyCode ?? '—' }}</td>
+                        <td class="col-status">{{ row.status ?? '—' }}</td>
+                        <td class="col-description">{{ row.description ?? '—' }}</td>
+
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="5">
+                            <p class="empty">{{ i18n.t('supplier.empty') }}</p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </section>
+</div>
+
+<p-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [header]="dialogTitle()" [modal]="true"
+    [draggable]="false" [resizable]="false" [style]="{ width: '50rem' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="pt-code">{{ i18n.t('supplier.supplierCode') }} <span class="req">*</span></label>
+                <input pInputText id="pt-code" name="code" [(ngModel)]="form.supplierCode" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="pt-name">{{ i18n.t('supplier.supplierName') }} <span class="req">*</span></label>
+                <input pInputText id="pt-name" name="name" [(ngModel)]="form.supplierName" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-short-name">{{ i18n.t('supplier.shortName') }}</label>
+                <input pInputText id="supplier-short-name" name="shortName" [(ngModel)]="form.shortName"
+                    autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="supplier-tax-code">{{ i18n.t('supplier.taxCode') }}</label>
+                <input pInputText id="supplier-tax-code" name="taxCode" [(ngModel)]="form.taxCode" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-type">{{ i18n.t('supplier.supplierType') }}</label>
+                <input pInputText id="supplier-type" name="supplierType" [(ngModel)]="form.supplierType"
+                    autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="supplier-phone">{{ i18n.t('supplier.phone') }}</label>
+                <input pInputText pInputMask="0999 999 999" id="supplier-phone" name="phone" [(ngModel)]="form.phone"
+                    autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-email">{{ i18n.t('supplier.email') }}</label>
+                <input pInputText id="supplier-email" name="email" [(ngModel)]="form.email" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-website">{{ i18n.t('supplier.website') }}</label>
+                <input pInputText id="supplier-website" name="website" [(ngModel)]="form.website" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-contact-person">{{ i18n.t('supplier.contactPerson') }}</label>
+                <input pInputText id="supplier-contact-person" name="contactPerson" [(ngModel)]="form.contactPerson"
+                    autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="supplier-payment-term">{{ i18n.t('supplier.paymentTerm') }}</label>
+                <input pInputText id="supplier-payment-term" name="paymentTerm" [(ngModel)]="form.paymentTerm"
+                    autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-currency-code">{{ i18n.t('supplier.currencyCode') }}</label>
+                <input pInputText id="supplier-currency-code" name="currencyCode" [(ngModel)]="form.currencyCode"
+                    autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="supplier-status">{{ i18n.t('supplier.status') }}</label>
+                <!-- <input pInputText id="supplier-status" name="status" [(ngModel)]="form.status" autocomplete="off" /> -->
+                <p-select inputId="supplier-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
+                    [(ngModel)]="form.status" [placeholder]="i18n.t('supplier.status.unset')" appendTo="body"
+                    class="w-full" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="pt-desc">{{ i18n.t('supplier.description') }}</label>
+            <textarea pTextarea id="pt-desc" name="description" rows="3" [(ngModel)]="form.description"></textarea>
+        </div>
+
+
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

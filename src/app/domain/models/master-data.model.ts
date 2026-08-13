@@ -22,10 +22,28 @@ export interface LineDto {
   layoutImage?: string | null;
 }
 
+export interface SupplierDto {
+  id: number;
+  supplierCode: string;
+  supplierName: string;
+  shortName?: string | null;
+  taxCode?: string | null;
+  supplierType?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  contactPerson?: string | null;
+  paymentTerm?: string | null;
+  currencyCode?: string | null;
+  status: number;
+  description?: string | null;
+}
+
 /** Create/Update share one shape per entity on the backend, so one type covers both. */
 export type FactoryRequest = Omit<FactoryDto, 'id'>;
 export type AreaRequest = Omit<AreaDto, 'id'>;
 export type LineRequest = Omit<LineDto, 'id'>;
+export type SupplierRequest = Omit<SupplierDto, 'id'>;
 
 /**
  * `Line.Status` is a nullable int in the database with no enum or lookup table backing
@@ -35,6 +53,22 @@ export type LineRequest = Omit<LineDto, 'id'>;
 export const LINE_STATUSES = [
   { labelKey: 'plant.status.running', value: 1, severity: 'success' as const },
   { labelKey: 'plant.status.stopped', value: 0, severity: 'danger' as const },
+];
+
+export const SUPPLIER_STATUS = [
+  {
+    labelKey: 'supplier.status.active',
+    value: 1,
+  },
+  {
+    labelKey: 'supplier.status.inactive',
+    value: 0,
+  },
+  {
+    labelKey: 'supplier.status.pending',
+    value: 2,
+  },
+
 ];
 
 export function lineStatusOf(status?: number | null) {

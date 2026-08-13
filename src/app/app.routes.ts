@@ -192,6 +192,22 @@ export const routes: Routes = [
           permissionMode: 'all',
         },
       },
+
+      //supplier
+      {
+        path: 'supplier',
+        loadComponent: () =>
+          import('./pages/supplier/supplier.component').then(m => m.SupplierComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.supplier.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
+
+
       {
         path: 'forbidden',
         loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
