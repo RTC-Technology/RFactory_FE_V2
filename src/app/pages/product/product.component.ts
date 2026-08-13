@@ -14,7 +14,7 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import {
   BomApiService, BomDetailApiService, ProductApiService, ProductTypeApiService, UnitApiService,
@@ -24,6 +24,8 @@ import {
   BomDetailDto, BomDto, PRODUCT_STATUSES, ProductDto, productStatusOf, requiredQuantity,
 } from '../../domain/models/product.model';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
+// import { InputTextModule } from 'primeng/inputtext';
+
 
 type EntityKind = 'product' | 'bom' | 'line';
 
@@ -62,7 +64,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './product.component.html',
   styleUrl: './product.component.scss',
 })
-export class ProductComponent implements OnInit {
+export class ProductComponent extends PermissionAwarePage implements OnInit {
   private readonly productApi = inject(ProductApiService);
   private readonly typeApi = inject(ProductTypeApiService);
   private readonly unitApi = inject(UnitApiService);
@@ -73,7 +75,6 @@ export class ProductComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly split = inject(SplitStateService);
 
-  readonly perms = PERMISSIONS;
   readonly statusOf = productStatusOf;
   readonly requiredQty = requiredQuantity;
 
@@ -161,6 +162,10 @@ export class ProductComponent implements OnInit {
     this.bomApi.items().filter(b => b.productId == null).length);
 
   constructor() {
+    // No entity passed: the three panels each gate on their own code set, handed to the
+    // shared toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const boms = this.boms();
       untracked(() => this.selectedBom.set(this._reconcile(this.selectedBom(), boms)));
@@ -347,7 +352,7 @@ export class ProductComponent implements OnInit {
 
     const label = kind === 'product' ? (row as ProductDto).productName
       : kind === 'bom' ? (row as BomDto).bomName
-      : this.productLabel((row as BomDetailDto).productId);
+        : this.productLabel((row as BomDetailDto).productId);
 
     this.confirm.confirm({
       header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(LABEL_KEYS[kind]) }),
@@ -479,5 +484,13 @@ export class ProductComponent implements OnInit {
       detail: err?.error?.message || detail,
       life: 4500,
     });
+  }
+
+
+  visible: boolean = false;
+  username: string = '';
+  email: string = '';
+  showDialog() {
+    this.visible = true;
   }
 }

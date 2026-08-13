@@ -13,11 +13,11 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { I18nService } from '../../core/services/i18n.service';
 import { ProductTypeApiService } from '../../core/services/product-api.service';
 import { ProductTypeDto } from '../../domain/models/product.model';
-import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-product-type',
@@ -26,19 +26,17 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
     CommonModule, FormsModule,
     TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, TextareaModule, TagModule, ToggleSwitchModule,
-    HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-type.component.html',
   styleUrl: './product-type.component.scss',
 })
-export class ProductTypeComponent implements OnInit {
+export class ProductTypeComponent extends PermissionAwarePage implements OnInit {
   private readonly api = inject(ProductTypeApiService);
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
 
-  readonly perms = PERMISSIONS.productType;
   readonly loading = this.api.loading;
 
   /** Ordered the way the product screen's type picker will show them. */
@@ -48,6 +46,12 @@ export class ProductTypeComponent implements OnInit {
       || a.productTypeCode.localeCompare(b.productTypeCode)));
 
   readonly selected = signal<ProductTypeDto | null>(null);
+
+  constructor() {
+    // Single-entity screen: the toolbar reads canAdd()/canEdit()/canDelete() straight off
+    // the base rather than naming a code per button.
+    super(PERMISSIONS.productType);
+  }
 
   ngOnInit(): void {
     this.reload();

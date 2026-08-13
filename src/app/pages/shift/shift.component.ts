@@ -13,7 +13,7 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { ShiftApiService, ShiftBreakApiService } from '../../core/services/shift-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
@@ -54,7 +54,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './shift.component.html',
   styleUrl: './shift.component.scss',
 })
-export class ShiftComponent implements OnInit {
+export class ShiftComponent extends PermissionAwarePage implements OnInit {
   private readonly shiftApi = inject(ShiftApiService);
   private readonly breakApi = inject(ShiftBreakApiService);
   private readonly messages = inject(MessageService);
@@ -62,8 +62,6 @@ export class ShiftComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly split = inject(SplitStateService);
 
-  /** Passed into the shared toolbar template so each panel gates its own buttons. */
-  readonly perms = PERMISSIONS;
   readonly toTime = toTimeInput;
 
   readonly loading = computed(() => this.shiftApi.loading() || this.breakApi.loading());
@@ -97,6 +95,10 @@ export class ShiftComponent implements OnInit {
   }
 
   constructor() {
+    // No entity passed: both panels gate on their own code set, handed to the shared
+    // toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const breaks = this.breaks();
       untracked(() => this.selectedBreak.set(this._reconcile(this.selectedBreak(), breaks)));

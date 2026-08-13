@@ -14,8 +14,7 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PERMISSIONS } from '../../core/auth/permissions';
-import { AuthService } from '../../core/services/auth.service';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { OrganizationApiService, UserApiService } from '../../core/services/organization-api.service';
@@ -53,18 +52,14 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './organization.component.html',
   styleUrl: './organization.component.scss',
 })
-export class OrganizationComponent implements OnInit {
+export class OrganizationComponent extends PermissionAwarePage implements OnInit {
   private readonly orgApi = inject(OrganizationApiService);
   private readonly userApi = inject(UserApiService);
-  private readonly auth = inject(AuthService);
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
   readonly split = inject(SplitStateService);
-
-  /** Passed into the shared toolbar template so each panel gates its own buttons. */
-  readonly perms = PERMISSIONS;
 
   readonly loading = computed(() => this.orgApi.loading() || this.userApi.loading());
 
@@ -106,6 +101,10 @@ export class OrganizationComponent implements OnInit {
   });
 
   constructor() {
+    // No entity passed: both panels gate on their own code set, handed to the shared
+    // toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const users = this.users();
       untracked(() => this.selectedUser.set(this._reconcile(this.selectedUser(), users)));

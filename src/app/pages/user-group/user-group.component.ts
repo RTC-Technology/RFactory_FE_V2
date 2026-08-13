@@ -12,11 +12,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SplitterModule } from 'primeng/splitter';
 import { Table, TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { FunctionApiService, FunctionGroupApiService } from '../../core/services/function-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { OrganizationApiService, UserApiService } from '../../core/services/organization-api.service';
 import { UserGroupApiService } from '../../core/services/user-group-api.service';
 import { FunctionDto } from '../../domain/models/function-dto.model';
@@ -42,13 +42,12 @@ interface PermissionRow {
     CommonModule, FormsModule,
     TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, CheckboxModule,
-    HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './user-group.component.html',
   styleUrl: './user-group.component.scss',
 })
-export class UserGroupComponent implements OnInit {
+export class UserGroupComponent extends PermissionAwarePage implements OnInit {
   private readonly groupApi = inject(UserGroupApiService);
   private readonly functionApi = inject(FunctionApiService);
   private readonly functionGroupApi = inject(FunctionGroupApiService);
@@ -59,8 +58,6 @@ export class UserGroupComponent implements OnInit {
   readonly i18n = inject(I18nService);
   /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
   readonly split = inject(SplitStateService);
-
-  readonly perms = PERMISSIONS;
 
   readonly loading = computed(() => this.groupApi.loading() || this.functionApi.loading());
 
@@ -83,6 +80,12 @@ export class UserGroupComponent implements OnInit {
 
   orgName(id?: number | null): string {
     return this.orgApi.items().find(o => o.id === id)?.organizationName ?? '';
+  }
+
+  constructor() {
+    // Every write on this screen — the group itself, its function grants and its members —
+    // is gated on `user-group.*`, so one entity covers the whole page.
+    super(PERMISSIONS.userGroup);
   }
 
   ngOnInit(): void {

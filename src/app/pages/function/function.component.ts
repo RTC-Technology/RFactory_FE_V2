@@ -13,6 +13,7 @@ import { SplitterModule } from 'primeng/splitter';
 import { Table, TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { FunctionApiService, FunctionGroupApiService } from '../../core/services/function-api.service';
 import { I18nService } from '../../core/services/i18n.service';
@@ -55,7 +56,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './function.component.html',
   styleUrl: './function.component.scss',
 })
-export class FunctionComponent implements OnInit {
+export class FunctionComponent extends PermissionAwarePage implements OnInit {
   private readonly groupApi = inject(FunctionGroupApiService);
   private readonly functionApi = inject(FunctionApiService);
   private readonly menuService = inject(MenuService);
@@ -64,9 +65,6 @@ export class FunctionComponent implements OnInit {
   readonly i18n = inject(I18nService);
   /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
   readonly split = inject(SplitStateService);
-
-  /** Passed into the shared toolbar template so each panel gates its own buttons. */
-  readonly perms = PERMISSIONS;
 
   /**
    * Held separately because inside `<ng-template #toolbar let-perms="perms">` the context
@@ -160,6 +158,10 @@ export class FunctionComponent implements OnInit {
   });
 
   constructor() {
+    // No entity passed: both panels gate on their own code set, handed to the shared
+    // toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const functions = this.functions();
       untracked(() => this.selectedFunction.set(this._reconcile(this.selectedFunction(), functions)));

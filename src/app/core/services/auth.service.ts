@@ -18,6 +18,16 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this._user());
   readonly permissions = computed(() => this._user()?.permissions ?? []);
 
+  /**
+   * The held codes, lower-cased, built once per permission change rather than once per
+   * check. `missingPermissions` runs for every sidebar item the pruner looks at and every
+   * gated button on screen, so rebuilding this from the array each time made the work
+   * scale with catalogue size × checks — noticeable once a deployment grants hundreds of
+   * codes.
+   */
+  private readonly _heldCodes = computed(
+    () => new Set(this.permissions().map(code => code.toLowerCase())));
+
   /** Dedupes concurrent refresh calls (e.g. several requests 401-ing at once) into one. */
   private _refreshInFlight$: Observable<AuthTokens> | null = null;
 
@@ -77,7 +87,7 @@ export class AuthService {
     const list = Array.isArray(required) ? required : [required];
     if (list.length === 0 || this._user()?.isAdmin) return [];
 
-    const held = new Set(this.permissions().map(code => code.toLowerCase()));
+    const held = this._heldCodes();
     const missing = list.filter(code => !held.has(code.toLowerCase()));
 
     if (mode === 'all') return missing;

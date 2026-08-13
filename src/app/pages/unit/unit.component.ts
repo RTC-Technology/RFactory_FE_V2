@@ -15,7 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import {
   UnitApiService, UnitCategoryApiService, UnitConversionApiService,
@@ -61,7 +61,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './unit.component.html',
   styleUrl: './unit.component.scss',
 })
-export class UnitComponent implements OnInit {
+export class UnitComponent extends PermissionAwarePage implements OnInit {
   private readonly categoryApi = inject(UnitCategoryApiService);
   private readonly unitApi = inject(UnitApiService);
   private readonly conversionApi = inject(UnitConversionApiService);
@@ -70,7 +70,6 @@ export class UnitComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly split = inject(SplitStateService);
 
-  readonly perms = PERMISSIONS;
   readonly factorOf = conversionFactor;
 
   readonly loading = computed(() => this.categoryApi.loading() || this.unitApi.loading());
@@ -120,6 +119,10 @@ export class UnitComponent implements OnInit {
     FORMULA_TYPES.map(f => ({ label: this.i18n.t(f.labelKey), value: f.value })));
 
   constructor() {
+    // No entity passed: the three panels each gate on their own code set, handed to the
+    // shared toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const units = this.units();
       untracked(() => this.selectedUnit.set(this._reconcile(this.selectedUnit(), units)));

@@ -13,7 +13,7 @@ import { SplitterModule } from 'primeng/splitter';
 import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { MachineApiService, MachineTypeApiService } from '../../core/services/equipment-api.service';
@@ -50,7 +50,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './machine.component.html',
   styleUrl: './machine.component.scss',
 })
-export class MachineComponent implements OnInit {
+export class MachineComponent extends PermissionAwarePage implements OnInit {
   private readonly typeApi = inject(MachineTypeApiService);
   private readonly machineApi = inject(MachineApiService);
   private readonly lineApi = inject(LineApiService);
@@ -60,9 +60,6 @@ export class MachineComponent implements OnInit {
   readonly i18n = inject(I18nService);
   /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
   readonly split = inject(SplitStateService);
-
-  /** Passed into the shared toolbar template so each panel gates its own buttons. */
-  readonly perms = PERMISSIONS;
 
   readonly statusOf = machineStatusOf;
 
@@ -107,6 +104,10 @@ export class MachineComponent implements OnInit {
   ]);
 
   constructor() {
+    // No entity passed: both panels gate on their own code set, handed to the shared
+    // toolbar template through ngTemplateOutlet.
+    super();
+
     // Keep the detail selection on a row that is actually on screen, and re-point it at
     // the freshly loaded object after a reload so the edit form never reads stale values.
     effect(() => {
