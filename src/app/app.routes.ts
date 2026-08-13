@@ -158,15 +158,40 @@ export const routes: Routes = [
 
 
       {
+        // Reads receipts and their lines, plus products and units — the detail grid's row
+        // pickers are driven from those two, not just labelled by them — and warehouses
+        // and storage locations to name where the goods landed. `reload()` forkJoins all
+        // six, so one missing view code fails the whole screen rather than one panel.
         path: 'goods-receipt',
         loadComponent: () =>
           import('./pages/goods-receipt/goods-receipt.component').then(m => m.GoodsReceiptComponent),
         canActivate: [permissionGuard],
-        data: { permissions: [PERMISSIONS.productType.view] },
+        data: {
+          permissions: [
+            PERMISSIONS.goodsReceipt.view, PERMISSIONS.goodsReceiptDetail.view,
+            PERMISSIONS.product.view, PERMISSIONS.unit.view,
+            PERMISSIONS.warehouse.view, PERMISSIONS.warehouseLocation.view,
+          ],
+          permissionMode: 'all',
+        },
       },
 
 
 
+      {
+        path: 'warehouses',
+        loadComponent: () =>
+          import('./pages/warehouse/warehouse.component').then(m => m.WarehouseComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.warehouse.view,
+            PERMISSIONS.warehouseZone.view,
+            PERMISSIONS.warehouseLocation.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
       {
         path: 'forbidden',
         loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
