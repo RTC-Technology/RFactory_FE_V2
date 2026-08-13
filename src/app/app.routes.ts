@@ -157,6 +157,20 @@ export const routes: Routes = [
       },
 
       {
+        path: 'warehouses',
+        loadComponent: () =>
+          import('./pages/warehouse/warehouse.component').then(m => m.WarehouseComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.warehouse.view,
+            PERMISSIONS.warehouseZone.view,
+            PERMISSIONS.warehouseLocation.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
+      {
         path: 'forbidden',
         loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
       },
