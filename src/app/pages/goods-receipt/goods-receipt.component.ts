@@ -20,13 +20,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, throwError } from 'rxjs';
 import { SplitterModule } from 'primeng/splitter';
 import { SelectModule } from 'primeng/select';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
+import { LocationApiService, WarehouseApiService } from '../../core/services/warehouse-api.service';
+import { InputNumberModule } from 'primeng/inputnumber';
 
 type EntityKind = 'goodsReceipt' | 'goodsReceiptDetail';
 
@@ -42,7 +44,7 @@ const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
     CommonModule, FormsModule,
     TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
-    HasPermissionDirective, PanelModule, CardModule
+    HasPermissionDirective, PanelModule, CardModule, InputNumberModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './goods-receipt.component.html',
@@ -52,6 +54,8 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 
   private readonly productApi = inject(ProductApiService);
   private readonly unitApi = inject(UnitApiService);
+  private readonly warehouseApi = inject(WarehouseApiService);
+  private readonly locationApi = inject(LocationApiService);
   private readonly goodsReceiptApi = inject(GoodsReceiptApiService);
   private readonly goodsReceiptDetailApi = inject(GoodsReceiptDetailApiService);
   private readonly messages = inject(MessageService);
@@ -80,6 +84,16 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
     return product ? `${product.productCode} · ${product.productName}` : '';
   }
 
+  warehouseLabel(id?: number | null): string {
+    const warehouse = this.warehouseApi.items().find(w => w.id === id);
+    return warehouse ? `${warehouse.warehouseCode} · ${warehouse.warehouseName}` : '';
+  }
+
+  locationLabel(id?: number | null): string {
+    const location = this.locationApi.items().find(l => l.id === id);
+    return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
+  }
+
   readonly unitOptions = computed(() =>
     this.unitApi.items()
       .filter(u => u.isActive)
@@ -93,6 +107,16 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 
   readonly typeOptions = computed(() =>
     GOODS_RECEIPT_TYPES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
+  readonly warehouseOptions = computed(() =>
+    this.warehouseApi.items()
+      .filter(w => w.isActive)
+      .map(w => ({ label: `${w.warehouseCode} · ${w.warehouseName}`, value: w.id })));
+
+  readonly locationOptions = computed(() =>
+    this.locationApi.items()
+      .filter(l => l.isActive)
+      .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
 
   // ─── Selection ──────────────────────────────────────────────────────────────
 
@@ -148,6 +172,8 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       details: this.goodsReceiptDetailApi.load(),
       products: this.productApi.load(),
       units: this.unitApi.load(),
+      warehouse: this.warehouseApi.load(),
+      location: this.locationApi.load(),
     }).subscribe({
       error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
     });
@@ -280,8 +306,11 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 
   /** Received quantity tracks the ordered one until someone edits it apart. */
   onDetailQuantityChange(row: GoodsReceiptDetailDto, quantity: number | null): void {
+    const prev = row.quantity ?? 0;
     const next = quantity ?? 0;
-    if (row.receivedQty === row.quantity) row.receivedQty = next;
+    if (row.receivedQty === prev) {
+      row.receivedQty = next;
+    }
     row.quantity = next;
   }
 
@@ -338,6 +367,40 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
     });
   }
 
+
+  askApprove(isApprove: boolean): void {
+    const row = this.selectedReceipt();
+    if (!row) return;
+
+    const headerKey = isApprove ? 'plant.confirm.approve.title' : 'plant.confirm.unapprove.title';
+    const messageKey = isApprove ? 'plant.confirm.approve.message' : 'plant.confirm.unapprove.message';
+    const acceptLabelKey = isApprove ? 'common.approve' : 'common.unapprove';
+
+    this.confirm.confirm({
+      header: this.i18n.t(headerKey, { entity: this.i18n.t('goodsReceipt.lower') }),
+      message: `${this.i18n.t(messageKey, { label: row.receiptNo })}`,
+      acceptLabel: this.i18n.t(acceptLabelKey),
+      rejectLabel: this.i18n.t('common.cancel'),
+      acceptButtonStyleClass: isApprove ? 'p-button-success' : 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      // The backend owns the "still used by products" rule and returns its own message.
+      accept: () => this._approveReceipt(row.id, isApprove).subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.dialogOpen.set(false);
+          this.reload();
+          this._ok(this.i18n.t(isApprove ? 'plant.ok.approved' : 'plant.ok.unapproved', {
+            entity: this.i18n.t('goodsReceipt.lower'),
+          }));
+        },
+        error: (err: HttpErrorResponse) => {
+          this.saving.set(false);
+          this.formError.set(err.error?.message
+            || this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('goodsReceipt.lower') }));
+        },
+      }),
+    });
+  }
 
   // ─── Internals ──────────────────────────────────────────────────────────────
 
@@ -491,6 +554,36 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       })),
     };
     return id ? this.goodsReceiptApi.update(id, body) : this.goodsReceiptApi.create(body);
+  }
+
+  private _approveReceipt(id: number | null, isApprove: boolean): Observable<GoodsReceiptDto> {
+    if (id == null) {
+      return throwError(() => new Error(this.i18n.t('goodsReceipt.err.notFound')));
+    }
+
+    const receipt = this.goodsReceiptApi.items().find(r => r.id === id);
+    if (!receipt) {
+      return throwError(() => new Error(this.i18n.t('goodsReceipt.err.notFound')));
+    }
+
+    const body: GoodsReceiptRequest = {
+      receiptNo: receipt.receiptNo,
+      warehouseId: receipt.warehouseId,
+      supplierId: receipt.supplierId ?? null,
+      referenceType: receipt.referenceType ?? null,
+      referenceId: receipt.referenceId,
+      receiptDate: receipt.receiptDate,
+      remark: receipt.remark ?? null,
+
+      approvedBy: receipt.approvedBy,
+      approvedDate: isApprove ? formatDate(new Date(), DATETIME_LOCAL, 'en-US') : null,
+      postedBy: receipt.postedBy,
+
+      postedDate: receipt.postedDate,
+      receiptType: receipt.receiptType ?? 1,
+    };
+
+    return this.goodsReceiptApi.update(id, body);
   }
 
   private _reconcile<T extends { id: number }>(current: T | null, rows: T[]): T | null {
