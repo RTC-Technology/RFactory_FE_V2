@@ -34,12 +34,29 @@ export const PERMISSIONS = {
   functionGroup: crud('function-group'),
   function: crud('function'),
   menu: crud('menu'),
+  warehouse: crud('warehouse'),
+  warehouseZone: crud('warehouse-zone'),
+  warehouseLocation: crud('warehouse-location'),
   goodsReceipt: crud('goods-receipt'),
+  goodsReceiptDetail: crud('goods-receipt-detail'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
   },
 } as const;
+
+/**
+ * Splits `<entity>.<action>` so a code can be shown as a name instead of raw text.
+ *
+ * Split on the *last* dot: entities carry hyphens (`goods-receipt-detail`) but never dots,
+ * so anything before it is the entity. Returns null for a string that is not a code at all,
+ * which the caller renders verbatim rather than guessing at.
+ */
+export function splitPermissionCode(code: string): { entity: string; action: string } | null {
+  const at = code.lastIndexOf('.');
+  if (at <= 0 || at === code.length - 1) return null;
+  return { entity: code.slice(0, at), action: code.slice(at + 1) };
+}
 
 function crud<T extends string>(entity: T) {
   return {

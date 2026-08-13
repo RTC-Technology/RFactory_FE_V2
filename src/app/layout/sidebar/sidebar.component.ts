@@ -27,9 +27,8 @@ export class SidebarComponent {
 
   /**
    * GET /api/auth/menus đã lọc theo IsAdmin/FunctionId, nhưng đó chỉ là cái cổng admin
-   * đặt trên *bản ghi menu*. Một menu công khai trỏ tới route có gán quyền vẫn lọt qua:
-   * sidebar hiện nó, bấm vào thì guard chặn. Lọc thêm theo chính yêu cầu của route để
-   * người dùng không bao giờ thấy mục dẫn tới màn hình họ không vào được.
+   * đặt trên *bản ghi menu*. Lọc thêm theo yêu cầu của route để người dùng không thấy mục
+   * dẫn tới màn hình họ không vào được — trừ mục admin đã đánh dấu công khai, xem `_isVisible`.
    */
   readonly menuItems = computed(() => this._prune(this.menuService.menuItems()));
 
@@ -46,12 +45,25 @@ export class SidebarComponent {
         continue;
       }
 
-      if (this.routeAccess.canAccess(item.route)) {
+      if (this._isVisible(item)) {
         kept.push(children?.length ? { ...item, children } : { ...item, children: undefined });
       }
     }
 
     return kept;
+  }
+
+  /**
+   * Mục không gắn Function là mục admin đã cố ý để công khai, nên nó được hiện bất kể route
+   * đòi quyền gì. Ý định khai báo trên dòng menu thắng suy luận từ route.
+   *
+   * ⚠ Đây CHỈ là hiển thị. `permissionGuard` vẫn đọc `data.permissions` của route và không
+   * biết gì về dòng menu, nên một mục công khai trỏ vào route có gác sẽ hiện ra rồi đá người
+   * dùng sang /forbidden khi bấm. Muốn nó dùng được thật thì tài khoản phải giữ đủ mã route
+   * đòi — API phía sau cũng gác độc lập, không cách nào lách từ FE.
+   */
+  private _isVisible(item: MenuItem): boolean {
+    return item.functionId == null || this.routeAccess.canAccess(item.route);
   }
 
   collapsed = false;

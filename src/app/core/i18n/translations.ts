@@ -95,6 +95,47 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     en: 'Ask an administrator to grant these to a user group you belong to, on the User group screen. You need to sign out and back in once they have.',
   },
 
+  // ─── Permission names ─────────────────────────────────────────────────────
+  // Mirrors PermissionCatalog.cs on the backend, which holds the same labels but sits
+  // behind `function.view` — the one code a user hitting /forbidden is least likely to
+  // hold. Composed from entity + action rather than one string per code, so the 23 × 6
+  // combinations cost 29 entries instead of 138.
+  'perm.label': { vi: '{action} {entity}', en: '{action} {entity}' },
+
+  'perm.action.view': { vi: 'Xem', en: 'View' },
+  'perm.action.add': { vi: 'Thêm', en: 'Add' },
+  'perm.action.edit': { vi: 'Sửa', en: 'Edit' },
+  'perm.action.delete': { vi: 'Xoá', en: 'Delete' },
+  'perm.action.approve': { vi: 'Duyệt', en: 'Approve' },
+  'perm.action.unapprove': { vi: 'Bỏ duyệt', en: 'Unapprove' },
+
+  'perm.entity.factory': { vi: 'nhà máy', en: 'factory' },
+  'perm.entity.area': { vi: 'khu vực', en: 'area' },
+  'perm.entity.line': { vi: 'line', en: 'line' },
+  'perm.entity.unit-category': { vi: 'nhóm đơn vị tính', en: 'unit category' },
+  'perm.entity.unit': { vi: 'đơn vị tính', en: 'unit' },
+  'perm.entity.unit-conversion': { vi: 'quy đổi đơn vị', en: 'unit conversion' },
+  'perm.entity.product-type': { vi: 'loại sản phẩm', en: 'product type' },
+  'perm.entity.product': { vi: 'sản phẩm', en: 'product' },
+  'perm.entity.bom': { vi: 'định mức nguyên vật liệu (BOM)', en: 'bill of materials (BOM)' },
+  'perm.entity.bom-detail': { vi: 'chi tiết BOM', en: 'BOM line' },
+  'perm.entity.shift': { vi: 'ca làm việc', en: 'shift' },
+  'perm.entity.shift-break': { vi: 'giờ nghỉ trong ca', en: 'shift break' },
+  'perm.entity.machine-type': { vi: 'loại máy', en: 'machine type' },
+  'perm.entity.machine': { vi: 'máy', en: 'machine' },
+  'perm.entity.organization': { vi: 'cơ cấu tổ chức', en: 'organization' },
+  'perm.entity.user': { vi: 'người dùng', en: 'user' },
+  'perm.entity.user-group': { vi: 'nhóm người dùng', en: 'user group' },
+  'perm.entity.function-group': { vi: 'nhóm quyền', en: 'permission group' },
+  'perm.entity.function': { vi: 'quyền', en: 'permission' },
+  'perm.entity.menu': { vi: 'menu', en: 'menu' },
+  'perm.entity.warehouse': { vi: 'kho', en: 'warehouse' },
+  'perm.entity.warehouse-zone': { vi: 'khu vực trong kho', en: 'warehouse zone' },
+  'perm.entity.warehouse-location': { vi: 'vị trí lưu trữ', en: 'storage location' },
+  'perm.entity.goods-receipt': { vi: 'phiếu nhập kho', en: 'goods receipt' },
+  'perm.entity.goods-receipt-detail': { vi: 'chi tiết phiếu nhập', en: 'goods receipt line' },
+  'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
+
   // ─── Dashboard (demo data) ────────────────────────────────────────────────
   'dashboard.title': { vi: 'Tổng quan', en: 'Dashboard' },
   'dashboard.subtitle': { vi: 'Chào mừng trở lại! Đây là tình hình hiện tại.', en: "Welcome back! Here's what's happening." },

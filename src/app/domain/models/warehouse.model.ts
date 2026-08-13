@@ -18,6 +18,22 @@ export interface WarehouseRequest {
     description?: string | null;
 }
 
+export interface ZoneDto {
+    id: number;
+    warehouseId?: number | null;
+    warehouseZoneCode?: string | null;
+    warehouseZoneName?: string | null;
+    description?: string | null;
+}
+
+export interface ZoneRequest {
+    id: number;
+    warehouseId?: number | null;
+    warehouseZoneCode?: string | null;
+    warehouseZoneName?: string | null;
+    description?: string | null;
+}
+
 export interface LocationDto {
     id: number;
     warehouseZoneId?: number | null;

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { I18nService } from '../../core/services/i18n.service';
+import { splitPermissionCode } from '../../core/auth/permissions';
 
 @Component({
   selector: 'app-forbidden',
@@ -25,8 +26,11 @@ import { I18nService } from '../../core/services/i18n.service';
             {{ i18n.t(mode() === 'all' ? 'forbidden.needAll' : 'forbidden.needAny') }}
           </p>
           <ul class="forbidden__list">
-            @for (code of missing(); track code) {
-              <li><code>{{ code }}</code></li>
+            @for (permission of missing(); track permission.code) {
+              <li>
+                <span class="forbidden__name">{{ permission.name }}</span>
+                <code class="forbidden__code">{{ permission.code }}</code>
+              </li>
             }
           </ul>
           <p class="forbidden__hint">{{ i18n.t('forbidden.hint') }}</p>
@@ -52,10 +56,15 @@ import { I18nService } from '../../core/services/i18n.service';
     }
     .forbidden__codes-label { margin: 0 0 8px; font-size: 12.5px; color: var(--text-secondary); }
     .forbidden__list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-    .forbidden__list code {
+    .forbidden__list li {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 5px 10px; border-radius: 6px;
+      background: var(--input-bg); border: 1px solid var(--border);
+    }
+    .forbidden__name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+    .forbidden__code {
       font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
-      font-size: 12px; padding: 3px 9px; border-radius: 5px;
-      background: var(--input-bg); border: 1px solid var(--border); color: var(--text-primary);
+      font-size: 11px; color: var(--text-muted);
     }
     .forbidden__hint { margin: 0; font-size: 11.5px; line-height: 1.5; }
     .btn { padding: 9px 20px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; }
@@ -70,7 +79,30 @@ export class ForbiddenComponent {
   private readonly params = toSignal(this.route.queryParamMap, { requireSync: true });
 
   readonly missing = computed(() =>
-    (this.params().get('required') ?? '').split(',').map(c => c.trim()).filter(Boolean));
+    (this.params().get('required') ?? '')
+      .split(',')
+      .map(code => code.trim())
+      .filter(Boolean)
+      .map(code => ({ code, name: this._name(code) })));
 
   readonly mode = computed(() => this.params().get('mode') ?? 'any');
+
+  /**
+   * `goods-receipt.view` → "Xem phiếu nhập kho". The raw code stays on screen beside it:
+   * it is what an admin has to find and tick on the User group screen, so replacing it
+   * outright would fix the reader's problem and create the granter's.
+   */
+  private _name(code: string): string {
+    const parts = splitPermissionCode(code);
+    if (!parts) return code;
+
+    const entity = this.i18n.t(`perm.entity.${parts.entity}`);
+    const action = this.i18n.t(`perm.action.${parts.action}`);
+
+    // t() echoes an unknown key back, so a code this catalogue has not caught up with
+    // would otherwise render as literal `perm.entity.foo` at the user.
+    if (entity.startsWith('perm.') || action.startsWith('perm.')) return code;
+
+    return this.i18n.t('perm.label', { action, entity });
+  }
 }
