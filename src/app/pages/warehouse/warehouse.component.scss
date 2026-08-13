@@ -1,0 +1,21 @@
+/* Master-detail: Warehouse on the left spanning full height, Zone over Location on the right.
+   Each panel scrolls its own table; the page itself never scrolls. */
+
+@use '../../shared/styles/master-detail';
+
+.col-type     { width: 130px; }
+.col-active   { width: 100px; }
+.col-capacity { width: 120px; }
+.col-picking  { width: 120px; }
+
+.field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  label {
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+  }
+}
+

@@ -35,6 +35,9 @@ export const PERMISSIONS = {
   function: crud('function'),
   menu: crud('menu'),
   goodsReceipt: crud('goods-receipt'),
+  warehouse:         crud('warehouse'),
+  warehouseZone:     crud('warehouse-zone'),
+  warehouseLocation: crud('warehouse-location'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
