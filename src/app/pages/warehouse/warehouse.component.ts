@@ -17,7 +17,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import {
@@ -67,7 +67,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './warehouse.component.html',
   styleUrl: './warehouse.component.scss',
 })
-export class WarehouseComponent implements OnInit {
+export class WarehouseComponent extends PermissionAwarePage implements OnInit {
   private readonly warehouseApi = inject(WarehouseApiService);
   private readonly zoneApi = inject(WarehouseZoneApiService);
   private readonly locationApi = inject(WarehouseLocationApiService);
@@ -75,8 +75,6 @@ export class WarehouseComponent implements OnInit {
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly split = inject(SplitStateService);
-
-  readonly perms = PERMISSIONS;
 
   readonly typeOf = warehouseTypeOf;
 
@@ -110,6 +108,10 @@ export class WarehouseComponent implements OnInit {
   });
 
   constructor() {
+    // No entity passed: the three panels each gate on their own code set, handed to the
+    // shared toolbar template through ngTemplateOutlet.
+    super();
+
     effect(() => {
       const zones = this.zones();
       untracked(() => this.selectedZone.set(this._reconcile(this.selectedZone(), zones)));

@@ -27,7 +27,7 @@ import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
-import { LocationApiService, WarehouseApiService } from '../../core/services/warehouse-api.service';
+import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
 import { InputNumberModule } from 'primeng/inputnumber';
 
 type EntityKind = 'goodsReceipt' | 'goodsReceiptDetail';
@@ -55,7 +55,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
   private readonly productApi = inject(ProductApiService);
   private readonly unitApi = inject(UnitApiService);
   private readonly warehouseApi = inject(WarehouseApiService);
-  private readonly locationApi = inject(LocationApiService);
+  private readonly locationApi = inject(WarehouseLocationApiService);
   private readonly goodsReceiptApi = inject(GoodsReceiptApiService);
   private readonly goodsReceiptDetailApi = inject(GoodsReceiptDetailApiService);
   private readonly messages = inject(MessageService);
