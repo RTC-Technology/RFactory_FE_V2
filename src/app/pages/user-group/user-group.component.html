@@ -13,26 +13,32 @@
       </div>
 
       <div class="toolbar">
-        <button *appHasPermission="perms.userGroup.add" type="button" class="tool" (click)="openCreate()">
-          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="3" y="3" width="12" height="14" rx="1.5"/>
-            <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
-          </svg>
-          <span>{{ i18n.t('common.add') }}</span>
-        </button>
-        <button *appHasPermission="perms.userGroup.edit" type="button" class="tool" [disabled]="!selectedGroup()" (click)="openEdit()">
-          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
-            <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
-          </svg>
-          <span>{{ i18n.t('common.edit') }}</span>
-        </button>
-        <button *appHasPermission="perms.userGroup.delete" type="button" class="tool tool--danger" [disabled]="!selectedGroup()" (click)="askDelete()">
-          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
-          </svg>
-          <span>{{ i18n.t('common.delete') }}</span>
-        </button>
+        @if (canAdd()) {
+          <button type="button" class="tool" (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+              <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+          </button>
+        }
+        @if (canEdit()) {
+          <button type="button" class="tool" [disabled]="!selectedGroup()" (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+              <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+          </button>
+        }
+        @if (canDelete()) {
+          <button type="button" class="tool tool--danger" [disabled]="!selectedGroup()" (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+          </button>
+        }
 
         <span class="tool__sep"></span>
         <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
@@ -95,13 +101,14 @@
 
         <div class="toolbar">
           <!-- Rights and membership are edits of the group, so they ride on the same code. -->
-          <button *appHasPermission="perms.userGroup.edit" type="button" class="tool"
-                  [disabled]="!selectedGroup()" (click)="openRights()">
-            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>
-            </svg>
-            <span>{{ i18n.t('ug.assignRights') }}</span>
-          </button>
+          @if (canEdit()) {
+            <button type="button" class="tool" [disabled]="!selectedGroup()" (click)="openRights()">
+              <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>
+              </svg>
+              <span>{{ i18n.t('ug.assignRights') }}</span>
+            </button>
+          }
         </div>
 
         <div class="table-scroll">
@@ -144,14 +151,15 @@
         </div>
 
         <div class="toolbar">
-          <button *appHasPermission="perms.userGroup.edit" type="button" class="tool"
-                  [disabled]="!selectedGroup()" (click)="openMembers()">
-            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-            </svg>
-            <span>{{ i18n.t('ug.assignMembers') }}</span>
-          </button>
+          @if (canEdit()) {
+            <button type="button" class="tool" [disabled]="!selectedGroup()" (click)="openMembers()">
+              <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+              </svg>
+              <span>{{ i18n.t('ug.assignMembers') }}</span>
+            </button>
+          }
         </div>
 
         <div class="table-scroll">
@@ -176,13 +184,15 @@
                   }
                 </td>
                 <td class="col-remove">
-                  <button *appHasPermission="perms.userGroup.edit" type="button" class="row-remove"
-                          [title]="i18n.t('common.delete')" (click)="removeMember(row)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                  </button>
+                  @if (canEdit()) {
+                    <button type="button" class="row-remove"
+                            [title]="i18n.t('common.delete')" (click)="removeMember(row)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                    </button>
+                  }
                 </td>
               </tr>
             </ng-template>

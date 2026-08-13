@@ -14,7 +14,7 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { AreaApiService, FactoryApiService, LineApiService } from '../../core/services/master-data-api.service';
@@ -53,7 +53,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   templateUrl: './factory-structure.component.html',
   styleUrl: './factory-structure.component.scss',
 })
-export class FactoryStructureComponent implements OnInit {
+export class FactoryStructureComponent extends PermissionAwarePage implements OnInit {
   private readonly factoryApi = inject(FactoryApiService);
   private readonly areaApi = inject(AreaApiService);
   private readonly lineApi = inject(LineApiService);
@@ -62,9 +62,6 @@ export class FactoryStructureComponent implements OnInit {
   readonly i18n = inject(I18nService);
   /** Splitter sizes go through SecureStorageService rather than PrimeNG's own plain-text stateStorage. */
   readonly split = inject(SplitStateService);
-
-  /** Passed into the shared toolbar template so each panel gates its own buttons. */
-  readonly perms = PERMISSIONS;
 
   readonly statusOf = lineStatusOf;
 
@@ -102,6 +99,10 @@ export class FactoryStructureComponent implements OnInit {
   });
 
   constructor() {
+    // No entity passed: the three panels each gate on their own code set, handed to the
+    // shared toolbar template through ngTemplateOutlet.
+    super();
+
     // Keep the two detail selections on a row that is actually on screen: re-point at
     // the freshly loaded object when the row survived a reload (matching on id alone
     // would leave the stale instance behind and the edit form would read old values),

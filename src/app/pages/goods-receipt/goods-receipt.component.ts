@@ -10,6 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { I18nService } from '../../core/services/i18n.service';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { GoodsReceiptApiService, GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-api.service';
 import {
@@ -47,7 +48,7 @@ const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
   templateUrl: './goods-receipt.component.html',
   styleUrl: './goods-receipt.component.scss',
 })
-export class GoodsReceiptComponent implements OnInit {
+export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit {
 
   private readonly productApi = inject(ProductApiService);
   private readonly unitApi = inject(UnitApiService);
@@ -57,8 +58,6 @@ export class GoodsReceiptComponent implements OnInit {
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
   readonly split = inject(SplitStateService);
-
-  readonly perms = PERMISSIONS;
 
   readonly loading = computed(() => this.goodsReceiptApi.loading() || this.goodsReceiptDetailApi.loading());
 
@@ -121,6 +120,11 @@ export class GoodsReceiptComponent implements OnInit {
     this.goodsReceiptApi.items().filter(b => b.id == null).length);
 
   constructor() {
+    // The toolbar still gates through `*appHasPermission`: its `<ng-template>` already
+    // binds a `canAdd` context variable meaning "a row can be added right now", which
+    // would shadow the inherited signal of the same name.
+    super(PERMISSIONS.goodsReceipt);
+
     effect(() => {
       const receipt = this.receipt();
       untracked(() => this.selectedReceipt.set(this._reconcile(this.selectedReceipt(), receipt)));

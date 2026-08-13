@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { TabService } from '../../core/services/tab.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { Lang } from '../../core/i18n/translations';
@@ -77,9 +78,15 @@ import { Lang } from '../../core/i18n/translations';
     @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
   `]
 })
-export class SettingsComponent {
+export class SettingsComponent extends PermissionAwarePage {
   private readonly tabService = inject(TabService);
   readonly i18n = inject(I18nService);
+
+  constructor() {
+    // No entity passed: `settings` grants view/edit only, and this screen has no
+    // add/delete of its own — everything on it writes through another page.
+    super();
+  }
 
   onLangChange(event: Event): void {
     this.i18n.setLang((event.target as HTMLSelectElement).value as Lang);
