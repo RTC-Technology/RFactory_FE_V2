@@ -47,5 +47,7 @@ function crud<T extends string>(entity: T) {
     add: `${entity}.add`,
     edit: `${entity}.edit`,
     delete: `${entity}.delete`,
+    approve: `${entity}.approve`,
+    unapprove: `${entity}.unapprove`,
   } as const;
 }
