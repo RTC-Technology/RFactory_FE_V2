@@ -149,6 +149,7 @@
                 <th class="col-quantity">{{ i18n.t('goodsReceiptDetail.quantity') }}</th>
                 <th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
                 <th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
+                <th class="col-expireDate">{{ i18n.t('goodsReceiptDetail.expireDate') }}</th>
                 <th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
               </tr>
             </ng-template>
@@ -171,12 +172,13 @@
                 <td class="col-unitPrice">
                   {{ row.quantity != null ? (row.unitPrice | number:'1.0-2') : '—' }}
                 </td>
+                <td class="col-expireDate">{{ row.expireDate | date}}</td>
                 <td class="col-remark">{{ row.remark || '—' }}</td>
               </tr>
             </ng-template>
             <ng-template #emptymessage>
               <tr>
-                <td colspan="9">
+                <td colspan="10">
                   <p class="empty">
                     {{ selectedReceipt() ? i18n.t('goodsReceiptDetail.emptyLine') :
                     i18n.t('goodsReceiptDetail.emptyLineHint') }}
@@ -207,7 +209,7 @@
           {{ i18n.t('goodsReceipt.receiptNo') }}
           <span class="req">*</span>
         </label>
-        <input pInputText id="gr-receiptNo" name="receiptNo" [(ngModel)]="form.receiptNo" autocomplete="off" disabled />
+        <input pInputText id="gr-receiptNo" name="receiptNo" [(ngModel)]="form.receiptNo" autocomplete="off" />
       </div>
 
       <div class="field">
@@ -305,6 +307,10 @@
               </th>
               <th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
               <th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
+              <th class="col-expireDate">
+                {{ i18n.t('goodsReceiptDetail.expireDate') }}
+                <span class="req">*</span>
+              </th>
               <th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
               <th class="col-act">{{ i18n.t('common.actions') }}</th>
             </tr>
@@ -367,6 +373,10 @@
                   [(ngModel)]="row.unitPrice" /> -->
                 <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.unitPrice" mode="decimal"
                   [showButtons]="true" inputId="minmax-buttons" [min]="0" />
+              </td>
+              <td class="col-expireDate">
+                <input pInputText id="gr-expireDate" name="expireDate" type="datetime-local"
+                  [(ngModel)]="row.expireDate" />
               </td>
 
               <td class="col-remark">
