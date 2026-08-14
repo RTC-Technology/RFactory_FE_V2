@@ -29,6 +29,7 @@ import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { SupplierApiService } from '../../core/services/master-data-api.service';
 
 type EntityKind = 'goodsReceipt' | 'goodsReceiptDetail';
 
@@ -56,8 +57,11 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
   private readonly unitApi = inject(UnitApiService);
   private readonly warehouseApi = inject(WarehouseApiService);
   private readonly locationApi = inject(WarehouseLocationApiService);
+  private readonly supplierApi = inject(SupplierApiService);
+
   private readonly goodsReceiptApi = inject(GoodsReceiptApiService);
   private readonly goodsReceiptDetailApi = inject(GoodsReceiptDetailApiService);
+
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
@@ -94,6 +98,16 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
     return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
   }
 
+  supplierLabel(id?: number | null): string {
+    const supplier = this.supplierApi.items().find(s => s.id === id);
+    return supplier ? `${supplier.supplierCode} · ${supplier.supplierName}` : '';
+  }
+
+  typeLabel(value: number): string {
+    const type = GOODS_RECEIPT_TYPES.find(s => s.value === value);
+    return type ? this.i18n.t(type.labelKey) : '';
+  }
+
   readonly unitOptions = computed(() =>
     this.unitApi.items()
       .filter(u => u.isActive)
@@ -117,6 +131,11 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
     this.locationApi.items()
       .filter(l => l.isActive)
       .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
+
+  readonly supplierOptions = computed(() =>
+    this.supplierApi.items()
+      // .filter(s => s.a)
+      .map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
 
   // ─── Selection ──────────────────────────────────────────────────────────────
 
@@ -174,6 +193,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       units: this.unitApi.load(),
       warehouse: this.warehouseApi.load(),
       location: this.locationApi.load(),
+      supplier: this.supplierApi.load(),
     }).subscribe({
       error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
     });

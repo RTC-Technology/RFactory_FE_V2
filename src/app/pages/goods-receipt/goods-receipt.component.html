@@ -103,7 +103,7 @@
                 (dblclick)="openEdit()">
                 <td class="col-receiptNo">{{ row.receiptNo }}</td>
                 <td>{{ warehouseLabel(row.warehouseId) || '—' }}</td>
-                <td class="col-supplier">{{ row.supplierId || '—' }}</td>
+                <td class="col-supplier">{{ supplierLabel(row.supplierId) || '—' }}</td>
                 <td class="col-reference">{{ row.referenceType || '—' }}</td>
                 <td class="col-referenceId">{{ row.referenceId || '—' }}</td>
                 <td class="col-receiptDate">{{ row.receiptDate | date }}</td>
@@ -112,7 +112,7 @@
                 <td class="col-approvedDate">{{ row.approvedDate | date }}</td>
                 <td class="col-postedBy">{{ row.postedBy || '—' }}</td>
                 <td class="col-postedDate">{{ row.postedDate | date }}</td>
-                <td class="col-receiptType">{{ row.receiptType || '—' }}</td>
+                <td class="col-receiptType">{{ typeLabel(row.receiptType) || '—' }}</td>
               </tr>
             </ng-template>
             <ng-template #emptymessage>
@@ -227,7 +227,7 @@
       <div class="field">
         <label for="gr-supplierId">{{ i18n.t('goodsReceipt.supplierId') }}</label>
         <!-- <input pInputText type="number" min="0" id="gr-supplierId" name="supplierId" [(ngModel)]="form.supplierId" /> -->
-        <p-select inputId="gr-supplierId" [options]="" optionLabel="label" optionValue="value"
+        <p-select inputId="gr-supplierId" [options]="supplierOptions()" optionLabel="label" optionValue="value"
           [(ngModel)]="form.supplierId" [placeholder]="i18n.t('product.status.unset')" appendTo="body" class="w-full" />
       </div>
     </div>
