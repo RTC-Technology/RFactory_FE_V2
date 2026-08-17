@@ -35,10 +35,15 @@ export interface GoodsReceiptDetailDto {
        receivedQty: number;
        unitPrice?: number | null;
        remark?: string | null;
+       receiptNo?: string | null;
        receiptDate?: string | null;
        expireDate?: string | null;
        productCode?: string | null;
        productName?: string | null;
+       status?: number | null;
+       defaultUnitId?: number | null;
+       unitCode?: string | null;
+       unitName?: string | null;
 }
 
 

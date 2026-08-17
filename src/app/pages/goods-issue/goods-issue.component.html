@@ -324,7 +324,39 @@
                                     [filterPlaceholder]="i18n.t('common.search')"
                                     [placeholder]="i18n.t('goodsIssueDetail.selectProduct')"
                                     [emptyFilterMessage]="i18n.t('goodsIssueDetail.noProduct')" appendTo="body"
-                                    class="w-full" />
+                                    class="w-full" panelStyleClass="grid-picker" scrollHeight="18rem">
+
+                                    <ng-template #header>
+                                        <div class="picker-row picker-row--head">
+                                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                }}</span>
+                                        </div>
+                                    </ng-template>
+
+                                    <ng-template #item let-opt>
+                                        <div class="picker-row">
+                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                {{ opt.drawingNo || '—' }}
+                                            </span>
+                                            <span class="picker-cell picker-cell--center">
+                                                @if (opt.statusLabel) {
+                                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                    [rounded]="true" />
+                                                } @else {
+                                                <span class="picker-cell--muted">—</span>
+                                                }
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
                             </td>
 
                             <td class="col-unit">
@@ -348,31 +380,35 @@
                             </td>
 
                             <td class="col-serialNo">
-                                <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" />
+                                <!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" /> -->
 
-                                <!-- <p-autocomplete [(ngModel)]="row.serialNo" [group]="true"
+                                <p-autocomplete [(ngModel)]="row.serialNo" [group]="true"
                                     [suggestions]="filteredGroups()" (completeMethod)="search($event)"
                                     optionLabel="label" optionGroupLabel="label" optionGroupChildren="items"
-                                    placeholder="" inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200 "
+                                    placeholder="" inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200"
                                     scrollHeight="18rem" [pt]="{ optionGroup: 'border-b border-surface' }">
-                                    <ng-template let-group #group>
-                                        <div class="flex items-center gap-2">
-                                            <span>{{ group.label }}</span>
+
+                                    <!-- Item trong dropdown -->
+                                    <ng-template #item let-item>
+                                        <div class="flex justify-content-between align-items-center w-full">
+                                            <span>{{ item.label }}</span>
+
+                                            @if (item.daysRemaining !== undefined) {
+                                            <small class="text-color-secondary ml-3">
+                                                @if (item.daysRemaining < 0) { Quá {{ item.daysRemaining }}
+                                                    ngày } @else if (item.daysRemaining===0) { Hết hạn hôm nay } @else {
+                                                    Còn {{ item.daysRemaining }} ngày }
+                                            </small>
+                                                    }
                                         </div>
                                     </ng-template>
 
-                                    <ng-template let-item #item>
-                                        <div>
-                                            {{ item.label }}
-                                        </div>
+                                    <!-- Giá trị sau khi chọn -->
+                                    <ng-template #selectedItem let-item>
+                                        {{ item.label }}
                                     </ng-template>
 
-                                    <ng-template let-item #selectedItem>
-                                        <div>
-                                            {{ item.value }}
-                                        </div>
-                                    </ng-template>
-                                </p-autocomplete> -->
+                                </p-autocomplete>
                             </td>
 
                             <td class="col-quantity">

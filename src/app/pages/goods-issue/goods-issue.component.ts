@@ -16,7 +16,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
-import { ConfirmationService, MessageService, SelectItemGroup } from 'primeng/api';
+import { ConfirmationService, MessageService, SelectItem, SelectItemGroup } from 'primeng/api';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
@@ -30,6 +30,7 @@ import { forkJoin, Observable, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-api.service';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
+import { productStatusOf } from '../../domain/models/product.model';
 
 type EntityKind = 'goodsIssue' | 'goodsIssueDetail';
 
@@ -37,6 +38,27 @@ type EntityKind = 'goodsIssue' | 'goodsIssueDetail';
  *  the browser silently blanks the field, which used to leave the date box empty. */
 const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
 const DATETIME_SHOW = "dd/MM/yyyy HH:mm";
+
+/**
+ * One row of the product picker in the line grid. The dropdown lays these out as columns,
+ * so the fields stay apart instead of being flattened into a single label — `filterBy`
+ * then searches each of them, which is how typing a drawing number finds the product.
+ * `label` is still what the closed select and the accessibility layer read.
+ */
+interface ProductOption {
+  value: number;
+  label: string;
+  code: string;
+  name: string;
+  unit: string;
+  drawingNo: string;
+  statusLabel: string;
+  statusSeverity: 'success' | 'danger' | undefined;
+}
+
+interface SerialNoSelectItem extends SelectItem {
+  daysRemaining?: number;
+}
 
 @Component({
   selector: 'app-goods-issue',
@@ -120,67 +142,163 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
   /** Feeds the per-row picker in the detail grid — `filterBy` searches both code and name,
    *  so the label carries the two fields an operator types. */
-  readonly productOptions = computed(() =>
-    this.productApi.items()
-      .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
+  // readonly productOptions = computed(() =>
+  //   this.productApi.items()
+  //     .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
 
+  readonly productOptions = computed<ProductOption[]>(() => {
+    const units = new Map(this.unitApi.items().map(u => [u.id, u.symbol || u.unitCode]));
 
-  // readonly serialNoSuggestions = computed<SelectItemGroup[]>(() => {
-  //   const items = this.goodsReceiptDetailApi.items()
-  //     .slice()
-  //     .sort((a, b) => {
-  //       const expireA = a.expireDate
-  //         ? new Date(a.expireDate).getTime()
-  //         : Infinity;
+    return this.productApi.items().map(p => {
+      const status = productStatusOf(p.status);
+      return {
+        value: p.id,
+        label: `${p.productCode} · ${p.productName}`,
+        code: p.productCode,
+        name: p.productName,
+        unit: (p.defaultUnitId != null ? units.get(p.defaultUnitId) : '') ?? '',
+        drawingNo: p.drawingNo ?? '',
+        statusLabel: status ? this.i18n.t(status.labelKey) : '',
+        statusSeverity: status?.severity,
+      };
+    });
+  });
 
-  //       const expireB = b.expireDate
-  //         ? new Date(b.expireDate).getTime()
-  //         : Infinity;
+  readonly serialNoSuggestions = computed<SelectItemGroup[]>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  //       if (expireA !== expireB) {
-  //         return expireA - expireB;
-  //       }
+    const data = this.goodsReceiptDetailApi
+      .items()
+      .filter(x => x.serialNo)
+      .map(x => {
+        const expireDate = x.expireDate
+          ? new Date(x.expireDate)
+          : null;
 
-  //       const receiptA = a.receiptDate
-  //         ? new Date(a.receiptDate).getTime()
-  //         : Infinity;
+        const receiptDate = x.receiptDate
+          ? new Date(x.receiptDate)
+          : null;
 
-  //       const receiptB = b.receiptDate
-  //         ? new Date(b.receiptDate).getTime()
-  //         : Infinity;
+        expireDate?.setHours(0, 0, 0, 0);
+        receiptDate?.setHours(0, 0, 0, 0);
 
-  //       return receiptA - receiptB;
-  //     });
+        const daysRemaining = expireDate
+          ? Math.round(
+            (expireDate.getTime() - today.getTime()) /
+            (1000 * 60 * 60 * 24)
+          )
+          : undefined;
 
-  //   const groups = new Map<string, SelectItemGroup>();
+        return {
+          serialNo: x.serialNo!,
+          expireDate,
+          receiptDate,
+          daysRemaining
+        };
+      });
 
-  //   for (const p of this.goodsReceiptDetailApi.items()) {
-  //     const expireDate = p.expireDate
-  //       ? formatDate(p.expireDate, DATETIME_SHOW, 'en-US')
-  //       : 'Không có hạn';
+    const expired: SerialNoSelectItem[] = [];
+    const expiring: SerialNoSelectItem[] = [];
+    const valid: SerialNoSelectItem[] = [];
+    const noExpiry: SerialNoSelectItem[] = [];
 
-  //     const receiptDate = p.receiptDate
-  //       ? formatDate(p.receiptDate, DATETIME_SHOW, 'en-US')
-  //       : '—';
+    for (const item of data) {
+      const selectItem: SerialNoSelectItem = {
+        label: item.serialNo,
+        value: item.serialNo,
+        daysRemaining: item.daysRemaining
+      };
 
-  //     const key = p.expireDate ?? '—';
+      if (item.daysRemaining === undefined) {
+        noExpiry.push(selectItem);
+      } else if (item.daysRemaining < 0) {
+        expired.push(selectItem);
+      } else if (item.daysRemaining <= 30) {
+        expiring.push(selectItem);
+      } else {
+        valid.push(selectItem);
+      }
+    }
 
-  //     if (!groups.has(key)) {
-  //       groups.set(key, {
-  //         label: expireDate,
-  //         value: key,
-  //         items: []
-  //       });
-  //     }
+    // FEFO: expireDate ASC -> receiptDate ASC
+    const sortFefo = (
+      a: SerialNoSelectItem,
+      b: SerialNoSelectItem
+    ) => {
+      const itemA = data.find(x => x.serialNo === a.value);
+      const itemB = data.find(x => x.serialNo === b.value);
 
-  //     groups.get(key)!.items.push({
-  //       label: `${receiptDate}. ${p.serialNo ?? '—'}`,
-  //       value: p.serialNo
-  //     });
-  //   }
+      if (!itemA || !itemB) return 0;
 
-  //   return Array.from(groups.values());
-  // });
+      if (itemA.expireDate && itemB.expireDate) {
+        const diff =
+          itemA.expireDate.getTime() -
+          itemB.expireDate.getTime();
+
+        if (diff !== 0) return diff;
+      }
+
+      if (itemA.receiptDate && itemB.receiptDate) {
+        return (
+          itemA.receiptDate.getTime() -
+          itemB.receiptDate.getTime()
+        );
+      }
+
+      if (itemA.receiptDate) return -1;
+      if (itemB.receiptDate) return 1;
+
+      return 0;
+    };
+
+    expired.sort(sortFefo);
+    expiring.sort(sortFefo);
+    valid.sort(sortFefo);
+
+    noExpiry.sort((a, b) => {
+      const itemA = data.find(x => x.serialNo === a.value);
+      const itemB = data.find(x => x.serialNo === b.value);
+
+      if (!itemA || !itemB) return 0;
+
+      if (itemA.receiptDate && itemB.receiptDate) {
+        return (
+          itemA.receiptDate.getTime() -
+          itemB.receiptDate.getTime()
+        );
+      }
+
+      if (itemA.receiptDate) return -1;
+      if (itemB.receiptDate) return 1;
+
+      return 0;
+    });
+
+    return [
+      {
+        label: '🔴 Đã hết hạn',
+        value: 'EXPIRED',
+        items: expired
+      },
+      {
+        label: '🟠 Sắp hết hạn',
+        value: 'EXPIRING',
+        items: expiring
+      },
+      {
+        label: '🟢 Còn hạn',
+        value: 'VALID',
+        items: valid
+      },
+      {
+        label: '⚪ Không có hạn sử dụng',
+        value: 'NO_EXPIRY',
+        items: noExpiry
+      }
+    ].filter(group => group.items.length > 0);
+  });
+
 
 
   readonly typeOptions = computed(() =>
@@ -204,42 +322,32 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
   //     // .filter(s => s.a)
   //     .map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
 
-  // filteredGroups = signal<SelectItemGroup[]>([]);
-  // search(event: AutoCompleteCompleteEvent) {
-  //   const query = event.query?.toLowerCase().trim() ?? '';
+  filteredGroups = signal<SelectItemGroup[]>([]);
+  search(event: AutoCompleteCompleteEvent) {
+    const query = event.query?.toLowerCase().trim() ?? '';
 
-  //   const groups = this.serialNoSuggestions();
-  //   console.log('g:', groups);
+    const groups = this.serialNoSuggestions();
 
-  //   if (!query) {
-  //     this.filteredGroups.set(groups);
-  //     return;
-  //   }
+    if (!query) {
+      this.filteredGroups.set(groups);
+      return;
+    }
 
-  //   const filtered = groups
-  //     .map(group => {
-  //       const groupMatch = group.label
-  //         ?.toLowerCase()
-  //         .includes(query);
-
-  //       const items = groupMatch
-  //         ? group.items
-  //         : group.items.filter(item =>
-  //           item.value?.toLowerCase().includes(query)
-  //         );
-
-  //       return {
-  //         ...group,
-  //         items
-  //       };
-  //     })
-  //     .filter(group => group.items.length > 0);
+    this.filteredGroups.set(
+      groups
+        .map(group => ({
+          ...group,
+          items: group.items.filter(item =>
+            String(item.label)
+              .toLowerCase()
+              .includes(query)
+          )
+        }))
+        .filter(group => group.items.length > 0)
+    );
+  }
 
 
-
-  //   this.filteredGroups.set(filtered);
-  //   console.log('filteredGroups:', this.filteredGroups());
-  // }
 
   // ─── Selection ──────────────────────────────────────────────────────────────
 
@@ -425,7 +533,9 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
   onDetailProductChange(row: GoodsIssueDetailDto, productId: number | null): void {
     row.productId = productId ?? 0;
     const product = this.productApi.items().find(p => p.id === productId);
+    // const receipDetail = this.goodsReceiptDetailApi.items().find(p => p.productId === productId);
     row.unitId = product?.defaultUnitId ?? row.unitId;
+
   }
 
   /** Received quantity tracks the ordered one until someone edits it apart. */
