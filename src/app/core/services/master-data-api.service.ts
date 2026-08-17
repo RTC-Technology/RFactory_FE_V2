@@ -4,6 +4,8 @@ import {
   AreaDto, AreaRequest,
   FactoryDto, FactoryRequest,
   LineDto, LineRequest,
+  SupplierDto,
+  SupplierRequest,
 } from '../../domain/models/master-data.model';
 import { CrudApiService } from './crud-api.service';
 
@@ -22,4 +24,9 @@ export class AreaApiService extends CrudApiService<AreaDto, AreaRequest> {
 @Injectable({ providedIn: 'root' })
 export class LineApiService extends CrudApiService<LineDto, LineRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/lines`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class SupplierApiService extends CrudApiService<SupplierDto, SupplierRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/supplier`;
 }

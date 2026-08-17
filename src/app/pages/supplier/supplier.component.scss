@@ -1,0 +1,11 @@
+@use '../../shared/styles/master-detail';
+
+.field-row {
+    display: flex;
+    gap: 12px;
+
+    >.field {
+        flex: 1;
+        min-width: 0;
+    }
+}
