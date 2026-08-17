@@ -207,6 +207,25 @@ export const routes: Routes = [
         },
       },
 
+      //goods issue
+      {
+        // Reads receipts and their lines, plus products and units — the detail grid's row
+        // pickers are driven from those two, not just labelled by them — and warehouses
+        // and storage locations to name where the goods landed. `reload()` forkJoins all
+        // six, so one missing view code fails the whole screen rather than one panel.
+        path: 'goods-issue',
+        loadComponent: () =>
+          import('./pages/goods-issue/goods-issue.component').then(m => m.GoodsIssueComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.goodsIssue.view, PERMISSIONS.goodsReceiptDetail.view,
+            PERMISSIONS.product.view, PERMISSIONS.unit.view,
+            PERMISSIONS.warehouse.view, PERMISSIONS.warehouseLocation.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
 
       {
         path: 'forbidden',
