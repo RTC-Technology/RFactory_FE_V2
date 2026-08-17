@@ -25,6 +25,7 @@ import { SplitterModule } from 'primeng/splitter';
 import { SelectModule } from 'primeng/select';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
+import { productStatusOf } from '../../domain/models/product.model';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
@@ -36,6 +37,23 @@ type EntityKind = 'goodsReceipt' | 'goodsReceiptDetail';
 /** `<input type="datetime-local">` accepts nothing else — a space instead of the `T` and
  *  the browser silently blanks the field, which used to leave the date box empty. */
 const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
+
+/**
+ * One row of the product picker in the line grid. The dropdown lays these out as columns,
+ * so the fields stay apart instead of being flattened into a single label — `filterBy`
+ * then searches each of them, which is how typing a drawing number finds the product.
+ * `label` is still what the closed select and the accessibility layer read.
+ */
+interface ProductOption {
+  value: number;
+  label: string;
+  code: string;
+  name: string;
+  unit: string;
+  drawingNo: string;
+  statusLabel: string;
+  statusSeverity: 'success' | 'danger' | undefined;
+}
 
 
 @Component({
@@ -113,11 +131,28 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       .filter(u => u.isActive)
       .map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })));
 
-  /** Feeds the per-row picker in the detail grid — `filterBy` searches both code and name,
-   *  so the label carries the two fields an operator types. */
-  readonly productOptions = computed(() =>
-    this.productApi.items()
-      .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
+  /**
+   * Feeds the per-row picker in the detail grid, which renders them as a small table.
+   * The unit is resolved through a map rather than `unitLabel`: that helper scans the unit
+   * list per call, and the picker asks for it once per product on every recompute.
+   */
+  readonly productOptions = computed<ProductOption[]>(() => {
+    const units = new Map(this.unitApi.items().map(u => [u.id, u.symbol || u.unitCode]));
+
+    return this.productApi.items().map(p => {
+      const status = productStatusOf(p.status);
+      return {
+        value: p.id,
+        label: `${p.productCode} · ${p.productName}`,
+        code: p.productCode,
+        name: p.productName,
+        unit: (p.defaultUnitId != null ? units.get(p.defaultUnitId) : '') ?? '',
+        drawingNo: p.drawingNo ?? '',
+        statusLabel: status ? this.i18n.t(status.labelKey) : '',
+        statusSeverity: status?.severity,
+      };
+    });
+  });
 
   readonly typeOptions = computed(() =>
     GOODS_RECEIPT_TYPES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
