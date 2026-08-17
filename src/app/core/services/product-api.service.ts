@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 import {
   BomDetailDto, BomDetailRequest, BomDto, BomRequest,
   ProductDto, ProductRequest, ProductTypeDto, ProductTypeRequest,
+  RoutingDto, RoutingOperationDto, RoutingOperationRequest, RoutingRequest,
   UnitCategoryDto, UnitCategoryRequest, UnitConversionDto, UnitConversionRequest,
   UnitDto, UnitRequest,
 } from '../../domain/models/product.model';
@@ -26,6 +27,16 @@ export class BomApiService extends CrudApiService<BomDto, BomRequest> {
 @Injectable({ providedIn: 'root' })
 export class BomDetailApiService extends CrudApiService<BomDetailDto, BomDetailRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/product/bom-details`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class RoutingApiService extends CrudApiService<RoutingDto, RoutingRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/product/routings`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class RoutingOperationApiService extends CrudApiService<RoutingOperationDto, RoutingOperationRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/product/routing-operations`;
 }
 
 /** Units and their categories/conversions live under MasterData — different prefix. */
