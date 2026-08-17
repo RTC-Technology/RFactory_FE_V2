@@ -79,7 +79,7 @@ export const routes: Routes = [
         data: { permissions: [PERMISSIONS.productType.view] },
       },
       {
-        // Reads types and units to label and pick, plus BOMs and their lines.
+        // Reads types and units to label and pick, plus BOMs, routings and their operations.
         path: 'products',
         loadComponent: () =>
           import('./pages/product/product.component').then(m => m.ProductComponent),
@@ -87,7 +87,7 @@ export const routes: Routes = [
         data: {
           permissions: [
             PERMISSIONS.product.view, PERMISSIONS.productType.view, PERMISSIONS.unit.view,
-            PERMISSIONS.bom.view, PERMISSIONS.bomDetail.view,
+            PERMISSIONS.bom.view, PERMISSIONS.routing.view, PERMISSIONS.routingOperation.view,
           ],
           permissionMode: 'all',
         },

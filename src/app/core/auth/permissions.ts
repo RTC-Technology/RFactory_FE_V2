@@ -24,6 +24,8 @@ export const PERMISSIONS = {
   product: crud('product'),
   bom: crud('bom'),
   bomDetail: crud('bom-detail'),
+  routing: crud('routing'),
+  routingOperation: crud('routing-operation'),
   shift: crud('shift'),
   shiftBreak: crud('shift-break'),
   machineType: crud('machine-type'),

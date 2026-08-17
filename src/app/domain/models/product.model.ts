@@ -131,3 +131,28 @@ export function requiredQuantity(line: BomDetailDto): number | null {
   const scaled = quantity * (1 + (line.scrapRate ?? 0) / 100);
   return scaled + (line.fixedScrapQty ?? 0);
 }
+
+export interface RoutingDto {
+  id: number;
+  /** The product this routing (process specification) describes. */
+  productId?: number | null;
+  version?: string | null;
+  isActive: boolean;
+}
+
+export type RoutingRequest = Omit<RoutingDto, 'id'>;
+
+export interface RoutingOperationDto {
+  id: number;
+  /** The routing the work step belongs to. */
+  routingId?: number | null;
+  sequence?: number | null;
+  routingOperationCode: string;
+  routingOperationName: string;
+  description?: string | null;
+  isFinishOperation: boolean;
+  isOutputOperation: boolean;
+}
+
+export type RoutingOperationRequest = Omit<RoutingOperationDto, 'id'>;
+

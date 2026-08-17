@@ -1,13 +1,14 @@
-/* Master-detail three deep: products on the left, the selected product's BOMs top right,
-   and the selected BOM's components below them. */
+﻿/* Product declaration screen. The main view is a single-product list; a "Detail" button on
+   each row opens a modal with three tabs (Thông tin / BOM List / Công đoạn). */
 
 @use '../../shared/styles/master-detail';
 
 .col-type    { width: 150px; }
 .col-unit    { width: 80px;  text-align: center; }
-.col-state   { width: 110px; }
+.col-state   { width: 110px; text-align: center; }
 .col-version { width: 100px; text-align: center; }
-.col-qty     { width: 110px; text-align: right; }
+.col-seq     { width: 70px;  text-align: center; }
+.col-action  { width: 96px;  text-align: center; }
 
 /* Scopes the whole list rather than acting on a row, so it lives in the panel header. */
 .type-filter {
@@ -16,6 +17,103 @@
   max-width: 200px;
 }
 
+/* The Detail button reads as a text link inside the actions cell, not a toolbar icon. */
+.tool--compact {
+  flex-direction: row;
+  gap: 0;
+  min-width: 0;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--accent);
+  border-radius: 5px;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+}
+
+.notice {
+  margin: 8px 12px 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ─── Detail modal tabs ──────────────────────────────────────────────────── */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tab-panel--stack { gap: 14px; }
+
+.tab-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-section__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-primary);
+}
+
+/* Tables inside the modal scroll instead of stretching the dialog forever. */
+.p-tabpanel .table-scroll { max-height: 260px; }
+.tab-section .table-scroll { max-height: 260px; }
+
+/* ─── Thông tin tab ──────────────────────────────────────────────────────── */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  padding: 4px 2px;
+}
+
+.info-grid__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.info-grid__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.info-grid__value {
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+/* ─── CRUD form ──────────────────────────────────────────────────────────── */
 .field-row {
   display: flex;
   gap: 12px;
