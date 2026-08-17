@@ -16,7 +16,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, SelectItemGroup } from 'primeng/api';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
@@ -28,12 +28,15 @@ import { GOODS_ISSUE_STATUSES, GoodsIssueDetailDto, GoodsIssueDto, GoodsIssueReq
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-api.service';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 
 type EntityKind = 'goodsIssue' | 'goodsIssueDetail';
 
 /** `<input type="datetime-local">` accepts nothing else — a space instead of the `T` and
  *  the browser silently blanks the field, which used to leave the date box empty. */
 const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
+const DATETIME_SHOW = "dd/MM/yyyy HH:mm";
 
 @Component({
   selector: 'app-goods-issue',
@@ -42,7 +45,7 @@ const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
     CommonModule, FormsModule,
     TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
     InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
-    HasPermissionDirective, PanelModule, CardModule, InputNumberModule
+    HasPermissionDirective, PanelModule, CardModule, InputNumberModule, AutoCompleteModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './goods-issue.component.html',
@@ -58,6 +61,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
   private readonly goodsIssueApi = inject(GoodsIssueApiService);
   private readonly goodsIssueDetailApi = inject(GoodsIssueDetailApiService);
+  private readonly goodsReceiptDetailApi = inject(GoodsReceiptDetailApiService);
 
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
@@ -120,6 +124,65 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     this.productApi.items()
       .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
 
+
+  // readonly serialNoSuggestions = computed<SelectItemGroup[]>(() => {
+  //   const items = this.goodsReceiptDetailApi.items()
+  //     .slice()
+  //     .sort((a, b) => {
+  //       const expireA = a.expireDate
+  //         ? new Date(a.expireDate).getTime()
+  //         : Infinity;
+
+  //       const expireB = b.expireDate
+  //         ? new Date(b.expireDate).getTime()
+  //         : Infinity;
+
+  //       if (expireA !== expireB) {
+  //         return expireA - expireB;
+  //       }
+
+  //       const receiptA = a.receiptDate
+  //         ? new Date(a.receiptDate).getTime()
+  //         : Infinity;
+
+  //       const receiptB = b.receiptDate
+  //         ? new Date(b.receiptDate).getTime()
+  //         : Infinity;
+
+  //       return receiptA - receiptB;
+  //     });
+
+  //   const groups = new Map<string, SelectItemGroup>();
+
+  //   for (const p of this.goodsReceiptDetailApi.items()) {
+  //     const expireDate = p.expireDate
+  //       ? formatDate(p.expireDate, DATETIME_SHOW, 'en-US')
+  //       : 'Không có hạn';
+
+  //     const receiptDate = p.receiptDate
+  //       ? formatDate(p.receiptDate, DATETIME_SHOW, 'en-US')
+  //       : '—';
+
+  //     const key = p.expireDate ?? '—';
+
+  //     if (!groups.has(key)) {
+  //       groups.set(key, {
+  //         label: expireDate,
+  //         value: key,
+  //         items: []
+  //       });
+  //     }
+
+  //     groups.get(key)!.items.push({
+  //       label: `${receiptDate}. ${p.serialNo ?? '—'}`,
+  //       value: p.serialNo
+  //     });
+  //   }
+
+  //   return Array.from(groups.values());
+  // });
+
+
   readonly typeOptions = computed(() =>
     GOODS_ISSUE_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
@@ -136,10 +199,47 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
       .filter(l => l.isActive)
       .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
 
-  readonly supplierOptions = computed(() =>
-    this.supplierApi.items()
-      // .filter(s => s.a)
-      .map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
+  // readonly supplierOptions = computed(() =>
+  //   this.supplierApi.items()
+  //     // .filter(s => s.a)
+  //     .map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
+
+  // filteredGroups = signal<SelectItemGroup[]>([]);
+  // search(event: AutoCompleteCompleteEvent) {
+  //   const query = event.query?.toLowerCase().trim() ?? '';
+
+  //   const groups = this.serialNoSuggestions();
+  //   console.log('g:', groups);
+
+  //   if (!query) {
+  //     this.filteredGroups.set(groups);
+  //     return;
+  //   }
+
+  //   const filtered = groups
+  //     .map(group => {
+  //       const groupMatch = group.label
+  //         ?.toLowerCase()
+  //         .includes(query);
+
+  //       const items = groupMatch
+  //         ? group.items
+  //         : group.items.filter(item =>
+  //           item.value?.toLowerCase().includes(query)
+  //         );
+
+  //       return {
+  //         ...group,
+  //         items
+  //       };
+  //     })
+  //     .filter(group => group.items.length > 0);
+
+
+
+  //   this.filteredGroups.set(filtered);
+  //   console.log('filteredGroups:', this.filteredGroups());
+  // }
 
   // ─── Selection ──────────────────────────────────────────────────────────────
 
@@ -194,6 +294,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
       issue: this.goodsIssueApi.load(),
       details: this.goodsIssueDetailApi.load(),
       products: this.productApi.load(),
+      productReceipts: this.goodsReceiptDetailApi.load(),
       units: this.unitApi.load(),
       warehouse: this.warehouseApi.load(),
       location: this.locationApi.load(),
@@ -536,10 +637,10 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
       if (!row.productId) return this.i18n.t('goodsIssueDetail.err.productRequired', { line });
       if (!row.unitId) return this.i18n.t('goodsIssueDetail.err.unitRequired', { line });
+      if (!row.locationId) return this.i18n.t('goodsIssueDetail.err.locationRequired', { line });
+      if (!row.serialNo) return this.i18n.t('goodsIssueDetail.err.serialNoRequired', { line });
       if (!row.quantity || row.quantity <= 0) return this.i18n.t('goodsIssueDetail.err.quantityRequired', { line });
-      // if (row.receivedQty == null || row.receivedQty < 0) {
-      //   return this.i18n.t('goodsIssueDetail.err.receivedQtyInvalid', { line });
-      // }
+
     }
 
     return '';

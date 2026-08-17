@@ -35,8 +35,10 @@ export interface GoodsReceiptDetailDto {
        receivedQty: number;
        unitPrice?: number | null;
        remark?: string | null;
-       receiptDate: string | null;
-       expireDate: string;
+       receiptDate?: string | null;
+       expireDate?: string | null;
+       productCode?: string | null;
+       productName?: string | null;
 }
 
 
@@ -55,7 +57,7 @@ export interface GoodsReceiptLineRequest {
        receivedQty: number;
        unitPrice?: number | null;
        remark?: string | null;
-       expireDate: string;
+       expireDate?: string | null;
 }
 
 export type GoodsReceiptRequest = Omit<GoodsReceiptDto, 'id'> & {

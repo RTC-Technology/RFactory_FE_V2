@@ -757,9 +757,18 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     vi: 'Dòng {line}: số lượng thực nhận không hợp lệ.',
     en: 'Line {line}: received quantity is not valid.',
   },
+
   'goodsReceiptDetail.err.expireDateRequired': {
     vi: 'Dòng {line}: chưa chọn ngày hết hạn.',
     en: 'Line {line}: no expire date selected.',
+  },
+  'goodsReceiptDetail.err.locationRequired': {
+    vi: 'Dòng {line}: chưa chọn vị trí kho',
+    en: 'Line {line}: no location selected.',
+  },
+  'goodsReceiptDetail.err.serialNoRequired': {
+    vi: 'Dòng {line}: chưa nhập số serial.',
+    en: 'Line {line}: no serial no selected.',
   },
 
 
@@ -842,10 +851,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'supplier.err.codeTaken': { vi: 'Mã nhà cung cấp "{code}" đã tồn tại.', en: 'Supplier code "{code}" already exists.' },
 
   'supplier.ok.created': { vi: 'Đã tạo nhà cung cấp.', en: 'Supplier created.' },
-  'supplier.ok.updated': { vi: 'Đã cập nhật nhà cung cấp "{code}".', en: 'Supplier updated "{code}".' },
-  'supplier.ok.deleted': { vi: 'Đã xoá nhà cung cấp "{code}".', en: 'Supplier deleted "{code}".' },
-  'supplier.err.saveFailed': { vi: 'Lưu nhà cung cấp thất bại.', en: 'Failed to save supplier.' },
-  'supplier.err.deleteFailed': { vi: 'Xoá nhà cung cấp thất bại.', en: 'Failed to delete supplier.' },
+  'supplier.ok.updated': { vi: 'Đã cập nhật "{entity}".', en: 'Updated "{entity}".' },
+  'supplier.ok.deleted': { vi: 'Đã xoá "{label}".', en: 'Deleted "{label}".' },
+  'supplier.err.saveFailed': { vi: 'Lưu {entity} thất bại.', en: 'Failed to save {entity}.' },
+  'supplier.err.deleteFailed': { vi: 'Xoá {entity} thất bại.', en: 'Failed to delete {entity}.' },
 
   'supplier.status.active': { vi: 'Đang hoạt động', en: 'Active' },
   'supplier.status.inactive': { vi: 'Ngừng hoạt động', en: 'Inactive' },
@@ -962,6 +971,15 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'goodsIssueDetail.err.quantityRequired': {
     vi: 'Dòng {line}: số lượng phải lớn hơn 0.',
     en: 'Line {line}: quantity must be greater than 0.',
+  },
+
+  'goodsIssueDetail.err.locationRequired': {
+    vi: 'Dòng {line}: chưa chọn vị trí kho',
+    en: 'Line {line}: no location selected.',
+  },
+  'goodsIssueDetail.err.serialNoRequired': {
+    vi: 'Dòng {line}: chưa nhập số serial.',
+    en: 'Line {line}: no serial no selected.',
   },
 
 };

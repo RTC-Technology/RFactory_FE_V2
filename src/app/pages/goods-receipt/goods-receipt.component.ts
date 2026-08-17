@@ -455,7 +455,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       unitPrice: 0,
       remark: '',
       receiptDate: null,
-      expireDate: '',
+      expireDate: null,
     };
   }
 
@@ -512,7 +512,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
     if (!this.form.receiptType) {
       return this.i18n.t('goodsReceipt.err.receiptTypeRequired');
     }
-    
+
     if (!this.form.warehouseId) {
       return this.i18n.t('goodsReceipt.err.warehouseRequired');
     }
@@ -539,12 +539,14 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
       const line = i + 1;
 
       if (!row.productId) return this.i18n.t('goodsReceiptDetail.err.productRequired', { line });
+      if (!row.locationId) return this.i18n.t('goodsReceiptDetail.err.locationRequired', { line });
+      if (!row.serialNo) return this.i18n.t('goodsReceiptDetail.err.serialNoRequired', { line });
       if (!row.unitId) return this.i18n.t('goodsReceiptDetail.err.unitRequired', { line });
       if (!(row.quantity > 0)) return this.i18n.t('goodsReceiptDetail.err.quantityRequired', { line });
       if (row.receivedQty == null || row.receivedQty < 0) {
         return this.i18n.t('goodsReceiptDetail.err.receivedQtyInvalid', { line });
       }
-      if (!row.expireDate) return this.i18n.t('goodsReceiptDetail.err.expireDateRequired', { line });
+      // if (!row.expireDate) return this.i18n.t('goodsReceiptDetail.err.expireDateRequired', { line });
     }
 
     return '';
@@ -579,7 +581,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
         unitPrice: row.unitPrice ?? null,
         remark: row.remark?.trim() || null,
         receiptDate: row.receiptDate,
-        expireDate: row.expireDate,
+        expireDate: row.expireDate ? formatDate(row.expireDate,DATETIME_LOCAL,'en-US') : null,
       })),
     };
     return id ? this.goodsReceiptApi.update(id, body) : this.goodsReceiptApi.create(body);

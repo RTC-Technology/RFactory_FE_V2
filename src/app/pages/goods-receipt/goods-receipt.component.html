@@ -106,12 +106,12 @@
                 <td class="col-supplier">{{ supplierLabel(row.supplierId) || '—' }}</td>
                 <td class="col-reference">{{ row.referenceType || '—' }}</td>
                 <td class="col-referenceId">{{ row.referenceId || '—' }}</td>
-                <td class="col-receiptDate">{{ row.receiptDate | date }}</td>
+                <td class="col-receiptDate">{{ row.receiptDate ? (row.receiptDate | date ):'—'}}</td>
                 <td class="col-remark">{{ row.remark || '—' }}</td>
                 <td class="col-approvedBy">{{ row.approvedBy || '—' }}</td>
-                <td class="col-approvedDate">{{ row.approvedDate | date }}</td>
+                <td class="col-approvedDate">{{ row.approvedDate ? (row.approvedDate | date) : '—' }}</td>
                 <td class="col-postedBy">{{ row.postedBy || '—' }}</td>
-                <td class="col-postedDate">{{ row.postedDate | date }}</td>
+                <td class="col-postedDate">{{ row.postedDate ? (row.postedDate | date) : '—' }}</td>
                 <td class="col-receiptType">{{ typeLabel(row.receiptType) || '—' }}</td>
               </tr>
             </ng-template>
@@ -172,7 +172,7 @@
                 <td class="col-unitPrice">
                   {{ row.quantity != null ? (row.unitPrice | number:'1.0-2') : '—' }}
                 </td>
-                <td class="col-expireDate">{{ row.expireDate | date}}</td>
+                <td class="col-expireDate">{{ row.expireDate ? (row.expireDate | date) : '—'}}</td>
                 <td class="col-remark">{{ row.remark || '—' }}</td>
               </tr>
             </ng-template>
@@ -298,9 +298,15 @@
                 {{ i18n.t('goodsReceiptDetail.unit') }}
                 <span class="req">*</span>
               </th>
-              <th class="col-location">{{ i18n.t('goodsReceiptDetail.location') }}</th>
+              <th class="col-location">
+                {{ i18n.t('goodsReceiptDetail.location') }}
+                <span class="req">*</span>
+              </th>
               <th class="col-lotNo">{{ i18n.t('goodsReceiptDetail.lotNo') }}</th>
-              <th class="col-serialNo">{{ i18n.t('goodsReceiptDetail.serialNo') }}</th>
+              <th class="col-serialNo">
+                {{ i18n.t('goodsReceiptDetail.serialNo') }}
+                <span class="req">*</span>
+              </th>
               <th class="col-quantity">
                 {{ i18n.t('goodsReceiptDetail.quantity') }}
                 <span class="req">*</span>
@@ -309,7 +315,7 @@
               <th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
               <th class="col-expireDate">
                 {{ i18n.t('goodsReceiptDetail.expireDate') }}
-                <span class="req">*</span>
+                <!-- <span class="req">*</span> -->
               </th>
               <th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
               <th class="col-act">{{ i18n.t('common.actions') }}</th>

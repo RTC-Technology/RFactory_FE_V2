@@ -85,7 +85,14 @@
                         <td class="col-contact-person">{{ row.contactPerson ?? '—' }}</td>
                         <td class="col-payment-term">{{ row.paymentTerm ?? '—' }}</td>
                         <td class="col-currency-code">{{ row.currencyCode ?? '—' }}</td>
-                        <td class="col-status">{{ row.status ?? '—' }}</td>
+                        <td class="col-status">
+                            <!-- {{ statusLabel(row.status) || '—' }} -->
+                            @if (statusOf(row.status); as status) {
+                            <p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+                            } @else {
+                            <span class="muted">—</span>
+                            }
+                        </td>
                         <td class="col-description">{{ row.description ?? '—' }}</td>
 
                     </tr>

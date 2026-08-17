@@ -15,7 +15,7 @@ import { SupplierApiService } from '../../core/services/master-data-api.service'
 import { I18nService } from '../../core/services/i18n.service';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
-import { SUPPLIER_STATUS, SupplierDto, SupplierRequest } from '../../domain/models/master-data.model';
+import { SUPPLIER_STATUS, SupplierDto, SupplierRequest, supplierStatusOf } from '../../domain/models/master-data.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SelectModule } from 'primeng/select';
@@ -27,7 +27,7 @@ import { InputMaskModule } from 'primeng/inputmask';
   imports: [
     CommonModule, FormsModule,
     TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
-    InputTextModule, TextareaModule, TagModule, ToggleSwitchModule, SelectModule, InputMaskModule
+    InputTextModule, TextareaModule, TagModule, ToggleSwitchModule, SelectModule, InputMaskModule, TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './supplier.component.html',
@@ -40,6 +40,8 @@ export class SupplierComponent extends PermissionAwarePage implements OnInit {
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
 
+  readonly statusOf = supplierStatusOf;
+
   readonly loading = this.supplierApi.loading;
 
   readonly suppliers = computed(() =>
@@ -50,9 +52,14 @@ export class SupplierComponent extends PermissionAwarePage implements OnInit {
 
   // ─── Lookups ────────────────────────────────────────────────────────────────
 
+
+  statusLabel(value: number): string {
+    const type = SUPPLIER_STATUS.find(s => s.value === value);
+    return type ? this.i18n.t(type.labelKey) : '';
+  }
+
   readonly statusOptions = computed(() =>
     SUPPLIER_STATUS.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
-
   // ─── Selection ──────────────────────────────────────────────────────────────
   readonly selected = signal<SupplierDto | null>(null);
 
@@ -75,7 +82,7 @@ export class SupplierComponent extends PermissionAwarePage implements OnInit {
 
   // ─── Filter ─────────────────────────────────────────────────────────────────
 
-  private readonly table = viewChild<Table>('typeTable');
+  private readonly table = viewChild<Table>('supplierTable');
   readonly filterFields = ['supplierCode', 'supplierName', 'description'];
 
   applyFilter(value: string): void {
