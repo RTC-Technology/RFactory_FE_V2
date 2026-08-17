@@ -1,33 +1,33 @@
-import { Component, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+﻿import { Component, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { SplitterModule } from 'primeng/splitter';
 import { Table, TableModule } from 'primeng/table';
+import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import {
-  BomApiService, BomDetailApiService, ProductApiService, ProductTypeApiService, UnitApiService,
+  BomApiService, ProductApiService, ProductTypeApiService, RoutingApiService,
+  RoutingOperationApiService, UnitApiService,
 } from '../../core/services/product-api.service';
-import { SplitStateService } from '../../core/services/split-state.service';
 import {
-  BomDetailDto, BomDto, PRODUCT_STATUSES, ProductDto, productStatusOf, requiredQuantity,
+  BomDto, ProductDto, PRODUCT_STATUSES, RoutingDto, RoutingOperationDto, productStatusOf,
 } from '../../domain/models/product.model';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
-// import { InputTextModule } from 'primeng/inputtext';
 
 
-type EntityKind = 'product' | 'bom' | 'line';
+type EntityKind = 'product' | 'bom' | 'routing' | 'routingOp';
 
 interface EntityForm {
   code: string;
@@ -39,16 +39,17 @@ interface EntityForm {
   status: number | null;
   version: string;
   isActive: boolean;
-  componentId: number | null;
-  quantity: number | null;
-  scrapRate: number | null;
-  fixedScrapQty: number | null;
+  sequence: number | null;
+  description: string;
+  isFinishOperation: boolean;
+  isOutputOperation: boolean;
 }
 
 const LABEL_KEYS: Record<EntityKind, string> = {
   product: 'product.lower',
   bom: 'bom.lower',
-  line: 'bom.line.lower',
+  routing: 'routing.lower',
+  routingOp: 'routing.op.lower',
 };
 
 @Component({
@@ -56,8 +57,8 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
-    InputTextModule, SelectModule, TagModule, ToggleSwitchModule,
+    TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
+    InputTextModule, SelectModule, TagModule, ToggleSwitchModule, CheckboxModule, TabsModule,
     HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
@@ -69,16 +70,17 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   private readonly typeApi = inject(ProductTypeApiService);
   private readonly unitApi = inject(UnitApiService);
   private readonly bomApi = inject(BomApiService);
-  private readonly lineApi = inject(BomDetailApiService);
+  private readonly routingApi = inject(RoutingApiService);
+  private readonly routingOpApi = inject(RoutingOperationApiService);
   private readonly messages = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
   readonly i18n = inject(I18nService);
-  readonly split = inject(SplitStateService);
 
   readonly statusOf = productStatusOf;
-  readonly requiredQty = requiredQuantity;
 
-  readonly loading = computed(() => this.productApi.loading() || this.bomApi.loading());
+  readonly loading = computed(() =>
+    this.productApi.loading() || this.bomApi.loading()
+    || this.routingApi.loading() || this.routingOpApi.loading());
 
   // ─── Lookups ────────────────────────────────────────────────────────────────
 
@@ -91,9 +93,9 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     return unit ? (unit.symbol || unit.unitCode) : '';
   }
 
-  productLabel(id?: number | null): string {
-    const product = this.productApi.items().find(p => p.id === id);
-    return product ? `${product.productCode} · ${product.productName}` : '';
+  routingLabel(id?: number | null): string {
+    const routing = this.routingApi.items().find(r => r.id === id);
+    return routing ? `#${routing.id} · ${routing.version || '—'}` : '';
   }
 
   /** Only active types can be picked; inactive ones stay visible on rows that already use them. */
@@ -115,19 +117,13 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   readonly statusOptions = computed(() =>
     PRODUCT_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
-  /** Every product except the one the BOM builds — see `_validate` for why. */
-  readonly componentOptions = computed(() => {
-    const ownerId = this.selectedProduct()?.id;
-    return this.productApi.items()
-      .filter(p => p.id !== ownerId)
-      .map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id }));
-  });
-
   // ─── Selection ──────────────────────────────────────────────────────────────
 
+  /** The product the detail modal is showing; every tab scopes off it. */
   readonly selectedProduct = signal<ProductDto | null>(null);
   readonly selectedBom = signal<BomDto | null>(null);
-  readonly selectedLine = signal<BomDetailDto | null>(null);
+  readonly selectedRouting = signal<RoutingDto | null>(null);
+  readonly selectedRoutingOp = signal<RoutingOperationDto | null>(null);
 
   /** Type filter above the product list — the first thing an operator reaches for. */
   readonly typeFilter = signal<number | null>(null);
@@ -151,10 +147,16 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     return this.bomApi.items().filter(b => b.productId === productId);
   });
 
-  readonly lines = computed(() => {
-    const bomId = this.selectedBom()?.id;
-    if (bomId == null) return [];
-    return this.lineApi.items().filter(l => l.bomId === bomId);
+  readonly routings = computed(() => {
+    const productId = this.selectedProduct()?.id;
+    if (productId == null) return [];
+    return this.routingApi.items().filter(r => r.productId === productId);
+  });
+
+  readonly routingOps = computed(() => {
+    const routingId = this.selectedRouting()?.id;
+    if (routingId == null) return [];
+    return this.routingOpApi.items().filter(o => o.routingId === routingId);
   });
 
   /** BOMs the backend holds with no product. No panel here can reach them. */
@@ -162,23 +164,20 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     this.bomApi.items().filter(b => b.productId == null).length);
 
   constructor() {
-    // No entity passed: the three panels each gate on their own code set, handed to the
-    // shared toolbar template through ngTemplateOutlet.
+    // The combinations below each drive one list inside the detail modal, so the selected
+    // row has to stay valid when the underlying set changes (filter, reload, delete).
     super();
-
     effect(() => {
       const boms = this.boms();
       untracked(() => this.selectedBom.set(this._reconcile(this.selectedBom(), boms)));
     });
     effect(() => {
-      const lines = this.lines();
-      untracked(() => this.selectedLine.set(this._reconcile(this.selectedLine(), lines)));
+      const routings = this.routings();
+      untracked(() => this.selectedRouting.set(this._reconcile(this.selectedRouting(), routings)));
     });
-    // Narrowing the type filter can hide the selected product, which would leave the BOM
-    // panels driven from off-screen.
     effect(() => {
-      const products = this.products();
-      untracked(() => this.selectedProduct.set(this._reconcile(this.selectedProduct(), products)));
+      const ops = this.routingOps();
+      untracked(() => this.selectedRoutingOp.set(this._reconcile(this.selectedRoutingOp(), ops)));
     });
   }
 
@@ -192,7 +191,8 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       types: this.typeApi.load(),
       units: this.unitApi.load(),
       boms: this.bomApi.load(),
-      lines: this.lineApi.load(),
+      routings: this.routingApi.load(),
+      routingOps: this.routingOpApi.load(),
     }).subscribe({
       error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
     });
@@ -202,28 +202,22 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
   private readonly productTable = viewChild<Table>('productTable');
   private readonly bomTable = viewChild<Table>('bomTable');
-  private readonly lineTable = viewChild<Table>('lineTable');
+  private readonly routingTable = viewChild<Table>('routingTable');
+  private readonly routingOpTable = viewChild<Table>('routingOpTable');
 
   readonly filterFields: Record<EntityKind, string[]> = {
     product: ['productCode', 'productName', 'drawingNo'],
     bom: ['bomCode', 'bomName', 'version'],
-    line: [],
+    routing: ['version'],
+    routingOp: ['routingOperationCode', 'routingOperationName', 'description'],
   };
 
   applyFilter(kind: EntityKind, value: string): void {
-    const table = { product: this.productTable(), bom: this.bomTable(), line: this.lineTable() }[kind];
+    const table = {
+      product: this.productTable(), bom: this.bomTable(),
+      routing: this.routingTable(), routingOp: this.routingOpTable(),
+    }[kind];
     table?.filterGlobal(value, 'contains');
-  }
-
-  onFiltered(kind: EntityKind, rows: unknown[] | null | undefined): void {
-    const visible = (rows ?? []) as { id: number }[];
-    if (kind === 'product') {
-      this.selectedProduct.set(this._reconcile(this.selectedProduct(), visible as ProductDto[]));
-    } else if (kind === 'bom') {
-      this.selectedBom.set(this._reconcile(this.selectedBom(), visible as BomDto[]));
-    } else {
-      this.selectedLine.set(this._reconcile(this.selectedLine(), visible as BomDetailDto[]));
-    }
   }
 
   selectProduct(product: ProductDto): void {
@@ -235,11 +229,37 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     this.selectedBom.set(bom);
   }
 
-  selectLine(line: BomDetailDto): void {
-    this.selectedLine.set(line);
+  selectRouting(routing: RoutingDto): void {
+    this.selectedRouting.set(routing);
+    this.selectedRoutingOp.set(this._first(this.routingOps()));
   }
 
-  // ─── Dialog ─────────────────────────────────────────────────────────────────
+  selectRoutingOp(op: RoutingOperationDto): void {
+    this.selectedRoutingOp.set(op);
+  }
+
+  // ─── Detail modal ───────────────────────────────────────────────────────────
+
+  readonly detailOpen = signal(false);
+  readonly detailTab = signal<string>('info');
+
+  readonly detailTitle = computed(() => {
+    const product = this.selectedProduct();
+    return product
+      ? this.i18n.t('product.detailOf', { name: `${product.productCode} · ${product.productName}` })
+      : '';
+  });
+
+  openDetail(product: ProductDto): void {
+    this.selectedProduct.set(product);
+    this.selectedBom.set(this._first(this.boms()));
+    this.selectedRouting.set(this._first(this.routings()));
+    this.selectedRoutingOp.set(this._first(this.routingOps()));
+    this.detailTab.set('info');
+    this.detailOpen.set(true);
+  }
+
+  // ─── CRUD dialog ───────────────────────────────────────────────────────────
 
   readonly dialogOpen = signal(false);
   readonly dialogKind = signal<EntityKind>('product');
@@ -268,7 +288,10 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   }
 
   openEdit(kind: EntityKind): void {
-    const row = { product: this.selectedProduct(), bom: this.selectedBom(), line: this.selectedLine() }[kind];
+    const row = {
+      product: this.selectedProduct(), bom: this.selectedBom(),
+      routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
+    }[kind];
     if (!row) return;
 
     this.dialogKind.set(kind);
@@ -291,24 +314,23 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
         code: b.bomCode, name: b.bomName,
         version: b.version ?? '', status: b.status ?? null, isActive: b.isActive,
       };
-    } else {
-      const l = row as BomDetailDto;
+    } else if (kind === 'routing') {
+      const r = row as RoutingDto;
       this.form = {
         ...this._emptyForm(),
-        componentId: l.productId ?? null, unitId: l.unitId ?? null,
-        quantity: l.quantity ?? null, scrapRate: l.scrapRate ?? null,
-        fixedScrapQty: l.fixedScrapQty ?? null,
+        version: r.version ?? '', isActive: r.isActive,
+      };
+    } else {
+      const o = row as RoutingOperationDto;
+      this.form = {
+        ...this._emptyForm(),
+        sequence: o.sequence ?? null, code: o.routingOperationCode, name: o.routingOperationName,
+        description: o.description ?? '',
+        isFinishOperation: o.isFinishOperation, isOutputOperation: o.isOutputOperation,
       };
     }
 
     this.dialogOpen.set(true);
-  }
-
-  /** Picking a component seeds the unit from that product, which is right nearly always. */
-  onComponentChange(): void {
-    if (this.form.unitId != null) return;
-    const component = this.productApi.items().find(p => p.id === this.form.componentId);
-    this.form.unitId = component?.defaultUnitId ?? null;
   }
 
   save(): void {
@@ -347,12 +369,16 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   }
 
   askDelete(kind: EntityKind): void {
-    const row = { product: this.selectedProduct(), bom: this.selectedBom(), line: this.selectedLine() }[kind];
+    const row = {
+      product: this.selectedProduct(), bom: this.selectedBom(),
+      routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
+    }[kind];
     if (!row) return;
 
     const label = kind === 'product' ? (row as ProductDto).productName
       : kind === 'bom' ? (row as BomDto).bomName
-        : this.productLabel((row as BomDetailDto).productId);
+      : kind === 'routing' ? `#${(row as RoutingDto).id}`
+        : (row as RoutingOperationDto).routingOperationName;
 
     this.confirm.confirm({
       header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(LABEL_KEYS[kind]) }),
@@ -373,7 +399,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   // ─── Internals ──────────────────────────────────────────────────────────────
 
   private _apiFor(kind: EntityKind) {
-    return { product: this.productApi, bom: this.bomApi, line: this.lineApi }[kind];
+    return { product: this.productApi, bom: this.bomApi, routing: this.routingApi, routingOp: this.routingOpApi }[kind];
   }
 
   private _emptyForm(): EntityForm {
@@ -381,13 +407,17 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       code: '', name: '', typeId: null, unitId: null,
       drawingNo: '', drawingPath: '', status: 1,
       version: '', isActive: true,
-      componentId: null, quantity: null, scrapRate: null, fixedScrapQty: null,
+      sequence: null, description: '', isFinishOperation: false, isOutputOperation: false,
     };
   }
 
   private _reconcile<T extends { id: number }>(current: T | null, rows: T[]): T | null {
     const match = current ? rows.find(row => row.id === current.id) : undefined;
     return match ?? rows[0] ?? null;
+  }
+
+  private _first<T extends { id: number }>(rows: T[]): T | null {
+    return rows[0] ?? null;
   }
 
   private _validate(kind: EntityKind): string {
@@ -416,19 +446,22 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       return clash ? this.i18n.t('plant.err.codeTaken', { code }) : '';
     }
 
-    if (!this.selectedBom()) return this.i18n.t('bom.err.pickBom');
-    if (this.form.componentId == null) return this.i18n.t('bom.err.componentRequired');
-    if (this.form.quantity == null || this.form.quantity <= 0) return this.i18n.t('bom.err.quantityRequired');
+    if (kind === 'routing') {
+      if (!this.selectedProduct()) return this.i18n.t('bom.err.pickProduct');
+      if (!this.form.version.trim()) return this.i18n.t('plant.err.nameRequired');
+      return '';
+    }
 
-    // A product that is a component of its own BOM would explode any recursive material
-    // calculation. The picker already excludes it; this catches a stale form.
-    if (this.form.componentId === this.selectedProduct()?.id) return this.i18n.t('bom.err.selfReference');
+    if (!this.selectedRouting()) return this.i18n.t('routing.err.pickRouting');
+    if (!this.form.code.trim()) return this.i18n.t('routing.err.opCodeRequired');
+    if (!this.form.name.trim()) return this.i18n.t('routing.err.opNameRequired');
 
-    const duplicate = this.lines().find(
-      l => l.productId === this.form.componentId && l.id !== this.editingId(),
+    const duplicate = this.routingOps().find(
+      o => o.routingOperationCode.toLowerCase() === this.form.code.trim().toLowerCase()
+        && o.id !== this.editingId(),
     );
     return duplicate
-      ? this.i18n.t('bom.err.duplicate', { name: this.productLabel(duplicate.productId) })
+      ? this.i18n.t('routing.err.duplicate', { name: duplicate.routingOperationName })
       : '';
   }
 
@@ -460,17 +493,29 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       return id ? this.bomApi.update(id, body) : this.bomApi.create(body);
     }
 
-    const bomId = this.selectedBom()?.id;
-    if (bomId == null) return null;
+    if (kind === 'routing') {
+      const productId = this.selectedProduct()?.id;
+      if (productId == null) return null;
+      const body = {
+        productId,
+        version: this.form.version.trim() || null,
+        isActive: this.form.isActive,
+      };
+      return id ? this.routingApi.update(id, body) : this.routingApi.create(body);
+    }
+
+    const routingId = this.selectedRouting()?.id;
+    if (routingId == null) return null;
     const body = {
-      bomId,
-      productId: this.form.componentId,
-      quantity: this.form.quantity,
-      unitId: this.form.unitId,
-      scrapRate: this.form.scrapRate,
-      fixedScrapQty: this.form.fixedScrapQty,
+      routingId,
+      sequence: this.form.sequence,
+      routingOperationCode: this.form.code.trim(),
+      routingOperationName: this.form.name.trim(),
+      description: this.form.description.trim() || null,
+      isFinishOperation: this.form.isFinishOperation,
+      isOutputOperation: this.form.isOutputOperation,
     };
-    return id ? this.lineApi.update(id, body) : this.lineApi.create(body);
+    return id ? this.routingOpApi.update(id, body) : this.routingOpApi.create(body);
   }
 
   private _ok(detail: string): void {
@@ -484,13 +529,5 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       detail: err?.error?.message || detail,
       life: 4500,
     });
-  }
-
-
-  visible: boolean = false;
-  username: string = '';
-  email: string = '';
-  showDialog() {
-    this.visible = true;
   }
 }
