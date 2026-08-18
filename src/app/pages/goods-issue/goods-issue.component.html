@@ -368,11 +368,12 @@
                             </td>
 
                             <td class="col-location">
-                                <p-select [options]="locationOptions()" optionLabel="label" optionValue="value"
+                                <p-select [options]="locationOptions(form.warehouseId)" optionLabel="label" optionValue="value"
                                     [ngModel]="row.locationId || null" (ngModelChange)="row.locationId = $event ?? 0"
                                     [filter]="true" filterBy="label"
                                     [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" appendTo="body"
-                                    class="w-full" />
+                                    class="w-full" [group]="true" optionLabel="label" optionValue="value"
+                                    class="w-full md:w-56" />
                             </td>
 
                             <td class="col-lotNo">

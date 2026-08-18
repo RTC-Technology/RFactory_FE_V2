@@ -37,6 +37,7 @@ export interface SupplierDto {
   currencyCode?: string | null;
   status: number;
   description?: string | null;
+
 }
 
 /** Create/Update share one shape per entity on the backend, so one type covers both. */

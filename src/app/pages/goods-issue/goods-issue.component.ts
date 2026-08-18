@@ -306,6 +306,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             }
         ].filter(group => group.items.length > 0);
     };
+
     readonly typeOptions = computed(() =>
         GOODS_ISSUE_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
@@ -317,10 +318,39 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             .filter(w => w.isActive)
             .map(w => ({ label: `${w.warehouseCode} · ${w.warehouseName}`, value: w.id })));
 
-    readonly locationOptions = computed(() =>
-        this.locationApi.items()
-            .filter(l => l.isActive)
-            .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
+    // readonly locationOptions = computed(() =>
+    //     this.locationApi.items()
+    //         .filter(l => l.isActive)
+    //         .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
+
+    readonly locationOptions = (warehouseId: number | null) => {
+        const locations = this.locationApi.items()
+            .filter(x => x.isActive && x.warehouseId === warehouseId);
+
+        const groups = new Map<string, {
+            label: string;
+            items: { label: string; value: number }[];
+        }>();
+
+        for (const location of locations) {
+            const zoneCode = location.warehouseZoneCode ?? '';
+            const zoneName = location.warehouseZoneName ?? '';
+
+            if (!groups.has(zoneCode)) {
+                groups.set(zoneCode, {
+                    label: `${zoneCode} · ${zoneName}`,
+                    items: []
+                });
+            }
+
+            groups.get(zoneCode)!.items.push({
+                label: `${location.warehouseLocationCode} · ${location.warehouseLocationName}`,
+                value: location.id
+            });
+        }
+
+        return Array.from(groups.values());
+    };
 
     // readonly supplierOptions = computed(() =>
     //   this.supplierApi.items()
@@ -654,8 +684,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
         autoComplete.show();
     }
+    
     // ─── Internals ──────────────────────────────────────────────────────────────
-
     private _emptyForm() {
         return {
             issueNo: '',
