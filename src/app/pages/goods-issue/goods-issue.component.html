@@ -382,23 +382,25 @@
                             <td class="col-serialNo">
                                 <!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" /> -->
 
-                                <p-autocomplete [(ngModel)]="row.serialNo" [group]="true"
-                                    [suggestions]="filteredGroups()" (completeMethod)="search($event)"
-                                    optionLabel="label" optionGroupLabel="label" optionGroupChildren="items"
-                                    placeholder="" inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200"
-                                    scrollHeight="18rem" [pt]="{ optionGroup: 'border-b border-surface' }">
+                                <p-autocomplete #serialAutoComplete [(ngModel)]="row.serialNo" [group]="true"
+                                    [suggestions]="filteredSerialNoGroups()"
+                                    (completeMethod)="onSearchSerialNo($event,row.productId)" optionLabel="label"
+                                    optionGroupLabel="label" optionGroupChildren="items" placeholder=""
+                                    inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200" appendTo="body"
+                                    (onFocus)="onSerialFocus(serialAutoComplete, row.productId)" scrollHeight="18rem"
+                                    [pt]="{ optionGroup: 'border-b border-surface' }">
 
                                     <!-- Item trong dropdown -->
                                     <ng-template #item let-item>
                                         <div class="flex justify-content-between align-items-center w-full">
                                             <span>{{ item.label }}</span>
 
-                                            @if (item.daysRemaining !== undefined) {
+                                            @if (item.daysRemaining !== undefined)
+                                            {
                                             <small class="text-color-secondary ml-3">
-                                                @if (item.daysRemaining < 0) { Quá {{ item.daysRemaining }}
-                                                    ngày } @else if (item.daysRemaining===0) { Hết hạn hôm nay } @else {
-                                                    Còn {{ item.daysRemaining }} ngày }
-                                            </small>
+                                                @if (item.daysRemaining < 0) { Quá {{ item.daysRemaining }} ngày } @else
+                                                    { @if (item.daysRemaining===0) { Hết hạn hôm nay } @else { Còn
+                                                    {{item.daysRemaining }} ngày } } </small>
                                                     }
                                         </div>
                                     </ng-template>
