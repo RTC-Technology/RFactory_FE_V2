@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { Table, TableModule } from 'primeng/table';
@@ -18,22 +19,24 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import {
-  BomApiService, ProductApiService, ProductTypeApiService, RoutingApiService,
+  BomApiService, BomDetailApiService, ProductApiService, ProductTypeApiService, RoutingApiService,
   RoutingOperationApiService, UnitApiService,
 } from '../../core/services/product-api.service';
 import {
-  BomDto, ProductDto, PRODUCT_STATUSES, RoutingDto, RoutingOperationDto, productStatusOf,
+  BomDetailDto, BomDto, ProductDto, PRODUCT_STATUSES, RoutingDto, RoutingOperationDto, productStatusOf,
 } from '../../domain/models/product.model';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 
 
-type EntityKind = 'product' | 'bom' | 'routing' | 'routingOp';
+type EntityKind = 'product' | 'bom' | 'bomDetail' | 'routing' | 'routingOp';
 
 interface EntityForm {
   code: string;
   name: string;
   typeId: number | null;
   unitId: number | null;
+  /** The component consumed by the selected BOM — used only by the BOM-detail form. */
+  productId: number | null;
   drawingNo: string;
   drawingPath: string;
   status: number | null;
@@ -41,6 +44,9 @@ interface EntityForm {
   isActive: boolean;
   sequence: number | null;
   description: string;
+  quantity: number | null;
+  scrapRate: number | null;
+  fixedScrapQty: number | null;
   isFinishOperation: boolean;
   isOutputOperation: boolean;
 }
@@ -48,6 +54,7 @@ interface EntityForm {
 const LABEL_KEYS: Record<EntityKind, string> = {
   product: 'product.lower',
   bom: 'bom.lower',
+  bomDetail: 'bomDetail.lower',
   routing: 'routing.lower',
   routingOp: 'routing.op.lower',
 };
@@ -58,7 +65,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
   imports: [
     CommonModule, FormsModule,
     TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
-    InputTextModule, SelectModule, TagModule, ToggleSwitchModule, CheckboxModule, TabsModule,
+    InputTextModule, InputNumberModule, SelectModule, TagModule, ToggleSwitchModule, CheckboxModule, TabsModule,
     HasPermissionDirective,
   ],
   providers: [MessageService, ConfirmationService],
@@ -70,6 +77,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   private readonly typeApi = inject(ProductTypeApiService);
   private readonly unitApi = inject(UnitApiService);
   private readonly bomApi = inject(BomApiService);
+  private readonly bomDetailApi = inject(BomDetailApiService);
   private readonly routingApi = inject(RoutingApiService);
   private readonly routingOpApi = inject(RoutingOperationApiService);
   private readonly messages = inject(MessageService);
@@ -114,6 +122,15 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       .map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })),
   ]);
 
+  /** Candidates for a BOM line: any product can be consumed as raw material / semi-finished. */
+  readonly bomComponentOptions = computed(() =>
+    this.productApi.items().map(p => ({ label: `${p.productCode} · ${p.productName}`, value: p.id })));
+
+  productLabel(id?: number | null): string {
+    const p = this.productApi.items().find(p => p.id === id);
+    return p ? `${p.productCode} · ${p.productName}` : '';
+  }
+
   readonly statusOptions = computed(() =>
     PRODUCT_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
@@ -122,6 +139,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   /** The product the detail modal is showing; every tab scopes off it. */
   readonly selectedProduct = signal<ProductDto | null>(null);
   readonly selectedBom = signal<BomDto | null>(null);
+  readonly selectedBomDetail = signal<BomDetailDto | null>(null);
   readonly selectedRouting = signal<RoutingDto | null>(null);
   readonly selectedRoutingOp = signal<RoutingOperationDto | null>(null);
 
@@ -159,6 +177,12 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     return this.routingOpApi.items().filter(o => o.routingId === routingId);
   });
 
+  readonly bomDetails = computed(() => {
+    const bomId = this.selectedBom()?.id;
+    if (bomId == null) return [];
+    return this.bomDetailApi.items().filter(d => d.bomId === bomId);
+  });
+
   /** BOMs the backend holds with no product. No panel here can reach them. */
   readonly unassignedBoms = computed(() =>
     this.bomApi.items().filter(b => b.productId == null).length);
@@ -170,6 +194,10 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     effect(() => {
       const boms = this.boms();
       untracked(() => this.selectedBom.set(this._reconcile(this.selectedBom(), boms)));
+    });
+    effect(() => {
+      const details = this.bomDetails();
+      untracked(() => this.selectedBomDetail.set(this._reconcile(this.selectedBomDetail(), details)));
     });
     effect(() => {
       const routings = this.routings();
@@ -191,6 +219,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       types: this.typeApi.load(),
       units: this.unitApi.load(),
       boms: this.bomApi.load(),
+      bomDetails: this.bomDetailApi.load(),
       routings: this.routingApi.load(),
       routingOps: this.routingOpApi.load(),
     }).subscribe({
@@ -202,19 +231,21 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
   private readonly productTable = viewChild<Table>('productTable');
   private readonly bomTable = viewChild<Table>('bomTable');
+  private readonly bomDetailTable = viewChild<Table>('bomDetailTable');
   private readonly routingTable = viewChild<Table>('routingTable');
   private readonly routingOpTable = viewChild<Table>('routingOpTable');
 
   readonly filterFields: Record<EntityKind, string[]> = {
     product: ['productCode', 'productName', 'drawingNo'],
     bom: ['bomCode', 'bomName', 'version'],
+    bomDetail: [],
     routing: ['version'],
     routingOp: ['routingOperationCode', 'routingOperationName', 'description'],
   };
 
   applyFilter(kind: EntityKind, value: string): void {
     const table = {
-      product: this.productTable(), bom: this.bomTable(),
+      product: this.productTable(), bom: this.bomTable(), bomDetail: this.bomDetailTable(),
       routing: this.routingTable(), routingOp: this.routingOpTable(),
     }[kind];
     table?.filterGlobal(value, 'contains');
@@ -227,6 +258,10 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
   selectBom(bom: BomDto): void {
     this.selectedBom.set(bom);
+  }
+
+  selectBomDetail(detail: BomDetailDto): void {
+    this.selectedBomDetail.set(detail);
   }
 
   selectRouting(routing: RoutingDto): void {
@@ -245,16 +280,42 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
   readonly detailTitle = computed(() => {
     const product = this.selectedProduct();
-    return product
-      ? this.i18n.t('product.detailOf', { name: `${product.productCode} · ${product.productName}` })
-      : '';
+    if (product) {
+      return this.i18n.t('product.detailOf', { name: `${product.productCode} · ${product.productName}` });
+    }
+    // Fresh entry: the modal doubles as the retired "add product" dialog.
+    return this.i18n.t('plant.dialog.add', { entity: this.i18n.t('product.lower') });
   });
 
-  openDetail(product: ProductDto): void {
+  /** True while the detail modal is open for a brand-new product (blank Thông tin form). */
+  readonly creatingProduct = computed(() => this.detailOpen() && !this.selectedProduct());
+
+  /** Opens the modal. `product` null = a fresh product: the Thông tin tab becomes the create
+   *  form and the BOM / Công đoạn tabs stay empty until it is saved. */
+  openDetail(product: ProductDto | null): void {
     this.selectedProduct.set(product);
     this.selectedBom.set(this._first(this.boms()));
+    this.selectedBomDetail.set(this._first(this.bomDetails()));
     this.selectedRouting.set(this._first(this.routings()));
     this.selectedRoutingOp.set(this._first(this.routingOps()));
+    this.formError.set('');
+
+    if (product) {
+      this.editingId.set(product.id);
+      this.form = {
+        ...this._emptyForm(),
+        code: product.productCode, name: product.productName,
+        typeId: product.productTypeId ?? null, unitId: product.defaultUnitId ?? null,
+        drawingNo: product.drawingNo ?? '', drawingPath: product.drawingPath ?? '',
+        status: product.status ?? null,
+      };
+    } else {
+      this.editingId.set(null);
+      // A new product lands in whatever type the list is filtered to — that is nearly
+      // always the one being worked on.
+      this.form = { ...this._emptyForm(), typeId: this.typeFilter() };
+    }
+
     this.detailTab.set('info');
     this.detailOpen.set(true);
   }
@@ -275,21 +336,32 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     }));
 
   openCreate(kind: EntityKind): void {
+    // Products are composed in the detail modal — the small "add product" dialog is gone.
+    if (kind === 'product') {
+      this.openDetail(null);
+      return;
+    }
     this.dialogKind.set(kind);
     this.editingId.set(null);
     this.formError.set('');
     this.form = {
       ...this._emptyForm(),
-      // A new product lands in whatever type the list is filtered to — that is nearly
-      // always the one being worked on.
-      typeId: kind === 'product' ? this.typeFilter() : null,
+      typeId: null,
     };
+    // A BOM line is always bound to the product the detail modal is editing.
+    if (kind === 'bomDetail') this.form.productId = this.selectedProduct()?.id ?? null;
     this.dialogOpen.set(true);
   }
 
   openEdit(kind: EntityKind): void {
+    // Editing a product happens inside its detail modal; sub-entities keep the small dialog.
+    if (kind === 'product') {
+      const product = this.selectedProduct();
+      if (product) this.openDetail(product);
+      return;
+    }
     const row = {
-      product: this.selectedProduct(), bom: this.selectedBom(),
+      product: this.selectedProduct(), bom: this.selectedBom(), bomDetail: this.selectedBomDetail(),
       routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
     }[kind];
     if (!row) return;
@@ -298,16 +370,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     this.editingId.set(row.id);
     this.formError.set('');
 
-    if (kind === 'product') {
-      const p = row as ProductDto;
-      this.form = {
-        ...this._emptyForm(),
-        code: p.productCode, name: p.productName,
-        typeId: p.productTypeId ?? null, unitId: p.defaultUnitId ?? null,
-        drawingNo: p.drawingNo ?? '', drawingPath: p.drawingPath ?? '',
-        status: p.status ?? null,
-      };
-    } else if (kind === 'bom') {
+    if (kind === 'bom') {
       const b = row as BomDto;
       this.form = {
         ...this._emptyForm(),
@@ -319,6 +382,14 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       this.form = {
         ...this._emptyForm(),
         version: r.version ?? '', isActive: r.isActive,
+      };
+    } else if (kind === 'bomDetail') {
+      const d = row as BomDetailDto;
+      this.form = {
+        ...this._emptyForm(),
+        // The component is locked to the product the modal edits; the picker is disabled.
+        productId: this.selectedProduct()?.id ?? null, quantity: d.quantity ?? null,
+        unitId: d.unitId ?? null, scrapRate: d.scrapRate ?? null, fixedScrapQty: d.fixedScrapQty ?? null,
       };
     } else {
       const o = row as RoutingOperationDto;
@@ -368,15 +439,59 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
     });
   }
 
+  /** Saves the product edited in the detail modal's Thông tin tab — create or update. The
+   *  modal stays open either way so BOMs and work steps can follow right after. */
+  saveProduct(): void {
+    const error = this._validate('product');
+    if (error) {
+      this.formError.set(error);
+      return;
+    }
+
+    this.saving.set(true);
+    this.formError.set('');
+
+    const id = this.editingId();
+    const request = this._buildRequest('product', id);
+    if (!request) {
+      this.saving.set(false);
+      return;
+    }
+
+    request.subscribe({
+      next: saved => {
+        this.saving.set(false);
+        this.reload();
+        if (!id) {
+          // A brand-new product: adopt it so the BOM / Công đoạn tabs become usable.
+          const created = saved as ProductDto | undefined;
+          if (created?.id) {
+            this.selectedProduct.set(created);
+            this.editingId.set(created.id);
+          }
+        }
+        this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
+          entity: this.i18n.t('product.lower'),
+        }));
+      },
+      error: (err: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.formError.set(err.error?.message
+          || this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('product.lower') }));
+      },
+    });
+  }
+
   askDelete(kind: EntityKind): void {
     const row = {
-      product: this.selectedProduct(), bom: this.selectedBom(),
+      product: this.selectedProduct(), bom: this.selectedBom(), bomDetail: this.selectedBomDetail(),
       routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
     }[kind];
     if (!row) return;
 
     const label = kind === 'product' ? (row as ProductDto).productName
       : kind === 'bom' ? (row as BomDto).bomName
+      : kind === 'bomDetail' ? this.productLabel((row as BomDetailDto).productId) || `#${(row as BomDetailDto).id}`
       : kind === 'routing' ? `#${(row as RoutingDto).id}`
         : (row as RoutingOperationDto).routingOperationName;
 
@@ -399,15 +514,20 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
   // ─── Internals ──────────────────────────────────────────────────────────────
 
   private _apiFor(kind: EntityKind) {
-    return { product: this.productApi, bom: this.bomApi, routing: this.routingApi, routingOp: this.routingOpApi }[kind];
+    return {
+      product: this.productApi, bom: this.bomApi, bomDetail: this.bomDetailApi,
+      routing: this.routingApi, routingOp: this.routingOpApi,
+    }[kind];
   }
 
   private _emptyForm(): EntityForm {
     return {
-      code: '', name: '', typeId: null, unitId: null,
+      code: '', name: '', typeId: null, unitId: null, productId: null,
       drawingNo: '', drawingPath: '', status: 1,
       version: '', isActive: true,
-      sequence: null, description: '', isFinishOperation: false, isOutputOperation: false,
+      sequence: null, description: '',
+      quantity: null, scrapRate: null, fixedScrapQty: null,
+      isFinishOperation: false, isOutputOperation: false,
     };
   }
 
@@ -452,6 +572,13 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
       return '';
     }
 
+    if (kind === 'bomDetail') {
+      if (!this.selectedBom()) return this.i18n.t('bomDetail.err.pickBom');
+      if (this.form.productId == null) return this.i18n.t('bomDetail.err.pickProduct');
+      if ((this.form.quantity ?? 0) <= 0) return this.i18n.t('bomDetail.err.quantity');
+      return '';
+    }
+
     if (!this.selectedRouting()) return this.i18n.t('routing.err.pickRouting');
     if (!this.form.code.trim()) return this.i18n.t('routing.err.opCodeRequired');
     if (!this.form.name.trim()) return this.i18n.t('routing.err.opNameRequired');
@@ -491,6 +618,21 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
         isActive: this.form.isActive,
       };
       return id ? this.bomApi.update(id, body) : this.bomApi.create(body);
+    }
+
+    if (kind === 'bomDetail') {
+      const bomId = this.selectedBom()?.id;
+      if (bomId == null) return null;
+      const body = {
+        bomId,
+        // Locked to the current product whatever the form holds.
+        productId: this.selectedProduct()?.id ?? this.form.productId,
+        quantity: this.form.quantity,
+        unitId: this.form.unitId,
+        scrapRate: this.form.scrapRate,
+        fixedScrapQty: this.form.fixedScrapQty,
+      };
+      return id ? this.bomDetailApi.update(id, body) : this.bomDetailApi.create(body);
     }
 
     if (kind === 'routing') {
