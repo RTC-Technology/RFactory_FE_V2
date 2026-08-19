@@ -130,6 +130,34 @@ body {
   outline-offset: 2px;
 }
 
+/* ─── Grid-style select panels ───────────────────────────────── */
+/* Opt-in through `panelStyleClass="grid-picker"` on a `p-select` whose options are laid out
+   as table rows (the product picker on the goods-receipt lines). The panel is appended to
+   <body>, outside every component's style scope, so the width and the pieces PrimeNG itself
+   renders have to be set from out here — the option markup is styled by the page declaring it.
+   The `order` is the point of the flex box: PrimeNG renders the header template *above* the
+   filter, and column headings sitting on top of the search box read backwards. Moving it
+   visually leaves the DOM order the focus trap walks untouched. */
+.p-select-overlay.grid-picker {
+  display: flex;
+  flex-direction: column;
+  /* Wide enough for the columns, but never wider than the screen it drops onto. */
+  min-width: min(660px, 92vw);
+
+  .p-select-header {
+    order: -1;
+  }
+
+  .p-select-list-container {
+    min-height: 0;
+  }
+
+  /* Matches the heading row's own padding — the columns line up on that shared inset. */
+  .p-select-option {
+    padding: 5px 12px;
+  }
+}
+
 /* ─── Toasts ─────────────────────────────────────────────────── */
 /* PrimeNG pins a top-right toast at `top: 20px` through an inline style, which drops it
    straight onto the 40px shell header and covers the topbar's own buttons. Clearing the

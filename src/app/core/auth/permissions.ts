@@ -42,6 +42,8 @@ export const PERMISSIONS = {
   goodsReceipt: crud('goods-receipt'),
   goodsReceiptDetail: crud('goods-receipt-detail'),
   supplier: crud('supplier'),
+  goodsIssue: crud('goods-issue'),
+  goodsIssueDetail: crud('goods-issue-detail'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

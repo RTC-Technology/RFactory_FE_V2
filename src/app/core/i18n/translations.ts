@@ -689,7 +689,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     en: '{count} machines have no type assigned, so no panel here can reach them. Assign a type in the database.',
   },
 
-
+  // goods-issue
   'goodsReceipt.title': { vi: 'Phiếu nhập', en: 'Goods Receipt' },
   'goodsReceipt.lower': { vi: 'phiếu nhập', en: 'goods receipt' },
   'goodsReceipt.scopeOf': { vi: 'của {name}', en: 'of {name}' },
@@ -752,6 +752,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     vi: 'Mã phiếu "{receiptNo}" đã tồn tại.',
     en: 'Receipt No "{receiptNo}" already exists.',
   },
+  'goodsReceipt.err.warehouseRequired': {
+    vi: 'Kho không được để trống.',
+    en: 'Warehouse is required.',
+  },
 
 
   'goodsReceiptDetail.title': { vi: 'Chi tiết phiếu nhập', en: 'Goods Receipt Detail' },
@@ -777,6 +781,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'goodsReceiptDetail.noProduct': { vi: 'Không tìm thấy sản phẩm.', en: 'No product found.' },
   'goodsReceiptDetail.total': { vi: 'Tổng tiền', en: 'Total' },
   'goodsReceiptDetail.selectLocation': { vi: 'Chọn vị trí kho…', en: 'Pick a location…' },
+  'goodsReceiptDetail.expireDate': { vi: 'Ngày hết hạn', en: 'Expire Date' },
 
   'goodsReceiptDetail.err.linesRequired': {
     vi: 'Phiếu nhập phải có ít nhất một sản phẩm.',
@@ -797,6 +802,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'goodsReceiptDetail.err.receivedQtyInvalid': {
     vi: 'Dòng {line}: số lượng thực nhận không hợp lệ.',
     en: 'Line {line}: received quantity is not valid.',
+  },
+  'goodsReceiptDetail.err.expireDateRequired': {
+    vi: 'Dòng {line}: chưa chọn ngày hết hạn.',
+    en: 'Line {line}: no expire date selected.',
   },
 
 
@@ -890,4 +899,115 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 
   'supplier.confirm.message': { vi: 'Bạn có chắc chắn muốn xoá nhà cung cấp "{label}"?', en: 'Are you sure you want to delete the supplier "{label}"?' },
   'supplier.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
+
+  // goods-issue
+  'goodsIssue.title': { vi: 'Phiếu xuất', en: 'Goods Issue' },
+  'goodsIssue.lower': { vi: 'phiếu xuất', en: 'goods issue' },
+  'goodsIssue.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+  'goodsIssue.id': { vi: 'ID', en: 'ID' },
+  'goodsIssue.empty': { vi: 'Không có phiếu xuất nào.', en: 'No goods issue found.' },
+
+  'goodsIssue.issueNo': { vi: 'Mã phiếu', en: 'Issue No' },
+  'goodsIssue.issueType': { vi: 'Loại phiếu xuất', en: 'Issue Type' },
+  'goodsIssue.warehouse': { vi: 'Kho', en: 'Warehouse' },
+  'goodsIssue.referenceType': { vi: 'Loại tham chiếu', en: 'Reference Type' },
+  'goodsIssue.reference': { vi: 'Mã tham chiếu', en: 'Reference ID' },
+  'goodsIssue.issueDate': { vi: 'Ngày xuất', en: 'Issue Date' },
+  'goodsIssue.status': { vi: 'Trạng thái', en: 'Status' },
+  'goodsIssue.remark': { vi: 'Ghi chú', en: 'Remark' },
+  'goodsIssue.approvedBy': { vi: 'Người duyệt', en: 'Approved By' },
+  'goodsIssue.approvedDate': { vi: 'Ngày duyệt', en: 'Approved Date' },
+  'goodsIssue.postedBy': { vi: 'Người ghi sổ', en: 'Posted By' },
+  'goodsIssue.postedDate': { vi: 'Ngày ghi sổ', en: 'Posted Date' },
+  'goodsIssue.issueType.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+  'goodsIssue.status.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+  'goodsIssue.err.load': { vi: 'Không tải được dữ liệu phiếu xuất.', en: 'Could not load the goods issue data.' },
+  'goodsIssue.warehouse.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+  'goodsIssue.status.purchase': {
+    vi: 'Mua hàng',
+    en: 'Purchase',
+  },
+  'goodsIssue.status.production': {
+    vi: 'Sản xuất',
+    en: 'Production',
+  },
+  'goodsIssue.status.return': {
+    vi: 'Trả hàng',
+    en: 'Return',
+  },
+  'goodsIssue.status.transferIn': {
+    vi: 'Xuất chuyển kho',
+    en: 'Transfer Out',
+  },
+  'goodsIssue.status.adjustment': {
+    vi: 'Điều chỉnh',
+    en: 'Adjustment',
+  },
+
+  'goodsIssue.err.issueNoRequired': {
+    vi: 'Mã phiếu không được để trống.',
+    en: 'Issue No is required.',
+  },
+
+  'goodsIssue.err.warehouseRequired': {
+    vi: 'Kho không được để trống.',
+    en: 'Warehouse is required.',
+  },
+
+  'goodsIssue.err.issueDateRequired': {
+    vi: 'Ngày xuất không được để trống.',
+    en: 'Issue date is required.',
+  },
+
+  'goodsIssue.err.statusRequired': {
+    vi: 'Trạng thái không được để trống.',
+    en: 'Status is required.',
+  },
+
+  'goodsIssue.err.issueNoTaken': {
+    vi: 'Mã phiếu "{issueNo}" đã tồn tại.',
+    en: 'Issue No "{issueNo}" already exists.',
+  },
+
+
+  'goodsIssueDetail.title': { vi: 'Chi tiết phiếu xuất', en: 'Goods Issue Detail' },
+  'goodsIssueDetail.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+  'goodsIssueDetail.goodsIssueId': { vi: 'Phiếu xuất', en: 'Goods Issue' },
+  'goodsIssueDetail.product': { vi: 'Sản phẩm', en: 'Product' },
+  'goodsIssueDetail.unit': { vi: 'Đơn vị tính', en: 'Unit' },
+  'goodsIssueDetail.location': { vi: 'Vị trí kho', en: 'Location' },
+  'goodsIssueDetail.lotNo': { vi: 'Số lô', en: 'Lot No' },
+  'goodsIssueDetail.serialNo': { vi: 'Số serial', en: 'Serial No' },
+  'goodsIssueDetail.quantity': { vi: 'Số lượng', en: 'Quantity' },
+  'goodsIssueDetail.unitPrice': { vi: 'Đơn giá', en: 'Unit Price' },
+  'goodsIssueDetail.remark': { vi: 'Ghi chú', en: 'Remark' },
+  'goodsIssueDetail.emptyLine': { vi: 'Phiếu xuất này chưa có sản phẩm nào.', en: 'This goods issue has no details yet.' },
+  'goodsIssueDetail.emptyLineHint': { vi: 'Chọn một phiếu xuất ở panel phía trên.', en: 'Pick a goods issue in the panel above.' },
+
+  'goodsIssueDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+  'goodsIssueDetail.removeLine': { vi: 'Xoá dòng', en: 'Remove line' },
+  'goodsIssueDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+  'goodsIssueDetail.selectProduct': { vi: 'Chọn sản phẩm…', en: 'Pick a product…' },
+  'goodsIssueDetail.selectUnit': { vi: 'Chọn ĐVT…', en: 'Pick a unit…' },
+  'goodsIssueDetail.noProduct': { vi: 'Không tìm thấy sản phẩm.', en: 'No product found.' },
+  'goodsIssueDetail.total': { vi: 'Tổng tiền', en: 'Total' },
+  'goodsIssueDetail.selectLocation': { vi: 'Chọn vị trí kho…', en: 'Pick a location…' },
+
+  'goodsIssueDetail.err.linesRequired': {
+    vi: 'Phiếu xuất phải có ít nhất một sản phẩm.',
+    en: 'A goods issue needs at least one product line.',
+  },
+  'goodsIssueDetail.err.productRequired': {
+    vi: 'Dòng {line}: chưa chọn sản phẩm.',
+    en: 'Line {line}: no product selected.',
+  },
+  'goodsIssueDetail.err.unitRequired': {
+    vi: 'Dòng {line}: chưa chọn đơn vị tính.',
+    en: 'Line {line}: no unit selected.',
+  },
+  'goodsIssueDetail.err.quantityRequired': {
+    vi: 'Dòng {line}: số lượng phải lớn hơn 0.',
+    en: 'Line {line}: quantity must be greater than 0.',
+  },
+
 };
