@@ -22,7 +22,7 @@ import { InventoryApiService, InventoryTransactionApiService } from '../../core/
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
-import { InventoryDto, InventoryTransactionDto } from '../../domain/models/inventory.model';
+import { INVENTORY_ACTION_TYPES, INVENTORY_REFERENCE_TYPES, INVENTORY_TRANSACTION_TYPES, InventoryDto, InventoryTransactionDto } from '../../domain/models/inventory.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -35,9 +35,23 @@ type EntityKind = 'inventory' | 'transaction';
 	selector: 'app-inventory',
 	standalone: true,
 	imports: [
-		CommonModule, FormsModule,
-		TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
-		InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule, PanelModule, CardModule, InputNumberModule, AutoCompleteModule
+		CommonModule,
+		FormsModule,
+		TableModule,
+		SplitterModule,
+		ButtonModule,
+		DialogModule,
+		ConfirmDialogModule,
+		ToastModule,
+		InputTextModule,
+		TextareaModule,
+		SelectModule,
+		TagModule,
+		ToggleSwitchModule,
+		PanelModule,
+		CardModule,
+		InputNumberModule,
+		AutoCompleteModule
 	],
 	providers: [MessageService, ConfirmationService],
 	templateUrl: './inventory.component.html',
@@ -83,6 +97,21 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 	locationLabel(id?: number | null): string {
 		const location = this.locationApi.items().find(l => l.id === id);
 		return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
+	}
+
+	transactionTypeLabel(value: number): string {
+		const type = INVENTORY_TRANSACTION_TYPES.find(s => s.value === value);
+		return type ? this.i18n.t(type.labelKey) : '';
+	}
+
+	referenceTypeLabel(value: number): string {
+		const type = INVENTORY_REFERENCE_TYPES.find(s => s.value === value);
+		return type ? this.i18n.t(type.labelKey) : '';
+	}
+
+	actionTypeLabel(value: number): string {
+		const type = INVENTORY_ACTION_TYPES.find(s => s.value === value);
+		return type ? this.i18n.t(type.labelKey) : '';
 	}
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
@@ -138,7 +167,9 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 			inventory: this.inventoryApi.load(),
 			transaction: this.transactionApi.load(),
 			products: this.productApi.load(),
-			units: this.unitApi.load()
+			units: this.unitApi.load(),
+			warehouses: this.warehouseApi.load(),
+			locations: this.locationApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('goodsIssue.err.load'), err),
 		});

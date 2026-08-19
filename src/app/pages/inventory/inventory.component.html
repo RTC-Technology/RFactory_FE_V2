@@ -161,13 +161,14 @@
                                 <th class="col-reference">{{ i18n.t('inventoryTransaction.reference') }}</th>
                                 <th class="col-transactionDate">{{ i18n.t('inventoryTransaction.transactionDate') }}
                                 </th>
+                                <th class="col-actionType">{{ i18n.t('inventoryTransaction.actionType') }}</th>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedTransaction()?.id === row.id"
                                 (click)="selectTransaction(row)">
-                                <td class="col-transactionNo">{{ row.transactionNo }}</td>
-                                <td class="col-transactionType">{{ row.transactionType }}
+                                <td class="col-transactionNo">{{ row.transactionNo||'—' }}</td>
+                                <td class="col-transactionType">{{ transactionTypeLabel(row.transactionType ||'—') }}
                                 </td>
                                 <td class="col-product">{{ productLabel(row.productId || '—') }}</td>
                                 <td class="col-warehouse">{{ warehouseLabel(row.warehouseId ||'—')}}</td>
@@ -177,16 +178,17 @@
                                     {{ row.quantity != null ? (row.quantity | number:'1.0-2') :'—'}}
                                 </td>
                                 <td class="col-unit">{{ unitLabel(row.unitId ||'—') }}</td>
-                                <td class="col-referenceType">{{ row.referenceType }}</td>
+                                <td class="col-referenceType">{{ referenceTypeLabel(row.referenceType||'—') }}</td>
                                 <td class="col-reference">{{ row.referenceId ||'—'}}</td>
                                 <td class="col-transactionDate">
                                     {{ row.transactionDate ? (row.transactionDate | date) :'—' }}
                                 </td>
+                                <td class="col-actionType">{{ actionTypeLabel(row.actionType||'—')}}</td>
                             </tr>
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="9">
+                                <td colspan="11">
                                     <p class="empty">
                                         {{ selectedInventory() ? i18n.t('inventoryTransaction.emptyLine') :
                                         i18n.t('inventoryTransaction.emptyLineHint') }}
