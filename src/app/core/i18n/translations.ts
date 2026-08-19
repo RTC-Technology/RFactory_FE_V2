@@ -398,6 +398,27 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'product.info': { vi: 'Thông tin', en: 'Information' },
   'product.workSteps': { vi: 'Công đoạn', en: 'Work steps' },
   'product.detailOf': { vi: 'Chi tiết sản phẩm: {name}', en: 'Product detail: {name}' },
+  'product.saveFirst': {
+    vi: 'Lưu sản phẩm trước khi thêm BOM hoặc công đoạn.',
+    en: 'Save the product before adding BOMs or work steps.',
+  },
+
+  'bomDetail.title': { vi: 'Chi tiết BOM', en: 'BOM detail' },
+  'bomDetail.lower': { vi: 'chi tiết BOM', en: 'BOM line' },
+  'bomDetail.product': { vi: 'Vật tư / bán thành phẩm', en: 'Material / semi-finished' },
+  'bomDetail.pickProductHint': { vi: '— Chọn vật tư —', en: '— Pick a material —' },
+  'bomDetail.lockedHint': { vi: 'Cố định theo sản phẩm hiện tại.', en: 'Fixed to the current product.' },
+  'bomDetail.quantity': { vi: 'Định lượng', en: 'Quantity' },
+  'bomDetail.scrapRate': { vi: 'Hao hụt %', en: 'Scrap %' },
+  'bomDetail.fixedScrap': { vi: 'Hao hụt cố định', en: 'Fixed scrap' },
+  'bomDetail.empty': { vi: 'Chưa có chi tiết BOM.', en: 'No BOM lines yet.' },
+  'bomDetail.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+  'bomDetail.err.pickBom': { vi: 'Hãy chọn một BOM trước.', en: 'Pick a BOM first.' },
+  'bomDetail.err.pickProduct': {
+    vi: 'Hãy chọn vật tư / bán thành phẩm.',
+    en: 'Pick a material or semi-finished product.',
+  },
+  'bomDetail.err.quantity': { vi: 'Định lượng phải lớn hơn 0.', en: 'Quantity must be greater than 0.' },
 
   'routing.title': { vi: 'Quy trình', en: 'Routing' },
   'routing.lower': { vi: 'quy trình', en: 'routing' },

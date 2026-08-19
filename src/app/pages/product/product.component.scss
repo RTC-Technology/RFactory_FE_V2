@@ -1,5 +1,6 @@
-﻿/* Product declaration screen. The main view is a single-product list; a "Detail" button on
-   each row opens a modal with three tabs (Thông tin / BOM List / Công đoạn). */
+﻿/* Product declaration screen. The main view is a single-product list; Thêm/Sửa open a modal
+   with three tabs — the first (Thông tin) doubles as the product create/edit form, the others
+   (BOM List / Công đoạn) manage the product's sub-entities. */
 
 @use '../../shared/styles/master-detail';
 
@@ -8,29 +9,15 @@
 .col-state   { width: 110px; text-align: center; }
 .col-version { width: 100px; text-align: center; }
 .col-seq     { width: 70px;  text-align: center; }
-.col-action  { width: 96px;  text-align: center; }
+.col-qty     { width: 100px; text-align: center; }
+.col-rate    { width: 90px;  text-align: center; }
+.col-fixed   { width: 110px; text-align: center; }
 
 /* Scopes the whole list rather than acting on a row, so it lives in the panel header. */
 .type-filter {
   margin-left: 8px;
   min-width: 0;
   max-width: 200px;
-}
-
-/* The Detail button reads as a text link inside the actions cell, not a toolbar icon. */
-.tool--compact {
-  flex-direction: row;
-  gap: 0;
-  min-width: 0;
-  padding: 3px 10px;
-  font-size: 12px;
-  color: var(--accent);
-  border-radius: 5px;
-
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
-  }
 }
 
 .notice {
@@ -81,36 +68,34 @@
 }
 
 /* Tables inside the modal scroll instead of stretching the dialog forever. */
-.p-tabpanel .table-scroll { max-height: 260px; }
-.tab-section .table-scroll { max-height: 260px; }
+.p-tabpanel .table-scroll { max-height: 340px; }
+.tab-section .table-scroll { max-height: 340px; }
 
-/* ─── Thông tin tab ──────────────────────────────────────────────────────── */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
-  padding: 4px 2px;
-}
-
-.info-grid__field {
+/* ─── Detail modal is a fixed-size workbench ───────────────────────────────
+   The dialog carries a locked width + height, so switching tabs or picking a
+   row can never resize it. The tabs fill that space and the panels scroll
+   inside it. */
+:host ::ng-deep .detail-dialog {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
 
-.info-grid__label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-}
+  .p-dialog-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+  }
 
-.info-grid__value {
-  font-size: 13px;
-  color: var(--text-primary);
-  word-break: break-word;
+  .detail-tabs {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .detail-tabs .p-tabpanels {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
 }
 
 /* ─── CRUD form ──────────────────────────────────────────────────────────── */
