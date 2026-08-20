@@ -191,7 +191,7 @@
 
 
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-    [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px' }">
+    [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
     <div class="form">
         @if (formError()) {
@@ -281,7 +281,8 @@
             </div>
 
             <div class="lines__scroll">
-                <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit">
+                <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
+                    scrollable="true" scrollHeight="flex">
                     <ng-template #header>
                         <tr>
                             <th class="col-idx">#</th>
@@ -368,12 +369,33 @@
                             </td>
 
                             <td class="col-location">
-                                <p-select [options]="locationOptions(form.warehouseId)" optionLabel="label" optionValue="value"
-                                    [ngModel]="row.locationId || null" (ngModelChange)="row.locationId = $event ?? 0"
-                                    [filter]="true" filterBy="label"
-                                    [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" appendTo="body"
-                                    class="w-full" [group]="true" optionLabel="label" optionValue="value"
-                                    class="w-full md:w-56" />
+                                <p-select [options]="locationOptions(row.productId)" optionLabel="label"
+                                    optionValue="value" optionDisabled="disabled" [ngModel]="row.locationId || null"
+                                    (ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
+                                    [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" optionLabel="label"
+                                    optionValue="value" class="w-full md:w-56" appendTo="body"
+                                    panelStyleClass="grid-picker" scrollHeight="18rem">
+                                    <ng-template #header>
+                                        <div class="picker-row picker-row--head">
+                                            <span class="picker-cell">{{ i18n.t('inventory.locationCode') }}</span>
+                                            <span class="picker-cell">{{ i18n.t('inventory.locationName') }}</span>
+                                            <span class="picker-cell">{{
+                                                i18n.t('inventory.availableQuantity')
+                                                }}</span>
+
+                                        </div>
+                                    </ng-template>
+
+                                    <ng-template #item let-opt>
+                                        <div class="picker-row">
+                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                            <span class="picker-cell">
+                                                {{ opt.availableQuantity}}
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
                             </td>
 
                             <td class="col-lotNo">

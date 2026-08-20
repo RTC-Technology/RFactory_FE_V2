@@ -81,37 +81,56 @@
 
                 <div class="table-scroll">
                     <p-table #inventoryTable [value]="inventory()" [showGridlines]="true" class="grid"
-                        [globalFilterFields]="filterFields.inventory"
+                        rowGroupMode="subheader" groupRowsBy="locationId" [globalFilterFields]="filterFields.inventory"
                         (onFilter)="onFiltered('inventory', $event.filteredValue)">
                         <ng-template #header>
                             <tr>
                                 <th class="col-product">{{ i18n.t('inventory.product') }}</th>
-                                <th class="col-warehouse">{{ i18n.t('inventory.warehouse') }}</th>
+                                <!-- <th class="col-warehouse">{{ i18n.t('inventory.warehouse') }}</th> -->
                                 <th class="col-location">{{ i18n.t('inventory.location') }}</th>
-                                <th class="col-lotNo">{{ i18n.t('inventory.lotNo') }}</th>
-                                <th class="col-serialNo">{{ i18n.t('inventory.serialNo') }}</th>
-                                <th class="col-quantity">{{ i18n.t('inventory.quantity') }}</th>
-                                <th class="col-reservedQuantity">{{ i18n.t('inventory.reservedQuantity') }}</th>
+                                <!-- <th class="col-lotNo">{{ i18n.t('inventory.lotNo') }}</th>
+                                <th class="col-serialNo">{{ i18n.t('inventory.serialNo') }}</th>-->
+                                <th class="col-totalReceipt">{{ i18n.t('inventory.totalReceipt') }}</th>
+                                <th class="col-totalIssue">{{ i18n.t('inventory.totalIssue') }}</th>
                                 <th class="col-availableQuantity">{{ i18n.t('inventory.availableQuantity') }}</th>
                                 <th class="col-unit">{{ i18n.t('inventory.unit') }}</th>
                                 <th class="col-lastTransactionDate">{{ i18n.t('inventory.lastTransactionDate') }}</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="12">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold">{{ locationLabel(row.locationId || '—') }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupfooter let-row>
+                            <tr>
+                                <td colspan="12">
+                                    <div class="text-right font-bold pe-12">{{i18n.t('inventory.totalProduct')}}:
+                                        {{calculateProductTotal(row.locationId) }}
+                                    </div>
+                                </td>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedInventory()?.id === row.id"
                                 (click)="selectInventory(row)">
                                 <td class="col-product">{{ productLabel(row.productId || '—')}}</td>
-                                <td class="col-warehouse">{{ warehouseLabel(row.warehouseId || '—') }}</td>
-                                <td class="col-location">{{ locationLabel(row.locationId) || '—' }}</td>
-                                <td class="col-lotNo">{{ row.lotNo || '—' }}</td>
-                                <td class="col-serialNo">{{ row.serialNo || '—' }}</td>
-                                <td class="col-quantity">
-                                    {{ row.quantity != null ? (row.quantity | number:'1.0-2') :'—'}}
+                                <!-- <td class="col-warehouse">{{ warehouseLabel(row.warehouseId || '—') }}</td> -->
+                                <td class="col-location">{{ locationLabel(row.locationId || '—') }}</td>
+                                <!-- <td class="col-lotNo">{{ row.lotNo || '—' }}</td>
+                                <td class="col-serialNo">{{ row.serialNo || '—' }}</td>-->
+                                <td class="col-totalReceipt text-right">
+                                    {{ row.totalReceipt != null ? (row.totalReceipt | number:'1.0-2') :'—'}}
                                 </td>
-                                <td class="col-reservedQuantity">
-                                    {{ row.reservedQuantity != null ? (row.reservedQuantity | number:'1.0-2') :'—'}}
+                                <td class="col-totalIssue text-right">
+                                    {{ row.totalIssue != null ? (row.totalIssue | number:'1.0-2') :'—'}}
                                 </td>
-                                <td class="col-availableQuantity">
+                                <td class="col-availableQuantity text-right">
                                     {{ row.availableQuantity != null ? (row.availableQuantity | number:'1.0-2') :'—'}}
                                 </td>
                                 <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
@@ -154,7 +173,7 @@
                                 </th>
                                 <th class="col-product">{{ i18n.t('inventoryTransaction.product') }}</th>
                                 <th class="col-warehouse">{{ i18n.t('inventoryTransaction.warehouse') }}</th>
-                                <th class="col-warehouseLocation">{{ i18n.t('inventoryTransaction.location') }}</th>
+                                <th class="col-location">{{ i18n.t('inventoryTransaction.location') }}</th>
                                 <th class="col-quantity">{{ i18n.t('inventoryTransaction.quantity') }}</th>
                                 <th class="col-unitId">{{ i18n.t('inventoryTransaction.unit') }}</th>
                                 <th class="col-referenceType">{{ i18n.t('inventoryTransaction.referenceType') }}</th>
@@ -164,6 +183,9 @@
                                 <th class="col-actionType">{{ i18n.t('inventoryTransaction.actionType') }}</th>
                             </tr>
                         </ng-template>
+
+
+
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedTransaction()?.id === row.id"
                                 (click)="selectTransaction(row)">
@@ -174,7 +196,7 @@
                                 <td class="col-warehouse">{{ warehouseLabel(row.warehouseId ||'—')}}</td>
                                 <td class="col-warehouseLocation">{{ warehouseLabel(row.warehouseLocationId ||'—' )}}
                                 </td>
-                                <td class="col-quantity">
+                                <td class="col-quantity text-right">
                                     {{ row.quantity != null ? (row.quantity | number:'1.0-2') :'—'}}
                                 </td>
                                 <td class="col-unit">{{ unitLabel(row.unitId ||'—') }}</td>
@@ -183,7 +205,15 @@
                                 <td class="col-transactionDate">
                                     {{ row.transactionDate ? (row.transactionDate | date) :'—' }}
                                 </td>
-                                <td class="col-actionType">{{ actionTypeLabel(row.actionType||'—')}}</td>
+                                <td class="col-actionType">
+
+                                    @if (actionOf(row.actionType); as action) {
+                                    <p-tag [severity]="action.severity" [value]="i18n.t(action.labelKey)"
+                                        [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
                             </tr>
                         </ng-template>
                         <ng-template #emptymessage>

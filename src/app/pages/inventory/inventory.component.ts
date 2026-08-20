@@ -22,7 +22,7 @@ import { InventoryApiService, InventoryTransactionApiService } from '../../core/
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
-import { INVENTORY_ACTION_TYPES, INVENTORY_REFERENCE_TYPES, INVENTORY_TRANSACTION_TYPES, InventoryDto, InventoryTransactionDto } from '../../domain/models/inventory.model';
+import { INVENTORY_ACTION_TYPES, INVENTORY_REFERENCE_TYPES, INVENTORY_TRANSACTION_TYPES, InventoryDto, inventoryTransactionActionOf, InventoryTransactionDto } from '../../domain/models/inventory.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -70,6 +70,8 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 	private readonly confirm = inject(ConfirmationService);
 	readonly i18n = inject(I18nService);
 	readonly split = inject(SplitStateService);
+
+	readonly actionOf = inventoryTransactionActionOf;
 
 	readonly loading = computed(() => this.inventoryApi.loading() || this.transactionApi.loading());
 
@@ -130,7 +132,9 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 	});
 
 	readonly transaction = computed(() => {
-		const productId = this.selectedInventory()?.id;
+		const productId = this.selectedInventory()?.productId;
+
+		// console.log('productId:', productId);
 		if (productId == null) return [];
 		return this.transactionApi.items().filter(b => b.productId === productId);
 	});
@@ -173,6 +177,20 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('goodsIssue.err.load'), err),
 		});
+	}
+
+	calculateProductTotal(locationId: number) {
+		let total = 0;
+
+		if (this.inventory()) {
+			for (let inventory of this.inventory()) {
+				if ((inventory.locationId ?? 0) === locationId) {
+					total++;
+				}
+			}
+		}
+
+		return total;
 	}
 
 	// ─── Global filter ──────────────────────────────────────────────────────────

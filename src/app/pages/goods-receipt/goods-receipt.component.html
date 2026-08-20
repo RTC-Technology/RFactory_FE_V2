@@ -199,7 +199,7 @@
 
 
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-	[draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px' }">
+	[draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
 	<div class="form">
 		@if (formError()) {
@@ -293,7 +293,8 @@
 			</div>
 
 			<div class="lines__scroll">
-				<p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit">
+				<p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
+					[scrollable]="true" scrollHeight="flex">
 					<ng-template #header>
 						<tr>
 							<th class="col-idx">#</th>
@@ -325,7 +326,8 @@
 								<!-- <span class="req">*</span> -->
 							</th>
 							<th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
-							<th class="col-act">{{ i18n.t('common.actions') }}</th>
+							<th class="col-act">{{
+								i18n.t('common.actions') }}</th>
 						</tr>
 					</ng-template>
 
@@ -456,13 +458,13 @@
 						<tr class="lines__total">
 							<td colspan="8">{{ i18n.t('goodsReceiptDetail.total') }}</td>
 							<td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
-							<td colspan="2"></td>
+							<td colspan="3"></td>
 						</tr>
 					</ng-template>
 
 					<ng-template #emptymessage>
 						<tr>
-							<td colspan="11">
+							<td colspan="12">
 								<p class="empty">{{ i18n.t('goodsReceiptDetail.emptyLine') }}</p>
 							</td>
 						</tr>

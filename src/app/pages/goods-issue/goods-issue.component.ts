@@ -31,6 +31,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-api.service';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { productStatusOf } from '../../domain/models/product.model';
+import { InventoryApiService } from '../../core/services/inventory-api.service';
 
 type EntityKind = 'goodsIssue' | 'goodsIssueDetail';
 
@@ -56,6 +57,15 @@ interface ProductOption {
     statusSeverity: 'success' | 'danger' | undefined;
 }
 
+interface LocationOption {
+    value: number;
+    label: string;
+    code: string;
+    name: string;
+    availableQuantity: number;
+    disabled:boolean;
+}
+
 interface SerialNoSelectItem extends SelectItem {
     daysRemaining?: number;
 }
@@ -79,7 +89,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     private readonly unitApi = inject(UnitApiService);
     private readonly warehouseApi = inject(WarehouseApiService);
     private readonly locationApi = inject(WarehouseLocationApiService);
-    private readonly supplierApi = inject(SupplierApiService);
+    // private readonly supplierApi = inject(SupplierApiService);
+    private readonly inventoryApi = inject(InventoryApiService);
 
     private readonly goodsIssueApi = inject(GoodsIssueApiService);
     private readonly goodsIssueDetailApi = inject(GoodsIssueDetailApiService);
@@ -121,10 +132,10 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
         return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
     }
 
-    supplierLabel(id?: number | null): string {
-        const supplier = this.supplierApi.items().find(s => s.id === id);
-        return supplier ? `${supplier.supplierCode} · ${supplier.supplierName}` : '';
-    }
+    // supplierLabel(id?: number | null): string {
+    //     const supplier = this.supplierApi.items().find(s => s.id === id);
+    //     return supplier ? `${supplier.supplierCode} · ${supplier.supplierName}` : '';
+    // }
 
     issueTypeLabel(value: number): string {
         const type = GOODS_ISSUE_STATUSES.find(s => s.value === value);
@@ -323,33 +334,63 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     //         .filter(l => l.isActive)
     //         .map(l => ({ label: `${l.warehouseLocationCode} · ${l.warehouseLocationName}`, value: l.id })));
 
-    readonly locationOptions = (warehouseId: number | null) => {
-        const locations = this.locationApi.items()
-            .filter(x => x.isActive && x.warehouseId === warehouseId);
+    // readonly locationOptions = (warehouseId: number | null, productId: number | null) => {
+    //     return this.inventoryApi.items()
+    //         .filter(x => x.productId == productId)
+    //         .map(x => ({ label: `${x.warehouseLocationCode} · ${x.warehouseLocationName}`, value: x.locationId }));
 
-        const groups = new Map<string, {
-            label: string;
-            items: { label: string; value: number }[];
-        }>();
+    //     // console.log('inventorys:', inventorys, this.inventoryApi.items());
+    //     // console.log('productId:', productId);
 
-        for (const location of locations) {
-            const zoneCode = location.warehouseZoneCode ?? '';
-            const zoneName = location.warehouseZoneName ?? '';
+    //     // const locations = this.locationApi.items()
+    //     //     .filter(x => x.isActive && x.warehouseId === warehouseId);
 
-            if (!groups.has(zoneCode)) {
-                groups.set(zoneCode, {
-                    label: `${zoneCode} · ${zoneName}`,
-                    items: []
-                });
-            }
+    //     // const groups = new Map<string, {
+    //     //     label: string;
+    //     //     items: { label: string; value: number }[];
+    //     // }>();
 
-            groups.get(zoneCode)!.items.push({
-                label: `${location.warehouseLocationCode} · ${location.warehouseLocationName}`,
-                value: location.id
-            });
+    //     // for (const location of locations) {
+    //     //     const zoneCode = location.warehouseZoneCode ?? '';
+    //     //     const zoneName = location.warehouseZoneName ?? '';
+
+    //     //     if (!groups.has(zoneCode)) {
+    //     //         groups.set(zoneCode, {
+    //     //             label: `${zoneCode} · ${zoneName}`,
+    //     //             items: []
+    //     //         });
+    //     //     }
+
+    //     //     groups.get(zoneCode)!.items.push({
+    //     //         label: `${location.warehouseLocationCode} · ${location.warehouseLocationName}`,
+    //     //         // value: location.id
+    //     //         value: location.locationId ?? 0
+    //     //     });
+    //     // }
+
+    //     // return Array.from(groups.values());
+
+    // };
+
+    readonly locationOptions = (productId: number | null): LocationOption[] => {
+        if (!productId) {
+            return [];
         }
 
-        return Array.from(groups.values());
+        const locations = this.inventoryApi.items()
+            .filter(x => x.productId === productId)
+            .map(p => ({
+                value: p.id,
+                label: `${p.warehouseLocationCode} · ${p.warehouseLocationName}`,
+                code: p.warehouseLocationCode ?? '',
+                name: p.warehouseLocationName ?? '',
+                availableQuantity: p.availableQuantity ?? 0,
+                disabled: (p.availableQuantity ?? 0) <= 0,
+            }));
+
+        console.log('locations:', locations);
+
+        return locations;
     };
 
     // readonly supplierOptions = computed(() =>
@@ -414,6 +455,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             units: this.unitApi.load(),
             warehouse: this.warehouseApi.load(),
             location: this.locationApi.load(),
+            inventorys: this.inventoryApi.load(),
         }).subscribe({
             error: (err: HttpErrorResponse) => this._fail(this.i18n.t('goodsIssue.err.load'), err),
         });
@@ -684,7 +726,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
         autoComplete.show();
     }
-    
+
     // ─── Internals ──────────────────────────────────────────────────────────────
     private _emptyForm() {
         return {

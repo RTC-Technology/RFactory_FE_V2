@@ -7,9 +7,19 @@ export interface InventoryDto {
     serialNo?: string | null;
     quantity?: number | null;
     reservedQuantity?: number | null;
-    availableQuantity?: number | null;
     unitId?: number | null;
     lastTransactionDate?: string | null;
+    totalReceipt?: string | null;
+    totalIssue?: string | null;
+    availableQuantity?: number | null;
+    productCode: string | null;
+    productName: string | null;
+    warehouseLocationCode: string | null;
+    warehouseLocationName: string | null;
+    unitCode: string | null;
+    unitName: string | null;
+    warehouseZoneCode: string | null;
+    warehouseZoneName: string | null;
 }
 
 export interface InventoryTransactionDto {
@@ -105,13 +115,20 @@ export const INVENTORY_ACTION_TYPES = [
     {
         labelKey: 'inventoryTransaction.actionType.add',
         value: 1,
+        severity: 'success' as const
     },
     {
         labelKey: 'inventoryTransaction.actionType.update',
         value: 2,
+        severity: 'warn' as const
     },
     {
         labelKey: 'inventoryTransaction.actionType.remove',
         value: 3,
+        severity: 'danger' as const
     }
 ];
+
+export function inventoryTransactionActionOf(status?: number | null) {
+    return INVENTORY_ACTION_TYPES.find(s => s.value === status);
+}
