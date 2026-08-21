@@ -407,3 +407,49 @@
     transform: translateY(0);
   }
 }
+
+/* ─── Dialog: product picker rows ─────────────────────────────────────────── */
+
+/* Column track for both the heading row and every option. The two are separate elements
+   inside the dropdown — the heading sits on the panel, the options inside list items — so
+   one shared grid definition is what keeps them lined up.
+   These rules live with the component even though the panel is appended to <body>: the
+   markup is declared in this template, so it carries this component's style scope. The
+   panel around it is not, and is styled in `styles.scss`. */
+.picker-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 56px 120px 84px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 12.5px;
+}
+
+.picker-row--head {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* One line per cell: a long product name must not push the columns beside it out of line. */
+.picker-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-cell--code {
+  font-weight: 600;
+}
+
+.picker-cell--center {
+  text-align: center;
+}
+
+.picker-cell--muted {
+  color: var(--text-muted);
+}

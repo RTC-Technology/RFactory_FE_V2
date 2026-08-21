@@ -26,6 +26,11 @@ export interface WarehouseLocationDto {
   maxCapacity?: number | null;
   isPickingLocation?: boolean | null;
   isActive?: boolean | null;
+  warehouseId?: number | null;
+  warehouseCode?: string | null;
+  warehouseName?: string | null;
+  warehouseZoneCode?: string | null;
+  warehouseZoneName?: string | null;
 }
 
 /** Create/Update share one shape per entity on the backend, so one type covers both. */

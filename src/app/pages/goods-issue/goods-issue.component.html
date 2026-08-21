@@ -103,17 +103,18 @@
                             <tr class="row" [class.row--selected]="selectedIssue()?.id === row.id"
                                 (click)="selectIssue(row)" (dblclick)="openEdit()">
                                 <td class="col-issueNo">{{ row.issueNo || '—' }}</td>
-                                <td class="col-issueType">{{                          (row.issueType || '—') }}</td>
+                                <td class="col-issueType">{{ issueTypeLabel(row.issueType || '—') }}</td>
                                 <td class="col-warehouseId">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
                                 <td class="col-reference">{{ row.referenceType || '—' }}</td>
                                 <td class="col-referenceId">{{ row.referenceId || '—' }}</td>
-                                <td class="col-issueDate">{{ row.issueDate | date }}</td>
+                                <td class="col-issueDate">{{ row.issueDate ? (row.issueDate | date) :'—' }}</td>
                                 <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
                                 <td class="col-approvedBy">{{ row.approvedBy || '—' }}</td>
-                                <td class="col-approvedDate">{{ row.approvedDate | date }}</td>
+                                <td class="col-approvedDate">{{ row.approvedDate ? (row.approvedDate | date) : '—' }}
+                                </td>
                                 <td class="col-postedBy">{{ row.postedBy || '—' }}</td>
-                                <td class="col-postedDate">{{ row.postedDate | date }}</td>
+                                <td class="col-postedDate">{{ row.postedDate ? (row.postedDate | date):'—' }}</td>
                             </tr>
                         </ng-template>
                         <ng-template #emptymessage>
@@ -190,7 +191,7 @@
 
 
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-    [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px' }">
+    [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
     <div class="form">
         @if (formError()) {
@@ -280,7 +281,8 @@
             </div>
 
             <div class="lines__scroll">
-                <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit">
+                <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
+                    scrollable="true" scrollHeight="flex">
                     <ng-template #header>
                         <tr>
                             <th class="col-idx">#</th>
@@ -292,9 +294,15 @@
                                 {{ i18n.t('goodsIssueDetail.unit') }}
                                 <span class="req">*</span>
                             </th>
-                            <th class="col-location">{{ i18n.t('goodsIssueDetail.location') }}</th>
+                            <th class="col-location">
+                                {{ i18n.t('goodsIssueDetail.location') }}
+                                <span class="req">*</span>
+                            </th>
                             <th class="col-lotNo">{{ i18n.t('goodsIssueDetail.lotNo') }}</th>
-                            <th class="col-serialNo">{{ i18n.t('goodsIssueDetail.serialNo') }}</th>
+                            <th class="col-serialNo">
+                                {{ i18n.t('goodsIssueDetail.serialNo') }}
+                                <span class="req">*</span>
+                            </th>
                             <th class="col-quantity">
                                 {{ i18n.t('goodsIssueDetail.quantity') }}
                                 <span class="req">*</span>
@@ -317,7 +325,39 @@
                                     [filterPlaceholder]="i18n.t('common.search')"
                                     [placeholder]="i18n.t('goodsIssueDetail.selectProduct')"
                                     [emptyFilterMessage]="i18n.t('goodsIssueDetail.noProduct')" appendTo="body"
-                                    class="w-full" />
+                                    class="w-full" panelStyleClass="grid-picker" scrollHeight="18rem">
+
+                                    <ng-template #header>
+                                        <div class="picker-row picker-row--head">
+                                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                }}</span>
+                                        </div>
+                                    </ng-template>
+
+                                    <ng-template #item let-opt>
+                                        <div class="picker-row">
+                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                {{ opt.drawingNo || '—' }}
+                                            </span>
+                                            <span class="picker-cell picker-cell--center">
+                                                @if (opt.statusLabel) {
+                                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                    [rounded]="true" />
+                                                } @else {
+                                                <span class="picker-cell--muted">—</span>
+                                                }
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
                             </td>
 
                             <td class="col-unit">
@@ -329,11 +369,33 @@
                             </td>
 
                             <td class="col-location">
-                                <p-select [options]="locationOptions()" optionLabel="label" optionValue="value"
-                                    [ngModel]="row.locationId || null" (ngModelChange)="row.locationId = $event ?? 0"
-                                    [filter]="true" filterBy="label"
-                                    [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" appendTo="body"
-                                    class="w-full" />
+                                <p-select [options]="locationOptions(row.productId)" optionLabel="label"
+                                    optionValue="value" optionDisabled="disabled" [ngModel]="row.locationId || null"
+                                    (ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
+                                    [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" optionLabel="label"
+                                    optionValue="value" class="w-full md:w-56" appendTo="body"
+                                    panelStyleClass="grid-picker" scrollHeight="18rem">
+                                    <ng-template #header>
+                                        <div class="picker-row picker-row--head">
+                                            <span class="picker-cell">{{ i18n.t('inventory.locationCode') }}</span>
+                                            <span class="picker-cell">{{ i18n.t('inventory.locationName') }}</span>
+                                            <span class="picker-cell">{{
+                                                i18n.t('inventory.availableQuantity')
+                                                }}</span>
+
+                                        </div>
+                                    </ng-template>
+
+                                    <ng-template #item let-opt>
+                                        <div class="picker-row">
+                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                            <span class="picker-cell">
+                                                {{ opt.availableQuantity}}
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
                             </td>
 
                             <td class="col-lotNo">
@@ -341,7 +403,37 @@
                             </td>
 
                             <td class="col-serialNo">
-                                <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" />
+                                <!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" /> -->
+
+                                <p-autocomplete #serialAutoComplete [(ngModel)]="row.serialNo" [group]="true"
+                                    [suggestions]="filteredSerialNoGroups()"
+                                    (completeMethod)="onSearchSerialNo($event,row.productId)" optionLabel="label"
+                                    optionGroupLabel="label" optionGroupChildren="items" placeholder=""
+                                    inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200" appendTo="body"
+                                    (onFocus)="onSerialFocus(serialAutoComplete, row.productId)" scrollHeight="18rem"
+                                    [pt]="{ optionGroup: 'border-b border-surface' }">
+
+                                    <!-- Item trong dropdown -->
+                                    <ng-template #item let-item>
+                                        <div class="flex justify-content-between align-items-center w-full">
+                                            <span>{{ item.label }}</span>
+
+                                            @if (item.daysRemaining !== undefined)
+                                            {
+                                            <small class="text-color-secondary ml-3">
+                                                @if (item.daysRemaining < 0) { Quá {{ item.daysRemaining }} ngày } @else
+                                                    { @if (item.daysRemaining===0) { Hết hạn hôm nay } @else { Còn
+                                                    {{item.daysRemaining }} ngày } } </small>
+                                                    }
+                                        </div>
+                                    </ng-template>
+
+                                    <!-- Giá trị sau khi chọn -->
+                                    <ng-template #selectedItem let-item>
+                                        {{ item.label }}
+                                    </ng-template>
+
+                                </p-autocomplete>
                             </td>
 
                             <td class="col-quantity">

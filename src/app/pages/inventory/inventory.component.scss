@@ -1,0 +1,30 @@
+@use '../../shared/styles/master-detail';
+
+/* styles.scss */
+
+/* Text alignment */
+.text-right {
+    text-align: right !important;
+}
+
+/* Font */
+.font-bold {
+    font-weight: 700 !important;
+}
+
+/* Padding end: 12 */
+.pe-12 {
+    padding-right: 12px !important;
+}
+
+.flex {
+    display: flex !important;
+}
+
+.items-center {
+    align-items: center !important;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}

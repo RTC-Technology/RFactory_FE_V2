@@ -37,6 +37,7 @@ export interface SupplierDto {
   currencyCode?: string | null;
   status: number;
   description?: string | null;
+
 }
 
 /** Create/Update share one shape per entity on the backend, so one type covers both. */
@@ -57,19 +58,26 @@ export const LINE_STATUSES = [
 
 export const SUPPLIER_STATUS = [
   {
-    labelKey: 'supplier.status.active',
-    value: 1,
-  },
-  {
     labelKey: 'supplier.status.inactive',
     value: 0,
+    severity: 'danger' as const
+  },
+  {
+    labelKey: 'supplier.status.active',
+    value: 1,
+    severity: 'success' as const
   },
   {
     labelKey: 'supplier.status.pending',
     value: 2,
+    severity: 'warn' as const
   },
 
 ];
+
+export function supplierStatusOf(status?: number | null) {
+  return SUPPLIER_STATUS.find(s => s.value === status);
+}
 
 export function lineStatusOf(status?: number | null) {
   return LINE_STATUSES.find(s => s.value === status);

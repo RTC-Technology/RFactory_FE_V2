@@ -1,462 +1,487 @@
 <ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
-  let-showReload="showReload">
-  <div class="toolbar">
-    <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <rect x="3" y="3" width="12" height="14" rx="1.5" />
-        <line x1="19" y1="9" x2="19" y2="17" />
-        <line x1="15" y1="13" x2="23" y2="13" />
-      </svg>
-      <span>{{ i18n.t('common.add') }}</span>
-    </button>
-    <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit()">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M4 3h9l4 4v3" />
-        <path d="M4 3v18h13v-6" />
-        <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
-      </svg>
-      <span>{{ i18n.t('common.edit') }}</span>
-    </button>
-    <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-      (click)="askDelete()">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M4 7h16" />
-        <path d="M10 11v6" />
-        <path d="M14 11v6" />
-        <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
-        <path d="M9 7V4h6v3" />
-      </svg>
-      <span>{{ i18n.t('common.delete') }}</span>
-    </button>
+	let-showReload="showReload">
+	<div class="toolbar">
+		<button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<rect x="3" y="3" width="12" height="14" rx="1.5" />
+				<line x1="19" y1="9" x2="19" y2="17" />
+				<line x1="15" y1="13" x2="23" y2="13" />
+			</svg>
+			<span>{{ i18n.t('common.add') }}</span>
+		</button>
+		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+			(click)="openEdit()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M4 3h9l4 4v3" />
+				<path d="M4 3v18h13v-6" />
+				<path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+			</svg>
+			<span>{{ i18n.t('common.edit') }}</span>
+		</button>
+		<button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+			(click)="askDelete()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M4 7h16" />
+				<path d="M10 11v6" />
+				<path d="M14 11v6" />
+				<path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+				<path d="M9 7V4h6v3" />
+			</svg>
+			<span>{{ i18n.t('common.delete') }}</span>
+		</button>
 
-    @if (showReload) {
-    <span class="tool__sep"></span>
-    <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <polyline points="23 4 23 10 17 10" />
-        <polyline points="1 20 1 14 7 14" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-      </svg>
-      <span>{{ i18n.t('common.reload') }}</span>
-    </button>
+		@if (showReload) {
+		<span class="tool__sep"></span>
+		<button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<polyline points="23 4 23 10 17 10" />
+				<polyline points="1 20 1 14 7 14" />
+				<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+			</svg>
+			<span>{{ i18n.t('common.reload') }}</span>
+		</button>
 
-    <span class="tool__sep"></span>
-    <button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
-      (click)="askApprove(true)">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M5 12.5l4.2 4.2L19 2.5" />
-      </svg>
-      <span>{{ i18n.t('common.approve') }}</span>
-    </button>
-    <button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-      (click)="askApprove(false)">
-      <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <line x1="6" y1="6" x2="18" y2="18" />
-        <line x1="18" y1="6" x2="6" y2="18" />
-      </svg>
-      <span>{{ i18n.t('common.unapprove') }}</span>
-    </button>
-    }
+		<span class="tool__sep"></span>
+		<button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
+			(click)="askApprove(true)">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M5 12.5l4.2 4.2L19 2.5" />
+			</svg>
+			<span>{{ i18n.t('common.approve') }}</span>
+		</button>
+		<button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+			(click)="askApprove(false)">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+				<line x1="6" y1="6" x2="18" y2="18" />
+				<line x1="18" y1="6" x2="6" y2="18" />
+			</svg>
+			<span>{{ i18n.t('common.unapprove') }}</span>
+		</button>
+		}
 
-    <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
-      [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
-  </div>
+		<input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+			[attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+	</div>
 </ng-template>
 
 
 
 <div class="page">
-  <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
-    [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+	<p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+		[minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
 
-    <ng-template #panel>
-      <section class="panel">
-        <div class="panel__head">
-          <h2 class="panel__title">{{ i18n.t('goodsReceipt.title') }}</h2>
-          <span class="panel__count">{{ receipt().length }}</span>
-        </div>
-        <ng-container
-          *ngTemplateOutlet="toolbar; context: { kind: 'goodsReceipt', perms: perms.goodsReceipt, canAdd: true, hasSelection: !!selectedReceipt(), showReload: true }" />
+		<ng-template #panel>
+			<section class="panel">
+				<div class="panel__head">
+					<h2 class="panel__title">{{ i18n.t('goodsReceipt.title') }}</h2>
+					<span class="panel__count">{{ receipt().length }}</span>
+				</div>
+				<ng-container
+					*ngTemplateOutlet="toolbar; context: { kind: 'goodsReceipt', perms: perms.goodsReceipt, canAdd: true, hasSelection: !!selectedReceipt(), showReload: true }" />
 
-        <div class="table-scroll">
-          <p-table #receiptTable [value]="receipt()" [showGridlines]="true" class="grid"
-            [globalFilterFields]="filterFields.goodsReceipt"
-            (onFilter)="onFiltered('goodsReceipt', $event.filteredValue)">
-            <ng-template #header>
-              <tr>
-                <th class="col-receiptNo">{{ i18n.t('goodsReceipt.receiptNo') }}</th>
-                <th>{{ i18n.t('goodsReceipt.warehouseId') }}</th>
-                <th class="col-supplier">{{ i18n.t('goodsReceipt.supplierId') }}</th>
-                <th class="col-reference">{{ i18n.t('goodsReceipt.referenceType') }}</th>
-                <th class="col-referenceId">{{ i18n.t('goodsReceipt.referenceId') }}</th>
-                <th class="col-receiptDate">{{ i18n.t('goodsReceipt.receiptDate') }}</th>
-                <th class="col-remark">{{ i18n.t('goodsReceipt.remark') }}</th>
-                <th class="col-approvedBy">{{ i18n.t('goodsReceipt.approvedBy') }}</th>
-                <th class="col-approvedDate">{{ i18n.t('goodsReceipt.approvedDate') }}</th>
-                <th class="col-postedBy">{{ i18n.t('goodsReceipt.postedBy') }}</th>
-                <th class="col-postedDate">{{ i18n.t('goodsReceipt.postedDate') }}</th>
-                <th class="col-receiptType">{{ i18n.t('goodsReceipt.receiptType') }}</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-row>
-              <tr class="row" [class.row--selected]="selectedReceipt()?.id === row.id" (click)="selectReceipt(row)"
-                (dblclick)="openEdit()">
-                <td class="col-receiptNo">{{ row.receiptNo }}</td>
-                <td>{{ warehouseLabel(row.warehouseId) || '—' }}</td>
-                <td class="col-supplier">{{ supplierLabel(row.supplierId) || '—' }}</td>
-                <td class="col-reference">{{ row.referenceType || '—' }}</td>
-                <td class="col-referenceId">{{ row.referenceId || '—' }}</td>
-                <td class="col-receiptDate">{{ row.receiptDate | date }}</td>
-                <td class="col-remark">{{ row.remark || '—' }}</td>
-                <td class="col-approvedBy">{{ row.approvedBy || '—' }}</td>
-                <td class="col-approvedDate">{{ row.approvedDate | date }}</td>
-                <td class="col-postedBy">{{ row.postedBy || '—' }}</td>
-                <td class="col-postedDate">{{ row.postedDate | date }}</td>
-                <td class="col-receiptType">{{ typeLabel(row.receiptType) || '—' }}</td>
-              </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-              <tr>
-                <td colspan="12">
-                  <p class="empty">{{ i18n.t('bom.emptyHint') }}</p>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      </section>
-    </ng-template>
+				<div class="table-scroll">
+					<p-table #receiptTable [value]="receipt()" [showGridlines]="true" class="grid"
+						[globalFilterFields]="filterFields.goodsReceipt"
+						(onFilter)="onFiltered('goodsReceipt', $event.filteredValue)">
+						<ng-template #header>
+							<tr>
+								<th class="col-receiptNo">{{ i18n.t('goodsReceipt.receiptNo') }}</th>
+								<th>{{ i18n.t('goodsReceipt.warehouseId') }}</th>
+								<th class="col-supplier">{{ i18n.t('goodsReceipt.supplierId') }}</th>
+								<th class="col-reference">{{ i18n.t('goodsReceipt.referenceType') }}</th>
+								<th class="col-referenceId">{{ i18n.t('goodsReceipt.referenceId') }}</th>
+								<th class="col-receiptDate">{{ i18n.t('goodsReceipt.receiptDate') }}</th>
+								<th class="col-remark">{{ i18n.t('goodsReceipt.remark') }}</th>
+								<th class="col-approvedBy">{{ i18n.t('goodsReceipt.approvedBy') }}</th>
+								<th class="col-approvedDate">{{ i18n.t('goodsReceipt.approvedDate') }}</th>
+								<th class="col-postedBy">{{ i18n.t('goodsReceipt.postedBy') }}</th>
+								<th class="col-postedDate">{{ i18n.t('goodsReceipt.postedDate') }}</th>
+								<th class="col-receiptType">{{ i18n.t('goodsReceipt.receiptType') }}</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-row>
+							<tr class="row" [class.row--selected]="selectedReceipt()?.id === row.id"
+								(click)="selectReceipt(row)" (dblclick)="openEdit()">
+								<td class="col-receiptNo">{{ row.receiptNo }}</td>
+								<td>{{ warehouseLabel(row.warehouseId) || '—' }}</td>
+								<td class="col-supplier">{{ supplierLabel(row.supplierId) || '—' }}</td>
+								<td class="col-reference">{{ row.referenceType || '—' }}</td>
+								<td class="col-referenceId">{{ row.referenceId || '—' }}</td>
+								<td class="col-receiptDate">{{ row.receiptDate ? (row.receiptDate | date ):'—'}}</td>
+								<td class="col-remark">{{ row.remark || '—' }}</td>
+								<td class="col-approvedBy">{{ row.approvedBy || '—' }}</td>
+								<td class="col-approvedDate">{{ row.approvedDate ? (row.approvedDate | date) : '—' }}
+								</td>
+								<td class="col-postedBy">{{ row.postedBy || '—' }}</td>
+								<td class="col-postedDate">{{ row.postedDate ? (row.postedDate | date) : '—' }}</td>
+								<td class="col-receiptType">{{ typeLabel(row.receiptType) || '—' }}</td>
+							</tr>
+						</ng-template>
+						<ng-template #emptymessage>
+							<tr>
+								<td colspan="12">
+									<p class="empty">{{ i18n.t('bom.emptyHint') }}</p>
+								</td>
+							</tr>
+						</ng-template>
+					</p-table>
+				</div>
+			</section>
+		</ng-template>
 
-    <ng-template #panel>
-      <section class="panel">
-        <div class="panel__head">
-          <h2 class="panel__title">{{ i18n.t('goodsReceiptDetail.title') }}</h2>
-          @if (selectedReceipt(); as receipt) {
-          <span class="panel__scope">{{ i18n.t('goodsReceiptDetail.scopeOf', { name: receipt.receiptNo }) }}</span>
-          <span class="panel__count">{{ receiptDetail().length }}</span>
-          }
-        </div>
+		<ng-template #panel>
+			<section class="panel">
+				<div class="panel__head">
+					<h2 class="panel__title">{{ i18n.t('goodsReceiptDetail.title') }}</h2>
+					@if (selectedReceipt(); as receipt) {
+					<span class="panel__scope">{{ i18n.t('goodsReceiptDetail.scopeOf', { name: receipt.receiptNo })
+						}}</span>
+					<span class="panel__count">{{ receiptDetail().length }}</span>
+					}
+				</div>
 
-        <div class="table-scroll">
-          <p-table #detailtTable [value]="receiptDetail()" [showGridlines]="true" class="grid">
-            <ng-template #header>
-              <tr>
-                <th>{{ i18n.t('goodsReceiptDetail.product') }}</th>
-                <th class="col-unit">{{ i18n.t('goodsReceiptDetail.unit') }}</th>
-                <th class="col-location">{{ i18n.t('goodsReceiptDetail.location') }}</th>
-                <th class="col-lotNo">{{ i18n.t('goodsReceiptDetail.lotNo') }}</th>
-                <th class="col-serialNo">{{ i18n.t('goodsReceiptDetail.serialNo') }}</th>
-                <th class="col-quantity">{{ i18n.t('goodsReceiptDetail.quantity') }}</th>
-                <th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
-                <th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
-                <th class="col-expireDate">{{ i18n.t('goodsReceiptDetail.expireDate') }}</th>
-                <th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
-              </tr>
-            </ng-template>
-            <ng-template #body let-row>
-              <tr class="row" [class.row--selected]="selectedDetail()?.id === row.id" (click)="selectDetail(row)"
-                (dblclick)="openEdit()">
-                <td>{{ productLabel(row.productId) || '—' }}</td>
-                <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
-                <td class="col-location">{{ locationLabel(row.locationId) || '—' }}</td>
-                <td class="col-lotNo">{{ row.lotNo || '—' }}</td>
-                <td class="col-serialNo">{{ row.serialNo || '—' }}</td>
-                <td class="col-quantity">
-                  {{ row.quantity != null ? (row.quantity | number:'1.0-2') : '—' }}
-                </td>
+				<div class="table-scroll">
+					<p-table #detailtTable [value]="receiptDetail()" [showGridlines]="true" class="grid">
+						<ng-template #header>
+							<tr>
+								<th>{{ i18n.t('goodsReceiptDetail.product') }}</th>
+								<th class="col-unit">{{ i18n.t('goodsReceiptDetail.unit') }}</th>
+								<th class="col-location">{{ i18n.t('goodsReceiptDetail.location') }}</th>
+								<th class="col-lotNo">{{ i18n.t('goodsReceiptDetail.lotNo') }}</th>
+								<th class="col-serialNo">{{ i18n.t('goodsReceiptDetail.serialNo') }}</th>
+								<th class="col-quantity">{{ i18n.t('goodsReceiptDetail.quantity') }}</th>
+								<th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
+								<th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
+								<th class="col-expireDate">{{ i18n.t('goodsReceiptDetail.expireDate') }}</th>
+								<th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-row>
+							<tr class="row" [class.row--selected]="selectedDetail()?.id === row.id"
+								(click)="selectDetail(row)" (dblclick)="openEdit()">
+								<td>{{ productLabel(row.productId) || '—' }}</td>
+								<td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+								<td class="col-location">{{ locationLabel(row.locationId) || '—' }}</td>
+								<td class="col-lotNo">{{ row.lotNo || '—' }}</td>
+								<td class="col-serialNo">{{ row.serialNo || '—' }}</td>
+								<td class="col-quantity">
+									{{ row.quantity != null ? (row.quantity | number:'1.0-2') : '—' }}
+								</td>
 
-                <td class="col-receivedQty">
-                  {{ row.quantity != null ? (row.receivedQty | number:'1.0-2') : '—' }}
-                </td>
-                <!-- <td class="col-unitPrice">{{ row.unitPrice ?? '—' }}</td> -->
-                <td class="col-unitPrice">
-                  {{ row.quantity != null ? (row.unitPrice | number:'1.0-2') : '—' }}
-                </td>
-                <td class="col-expireDate">{{ row.expireDate | date}}</td>
-                <td class="col-remark">{{ row.remark || '—' }}</td>
-              </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-              <tr>
-                <td colspan="10">
-                  <p class="empty">
-                    {{ selectedReceipt() ? i18n.t('goodsReceiptDetail.emptyLine') :
-                    i18n.t('goodsReceiptDetail.emptyLineHint') }}
-                  </p>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      </section>
-    </ng-template>
+								<td class="col-receivedQty">
+									{{ row.quantity != null ? (row.receivedQty | number:'1.0-2') : '—' }}
+								</td>
+								<!-- <td class="col-unitPrice">{{ row.unitPrice ?? '—' }}</td> -->
+								<td class="col-unitPrice">
+									{{ row.quantity != null ? (row.unitPrice | number:'1.0-2') : '—' }}
+								</td>
+								<td class="col-expireDate">{{ row.expireDate ? (row.expireDate | date) : '—'}}</td>
+								<td class="col-remark">{{ row.remark || '—' }}</td>
+							</tr>
+						</ng-template>
+						<ng-template #emptymessage>
+							<tr>
+								<td colspan="10">
+									<p class="empty">
+										{{ selectedReceipt() ? i18n.t('goodsReceiptDetail.emptyLine') :
+										i18n.t('goodsReceiptDetail.emptyLineHint') }}
+									</p>
+								</td>
+							</tr>
+						</ng-template>
+					</p-table>
+				</div>
+			</section>
+		</ng-template>
 
-  </p-splitter>
+	</p-splitter>
 </div>
 
 
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-  [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px' }">
+	[draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
-  <div class="form">
-    @if (formError()) {
-    <div class="form__error">{{ formError() }}</div>
-    }
+	<div class="form">
+		@if (formError()) {
+		<div class="form__error">{{ formError() }}</div>
+		}
 
-    <div class="field-row">
-      <div class="field">
-        <label for="gr-receiptNo">
-          {{ i18n.t('goodsReceipt.receiptNo') }}
-          <span class="req">*</span>
-        </label>
-        <input pInputText id="gr-receiptNo" name="receiptNo" [(ngModel)]="form.receiptNo" autocomplete="off" />
-      </div>
+		<div class="field-row">
+			<div class="field">
+				<label for="gr-receiptNo">
+					{{ i18n.t('goodsReceipt.receiptNo') }}
+					<span class="req">*</span>
+				</label>
+				<input pInputText id="gr-receiptNo" name="receiptNo" [(ngModel)]="form.receiptNo" autocomplete="off" />
+			</div>
 
-      <div class="field">
-        <label for="gr-warehouseId">
-          {{ i18n.t('goodsReceipt.warehouseId') }}
-          <span class="req">*</span>
-        </label>
-        <!-- Warehouses and suppliers have no master-data endpoint yet, so these stay raw ids
+			<div class="field">
+				<label for="gr-warehouseId">
+					{{ i18n.t('goodsReceipt.warehouseId') }}
+					<span class="req">*</span>
+				</label>
+				<!-- Warehouses and suppliers have no master-data endpoint yet, so these stay raw ids
              rather than pickers fed from an unrelated list. -->
-        <!-- <input pInputText type="number" min="0" id="gr-warehouseId" name="warehouseId" [(ngModel)]="form.warehouseId" /> -->
+				<!-- <input pInputText type="number" min="0" id="gr-warehouseId" name="warehouseId" [(ngModel)]="form.warehouseId" /> -->
 
-        <p-select inputId="gr-warehouseId" [options]="warehouseOptions()" optionLabel="label" optionValue="value"
-          [(ngModel)]="form.warehouseId" [placeholder]="i18n.t('product.status.unset')" appendTo="body"
-          class="w-full" />
-      </div>
+				<p-select inputId="gr-warehouseId" [options]="warehouseOptions()" optionLabel="label"
+					optionValue="value" [(ngModel)]="form.warehouseId" [placeholder]="i18n.t('product.status.unset')"
+					appendTo="body" class="w-full" />
+			</div>
 
-      <div class="field">
-        <label for="gr-supplierId">{{ i18n.t('goodsReceipt.supplierId') }}</label>
-        <!-- <input pInputText type="number" min="0" id="gr-supplierId" name="supplierId" [(ngModel)]="form.supplierId" /> -->
-        <p-select inputId="gr-supplierId" [options]="supplierOptions()" optionLabel="label" optionValue="value"
-          [(ngModel)]="form.supplierId" [placeholder]="i18n.t('product.status.unset')" appendTo="body" class="w-full" />
-      </div>
-    </div>
+			<div class="field">
+				<label for="gr-supplierId">{{ i18n.t('goodsReceipt.supplierId') }}</label>
+				<!-- <input pInputText type="number" min="0" id="gr-supplierId" name="supplierId" [(ngModel)]="form.supplierId" /> -->
+				<p-select inputId="gr-supplierId" [options]="supplierOptions()" optionLabel="label" optionValue="value"
+					[(ngModel)]="form.supplierId" [placeholder]="i18n.t('product.status.unset')" appendTo="body"
+					class="w-full" />
+			</div>
+		</div>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="gr-referenceType">{{ i18n.t('goodsReceipt.referenceType') }}</label>
-        <input pInputText id="gr-referenceType" name="referenceType" [(ngModel)]="form.referenceType"
-          autocomplete="off" />
-      </div>
+		<div class="field-row">
+			<div class="field">
+				<label for="gr-referenceType">{{ i18n.t('goodsReceipt.referenceType') }}</label>
+				<input pInputText id="gr-referenceType" name="referenceType" [(ngModel)]="form.referenceType"
+					autocomplete="off" />
+			</div>
 
-      <div class="field">
-        <label for="gr-referenceId">{{ i18n.t('goodsReceipt.referenceId') }}</label>
-        <input pInputText type="number" min="0" id="gr-referenceId" name="referenceId" [(ngModel)]="form.referenceId" />
-      </div>
+			<div class="field">
+				<label for="gr-referenceId">{{ i18n.t('goodsReceipt.referenceId') }}</label>
+				<input pInputText type="number" min="0" id="gr-referenceId" name="referenceId"
+					[(ngModel)]="form.referenceId" />
+			</div>
 
-      <div class="field">
-        <label for="gr-receiptDate">
-          {{ i18n.t('goodsReceipt.receiptDate') }}
-          <span class="req">*</span>
-        </label>
-        <input pInputText id="gr-receiptDate" name="receiptDate" type="datetime-local" [(ngModel)]="form.receiptDate" />
-      </div>
+			<div class="field">
+				<label for="gr-receiptDate">
+					{{ i18n.t('goodsReceipt.receiptDate') }}
+					<span class="req">*</span>
+				</label>
+				<input pInputText id="gr-receiptDate" name="receiptDate" type="datetime-local"
+					[(ngModel)]="form.receiptDate" />
+			</div>
 
-      <div class="field">
-        <label for="gr-receiptType">
-          {{ i18n.t('goodsReceipt.receiptType') }}
-          <span class="req">*</span>
-        </label>
-        <p-select inputId="gr-receiptType" [options]="typeOptions()" optionLabel="label" optionValue="value"
-          [(ngModel)]="form.receiptType" [placeholder]="i18n.t('product.status.unset')" appendTo="body"
-          class="w-full" />
-      </div>
-    </div>
+			<div class="field">
+				<label for="gr-receiptType">
+					{{ i18n.t('goodsReceipt.receiptType') }}
+					<span class="req">*</span>
+				</label>
+				<p-select inputId="gr-receiptType" [options]="typeOptions()" optionLabel="label" optionValue="value"
+					[(ngModel)]="form.receiptType" [placeholder]="i18n.t('product.status.unset')" appendTo="body"
+					class="w-full" />
+			</div>
+		</div>
 
-    <div class="field">
-      <label for="gr-remark">{{ i18n.t('goodsReceipt.remark') }}</label>
-      <textarea pTextarea id="gr-remark" name="remark" rows="2" [(ngModel)]="form.remark"></textarea>
-    </div>
+		<div class="field">
+			<label for="gr-remark">{{ i18n.t('goodsReceipt.remark') }}</label>
+			<textarea pTextarea id="gr-remark" name="remark" rows="2" [(ngModel)]="form.remark"></textarea>
+		</div>
 
-    <!-- Lines are edited in the grid itself: one row per product, picked with the searchable
+		<!-- Lines are edited in the grid itself: one row per product, picked with the searchable
          select in the row's first cell. -->
-    <section class="panel lines">
-      <div class="panel__head">
-        <h2 class="panel__title">{{ i18n.t('goodsReceiptDetail.title') }}</h2>
-        <span class="panel__scope">{{ i18n.t('goodsReceiptDetail.lineCount', { count: detailRows().length }) }}</span>
-        <button type="button" class="lines__add" (click)="addDetailRow()">
-          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>{{ i18n.t('goodsReceiptDetail.addLine') }}</span>
-        </button>
-      </div>
+		<section class="panel lines">
+			<div class="panel__head">
+				<h2 class="panel__title">{{ i18n.t('goodsReceiptDetail.title') }}</h2>
+				<span class="panel__scope">{{ i18n.t('goodsReceiptDetail.lineCount', { count: detailRows().length })
+					}}</span>
+				<button type="button" class="lines__add" (click)="addDetailRow()">
+					<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+						<line x1="12" y1="5" x2="12" y2="19" />
+						<line x1="5" y1="12" x2="19" y2="12" />
+					</svg>
+					<span>{{ i18n.t('goodsReceiptDetail.addLine') }}</span>
+				</button>
+			</div>
 
-      <div class="lines__scroll">
-        <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit">
-          <ng-template #header>
-            <tr>
-              <th class="col-idx">#</th>
-              <th class="col-product">
-                {{ i18n.t('goodsReceiptDetail.product') }}
-                <span class="req">*</span>
-              </th>
-              <th class="col-unit">
-                {{ i18n.t('goodsReceiptDetail.unit') }}
-                <span class="req">*</span>
-              </th>
-              <th class="col-location">{{ i18n.t('goodsReceiptDetail.location') }}</th>
-              <th class="col-lotNo">{{ i18n.t('goodsReceiptDetail.lotNo') }}</th>
-              <th class="col-serialNo">{{ i18n.t('goodsReceiptDetail.serialNo') }}</th>
-              <th class="col-quantity">
-                {{ i18n.t('goodsReceiptDetail.quantity') }}
-                <span class="req">*</span>
-              </th>
-              <th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
-              <th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
-              <th class="col-expireDate">
-                {{ i18n.t('goodsReceiptDetail.expireDate') }}
-                <span class="req">*</span>
-              </th>
-              <th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
-              <th class="col-act">{{ i18n.t('common.actions') }}</th>
-            </tr>
-          </ng-template>
+			<div class="lines__scroll">
+				<p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
+					[scrollable]="true" scrollHeight="flex">
+					<ng-template #header>
+						<tr>
+							<th class="col-idx">#</th>
+							<th class="col-product">
+								{{ i18n.t('goodsReceiptDetail.product') }}
+								<span class="req">*</span>
+							</th>
+							<th class="col-unit">
+								{{ i18n.t('goodsReceiptDetail.unit') }}
+								<span class="req">*</span>
+							</th>
+							<th class="col-location">
+								{{ i18n.t('goodsReceiptDetail.location') }}
+								<span class="req">*</span>
+							</th>
+							<th class="col-lotNo">{{ i18n.t('goodsReceiptDetail.lotNo') }}</th>
+							<th class="col-serialNo">
+								{{ i18n.t('goodsReceiptDetail.serialNo') }}
+								<span class="req">*</span>
+							</th>
+							<th class="col-quantity">
+								{{ i18n.t('goodsReceiptDetail.quantity') }}
+								<span class="req">*</span>
+							</th>
+							<th class="col-receivedQty">{{ i18n.t('goodsReceiptDetail.receivedQty') }}</th>
+							<th class="col-unitPrice">{{ i18n.t('goodsReceiptDetail.unitPrice') }}</th>
+							<th class="col-expireDate">
+								{{ i18n.t('goodsReceiptDetail.expireDate') }}
+								<!-- <span class="req">*</span> -->
+							</th>
+							<th class="col-remark">{{ i18n.t('goodsReceiptDetail.remark') }}</th>
+							<th class="col-act">{{
+								i18n.t('common.actions') }}</th>
+						</tr>
+					</ng-template>
 
-          <ng-template #body let-row let-i="rowIndex">
-            <tr class="row row--edit">
-              <td class="col-idx">{{ i + 1 }}</td>
+					<ng-template #body let-row let-i="rowIndex">
+						<tr class="row row--edit">
+							<td class="col-idx">{{ i + 1 }}</td>
 
-              <td class="col-product">
-                <!-- The options open as a table: an operator picking off a delivery note reads
+							<td class="col-product">
+								<!-- The options open as a table: an operator picking off a delivery note reads
                      the drawing number and the unit as often as the product name. -->
-                <p-select [options]="productOptions()" optionLabel="label" optionValue="value"
-                  [ngModel]="row.productId || null" (ngModelChange)="onDetailProductChange(row, $event)" [filter]="true"
-                  filterBy="code,name,unit,drawingNo" [resetFilterOnHide]="true"
-                  [filterPlaceholder]="i18n.t('common.search')"
-                  [placeholder]="i18n.t('goodsReceiptDetail.selectProduct')"
-                  [emptyFilterMessage]="i18n.t('goodsReceiptDetail.noProduct')" appendTo="body" class="w-full"
-                  panelStyleClass="grid-picker" scrollHeight="18rem">
+								<p-select [options]="productOptions()" optionLabel="label" optionValue="value"
+									[ngModel]="row.productId || null"
+									(ngModelChange)="onDetailProductChange(row, $event)" [filter]="true"
+									filterBy="code,name,unit,drawingNo" [resetFilterOnHide]="true"
+									[filterPlaceholder]="i18n.t('common.search')"
+									[placeholder]="i18n.t('goodsReceiptDetail.selectProduct')"
+									[emptyFilterMessage]="i18n.t('goodsReceiptDetail.noProduct')" appendTo="body"
+									class="w-full" panelStyleClass="grid-picker" scrollHeight="18rem">
 
-                  <ng-template #header>
-                    <div class="picker-row picker-row--head">
-                      <span class="picker-cell">{{ i18n.t('product.code') }}</span>
-                      <span class="picker-cell">{{ i18n.t('product.name') }}</span>
-                      <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit') }}</span>
-                      <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
-                      <span class="picker-cell picker-cell--center">{{ i18n.t('common.status') }}</span>
-                    </div>
-                  </ng-template>
+									<ng-template #header>
+										<div class="picker-row picker-row--head">
+											<span class="picker-cell">{{ i18n.t('product.code') }}</span>
+											<span class="picker-cell">{{ i18n.t('product.name') }}</span>
+											<span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+												}}</span>
+											<span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+											<span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+												}}</span>
+										</div>
+									</ng-template>
 
-                  <ng-template #item let-opt>
-                    <div class="picker-row">
-                      <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
-                      <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
-                      <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
-                      <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
-                        {{ opt.drawingNo || '—' }}
-                      </span>
-                      <span class="picker-cell picker-cell--center">
-                        @if (opt.statusLabel) {
-                        <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel" [rounded]="true" />
-                        } @else {
-                        <span class="picker-cell--muted">—</span>
-                        }
-                      </span>
-                    </div>
-                  </ng-template>
-                </p-select>
-              </td>
+									<ng-template #item let-opt>
+										<div class="picker-row">
+											<span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+											<span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+											<span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+											<span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+												{{ opt.drawingNo || '—' }}
+											</span>
+											<span class="picker-cell picker-cell--center">
+												@if (opt.statusLabel) {
+												<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+													[rounded]="true" />
+												} @else {
+												<span class="picker-cell--muted">—</span>
+												}
+											</span>
+										</div>
+									</ng-template>
+								</p-select>
+							</td>
 
-              <td class="col-unit">
-                <p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
-                  [ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0" [filter]="true"
-                  filterBy="label" [placeholder]="i18n.t('goodsReceiptDetail.selectUnit')" appendTo="body"
-                  class="w-full" />
-              </td>
+							<td class="col-unit">
+								<p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
+									[ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0"
+									[filter]="true" filterBy="label"
+									[placeholder]="i18n.t('goodsReceiptDetail.selectUnit')" appendTo="body"
+									class="w-full" />
+							</td>
 
-              <td class="col-location">
-                <!-- <input pInputText type="number" min="0" class="cell-input" [(ngModel)]="row.locationId" /> -->
-                <p-select [options]="locationOptions()" optionLabel="label" optionValue="value"
-                  [ngModel]="row.locationId || null" (ngModelChange)="row.locationId = $event ?? 0" [filter]="true"
-                  filterBy="label" [placeholder]="i18n.t('goodsReceiptDetail.selectLocation')" appendTo="body"
-                  class="w-full" />
-              </td>
+							<td class="col-location">
+								<!-- <input pInputText type="number" min="0" class="cell-input" [(ngModel)]="row.locationId" /> -->
+								<p-select [options]="locationOptions(form.warehouseId)" optionLabel="label"
+									optionValue="value" [ngModel]="row.locationId || null"
+									(ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
+									[placeholder]="i18n.t('goodsReceiptDetail.selectLocation')" appendTo="body"
+									[group]="true" optionLabel="label" optionValue="value" class="w-full md:w-56"
+									class="w-full" />
+							</td>
 
-              <td class="col-lotNo">
-                <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.lotNo" />
-              </td>
+							<td class="col-lotNo">
+								<input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.lotNo" />
+							</td>
 
-              <td class="col-serialNo">
-                <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" />
-              </td>
+							<td class="col-serialNo">
+								<input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" />
+							</td>
 
-              <td class="col-quantity">
-                <!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
+							<td class="col-quantity">
+								<!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
                   [ngModel]="row.quantity" (ngModelChange)="onDetailQuantityChange(row, $event)" /> -->
 
-                <p-inputnumber inputStyleClass="cell-input cell-input--num" [ngModel]="row.quantity" mode="decimal"
-                  [showButtons]="true" inputId="minmax-buttons" [min]="0"
-                  (ngModelChange)="onDetailQuantityChange(row, $event)" />
-              </td>
+								<p-inputnumber inputStyleClass="cell-input cell-input--num" [ngModel]="row.quantity"
+									mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0"
+									(ngModelChange)="onDetailQuantityChange(row, $event)" />
+							</td>
 
-              <td class="col-receivedQty">
-                <!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
+							<td class="col-receivedQty">
+								<!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
                   [(ngModel)]="row.receivedQty" /> -->
 
-                <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.receivedQty" mode="decimal"
-                  [showButtons]="true" inputId="minmax-buttons" [min]="0" />
-              </td>
+								<p-inputnumber inputStyleClass="cell-input cell-input--num"
+									[(ngModel)]="row.receivedQty" mode="decimal" [showButtons]="true"
+									inputId="minmax-buttons" [min]="0" />
+							</td>
 
-              <td class="col-unitPrice">
-                <!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
+							<td class="col-unitPrice">
+								<!-- <input pInputText type="number" min="0" step="any" class="cell-input cell-input--num"
                   [(ngModel)]="row.unitPrice" /> -->
-                <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.unitPrice" mode="decimal"
-                  [showButtons]="true" inputId="minmax-buttons" [min]="0" />
-              </td>
-              <td class="col-expireDate">
-                <input pInputText id="gr-expireDate" name="expireDate" type="datetime-local"
-                  [(ngModel)]="row.expireDate" />
-              </td>
+								<p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.unitPrice"
+									mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
+							</td>
+							<td class="col-expireDate">
+								<input pInputText id="gr-expireDate" name="expireDate" type="datetime-local"
+									[(ngModel)]="row.expireDate" />
+							</td>
 
-              <td class="col-remark">
-                <!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.remark" /> -->
-                <textarea pTextarea class="cell-input" autocomplete="off" rows="2" [(ngModel)]="row.remark"></textarea>
-              </td>
+							<td class="col-remark">
+								<!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.remark" /> -->
+								<textarea pTextarea class="cell-input" autocomplete="off" rows="2"
+									[(ngModel)]="row.remark"></textarea>
+							</td>
 
-              <td class="col-act">
-                <button type="button" class="row-del" [title]="i18n.t('goodsReceiptDetail.removeLine')"
-                  [attr.aria-label]="i18n.t('goodsReceiptDetail.removeLine')" (click)="removeDetailRow(row)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                  </svg>
-                </button>
-              </td>
-            </tr>
-          </ng-template>
+							<td class="col-act">
+								<button type="button" class="row-del" [title]="i18n.t('goodsReceiptDetail.removeLine')"
+									[attr.aria-label]="i18n.t('goodsReceiptDetail.removeLine')"
+									(click)="removeDetailRow(row)">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<line x1="6" y1="6" x2="18" y2="18" />
+										<line x1="18" y1="6" x2="6" y2="18" />
+									</svg>
+								</button>
+							</td>
+						</tr>
+					</ng-template>
 
-          <ng-template #footer>
-            <tr class="lines__total">
-              <td colspan="8">{{ i18n.t('goodsReceiptDetail.total') }}</td>
-              <td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
-              <td colspan="2"></td>
-            </tr>
-          </ng-template>
+					<ng-template #footer>
+						<tr class="lines__total">
+							<td colspan="8">{{ i18n.t('goodsReceiptDetail.total') }}</td>
+							<td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
+							<td colspan="3"></td>
+						</tr>
+					</ng-template>
 
-          <ng-template #emptymessage>
-            <tr>
-              <td colspan="11">
-                <p class="empty">{{ i18n.t('goodsReceiptDetail.emptyLine') }}</p>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </section>
-  </div>
+					<ng-template #emptymessage>
+						<tr>
+							<td colspan="12">
+								<p class="empty">{{ i18n.t('goodsReceiptDetail.emptyLine') }}</p>
+							</td>
+						</tr>
+					</ng-template>
+				</p-table>
+			</div>
+		</section>
+	</div>
 
-  <ng-template #footer>
-    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
-      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
-    </button>
-    <button pButton type="button" [disabled]="saving()" (click)="save()">
-      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
-    </button>
-  </ng-template>
+	<ng-template #footer>
+		<button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+			<span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+		</button>
+		<button pButton type="button" [disabled]="saving()" (click)="save()">
+			<span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+		</button>
+	</ng-template>
 </p-dialog>
 
 <p-confirmDialog />

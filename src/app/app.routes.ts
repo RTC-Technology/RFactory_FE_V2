@@ -227,6 +227,25 @@ export const routes: Routes = [
         },
       },
 
+      //inventory
+      {
+        // Reads receipts and their lines, plus products and units — the detail grid's row
+        // pickers are driven from those two, not just labelled by them — and warehouses
+        // and storage locations to name where the goods landed. `reload()` forkJoins all
+        // six, so one missing view code fails the whole screen rather than one panel.
+        path: 'inventory',
+        loadComponent: () =>
+          import('./pages/inventory/inventory.component').then(m => m.InventoryComponent),
+        canActivate: [permissionGuard],
+        data: {
+          permissions: [
+            PERMISSIONS.inventory.view, PERMISSIONS.inventoryTransaction.view,
+          ],
+          permissionMode: 'all',
+        },
+      },
+
+
       {
         path: 'forbidden',
         loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
