@@ -2130,12 +2130,12 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'purchaseOrderDetail.quantity': { vi: 'Số lượng', en: 'Quantity' },
 	'purchaseOrderDetail.unitPrice': { vi: 'Đơn giá', en: 'Unit Price' },
 
-	'purchaseOrderSchedule.title': { vi: 'Lịch giao hàng', en: 'Delivery Schedule' },
-	'purchaseOrderSchedule.lower': { vi: 'lịch giao hàng', en: 'delivery schedule' },
-	'purchaseOrderSchedule.scopeOf': { vi: 'của {name}', en: 'of {name}' },
-	'purchaseOrderSchedule.deliveryDate': { vi: 'Ngày giao', en: 'Delivery Date' },
-	'purchaseOrderSchedule.quantity': { vi: 'Số lượng', en: 'Quantity' },
-	'purchaseOrderSchedule.empty': { vi: 'Dòng này chưa có lịch giao hàng.', en: 'This detail line has no delivery schedule yet.' },
-	'purchaseOrderSchedule.emptyHint': { vi: 'Chọn một dòng chi tiết ở panel phía trên.', en: 'Pick a detail line in the panel above.' },
+	'purchaseOrderDeliverySchedule.title': { vi: 'Lịch giao hàng', en: 'Delivery Schedule' },
+	'purchaseOrderDeliverySchedule.lower': { vi: 'lịch giao hàng', en: 'delivery schedule' },
+	'purchaseOrderDeliverySchedule.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'purchaseOrderDeliverySchedule.deliveryDate': { vi: 'Ngày giao', en: 'Delivery Date' },
+	'purchaseOrderDeliverySchedule.quantity': { vi: 'Số lượng', en: 'Quantity' },
+	'purchaseOrderDeliverySchedule.empty': { vi: 'Dòng này chưa có lịch giao hàng.', en: 'This detail line has no delivery schedule yet.' },
+	'purchaseOrderDeliverySchedule.emptyHint': { vi: 'Chọn một dòng chi tiết ở panel phía trên.', en: 'Pick a detail line in the panel above.' },
 
 };

@@ -31,6 +31,7 @@ import { forkJoin } from 'rxjs';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChevronDownIcon, ChevronRightIcon } from 'primeng/icons';
+import { TabsModule } from 'primeng/tabs';
 
 type EntityKind = 'po' | 'poDetail' | 'deliverySchedule';
 
@@ -47,6 +48,16 @@ interface ProductOption {
 	statusSeverity: 'success' | 'danger' | undefined;
 }
 
+interface PoDetailOption {
+	value: number;
+	label: string;
+	productCode: string;
+	productName: string;
+	unit: string;
+	quantity: number;
+	unitPrice: number;
+}
+
 @Component({
 	selector: 'app-purchase-order',
 	standalone: true,
@@ -55,7 +66,7 @@ interface ProductOption {
 		TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
 		InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
 		HasPermissionDirective, PanelModule, CardModule, InputNumberModule, AutoCompleteModule,
-		ChevronDownIcon, ChevronRightIcon
+		ChevronDownIcon, ChevronRightIcon, TabsModule
 	],
 	providers: [MessageService, ConfirmationService],
 	templateUrl: './purchase-order.component.html',
@@ -173,6 +184,26 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 			// .filter(s => s.a)
 			.map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
 
+	readonly detailOptions = computed<PoDetailOption[]>(() => {
+
+		const details = this.detailApi.items()
+			.filter(p => p.purchaseOrderId === this.selectedPo()?.id)
+			.map(p => {
+				return {
+					value: p.id,
+					label: `${this.productLabel(p.productId)} · ${p.quantity}`,
+					productCode: this.productLabel(p.productId),
+					productName: this.unitLabel(p.unitId),
+					unit: this.unitLabel(p.unitId),
+					quantity: p.quantity ?? 0,
+					unitPrice: p.unitPrice ?? 0,
+				};
+			});
+		// console.log('details:', details);
+
+		return details
+	});
+
 	// ─── Selection ──────────────────────────────────────────────────────────────
 
 	readonly selectedPo = signal<PurchaseOrderDto | null>(null);
@@ -195,11 +226,17 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		return this.detailApi.items().filter(b => b.purchaseOrderId === id);
 	});
 
-	readonly schedule = computed(() => {
-		const id = this.selectedDetail()?.id;
-		if (id == null) return [];
-		return this.scheduleApi.items().filter(b => b.purchaseOrderDetailId === id);
-	});
+	// readonly schedule = computed(() => {
+	// 	const id = this.selectedDetail()?.id;
+	// 	if (id == null) return [];
+	// 	return this.scheduleApi.items().filter(b => b.purchaseOrderDetailId === id);
+	// });
+
+	schedule(row: PurchaseOrderDetailDto) {
+		return this.scheduleApi.items().filter(
+			x => x.purchaseOrderDetailId === row.id
+		);
+	}
 
 	/** Receipts the backend holds with no id. No panel here can reach them. */
 	readonly unassignedReceipts = computed(() =>
@@ -221,10 +258,10 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 			untracked(() => this.selectedDetail.set(this._reconcile(this.selectedDetail(), details)));
 		});
 
-		effect(() => {
-			const schedules = this.schedule();
-			untracked(() => this.selectedSchedule.set(this._reconcile(this.selectedSchedule(), schedules)));
-		});
+		// effect(() => {
+		// 	const schedules = this.schedule();
+		// 	untracked(() => this.selectedSchedule.set(this._reconcile(this.selectedSchedule(), schedules)));
+		// });
 	}
 
 	ngOnInit(): void {
@@ -241,7 +278,7 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 			schedules: this.scheduleApi.load(),
 			units: this.unitApi.load(),
 			warehouse: this.warehouseApi.load(),
-			location: this.locationApi.load(),
+			suppliers: this.supplierApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('purchaseOrder.err.load'), err),
 		});
@@ -290,10 +327,12 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 
 	// ─── Dialog ─────────────────────────────────────────────────────────────────
 	readonly dialogOpen = signal(false);
+	readonly activeTab = signal<string>('info');
 	readonly editingId = signal<number | null>(null);
 	readonly saving = signal(false);
 	readonly formError = signal('');
 	form = this._emptyForm();
+	formSchedule = this._emptyScheduleForm();
 
 	readonly detailRows = signal<PurchaseOrderDetailDto[]>([]);
 	readonly scheduleRows = signal<PurchaseOrderDeliveryScheduleDto[]>([]);
@@ -308,13 +347,19 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		return this.detailRows().reduce((sum, row) => sum + (row.quantity ?? 0) * (row.unitPrice ?? 0), 0);
 	}
 
+	scheduleTotalQuantity(): number {
+		return this.scheduleRows().reduce((sum, row) => sum + (row.quantity ?? 0), 0);
+	}
+
+
+
 	openCreate(): void {
 		this.editingId.set(null);
 		this.formError.set('');
 		this.form = { ...this._emptyForm(), pono: this._nextPoNo() };
 		// An issue with no line is meaningless, so start the operator on one.
 		this.detailRows.set([this._emptyDetailRow()]);
-		this.scheduleRows.set([this._emptySchduleRow()]);
+		this.scheduleRows.set([this._emptyScheduleRow()]);
 		this.dialogOpen.set(true);
 	}
 
@@ -324,29 +369,109 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		this.editingId.set(row.id);
 		this.formError.set('');
 
-		// this.form = {
-		// 	issueNo: row.issueNo ?? '',
-		// 	issueType: row.issueType ?? null,
-		// 	warehouseId: row.warehouseId ?? 0,
-		// 	referenceType: row.referenceType?.trim() ?? '',
-		// 	referenceId: row.referenceId ?? null,
-		// 	issueDate: this._toLocalInput(row.issueDate),
-		// 	status: row.status ?? 1,
-		// 	remark: row.remark?.trim() || '',
-		// 	// Carried untouched: the backend maps the whole payload onto the entity, so leaving
-		// 	// these out of the PUT would blank the approval and posting trail.
-		// 	approvedBy: row.approvedBy ?? null,
-		// 	approvedDate: row.approvedDate ?? null,
-		// 	postedBy: row.postedBy ?? null,
-		// 	postedDate: row.postedDate ?? null,
-		// };
-		// this.detailRows.set(
-		// 	this.goodsIssueDetailApi.items()
-		// 		.filter(d => d.goodsIssueId === row.id)
-		// 		.map(d => ({ ...d })));
+		this.form = {
+			id: row.id,
+			pono: row.pono ?? '',
+			supplierId: row.supplierId ?? null,
+			orderDate: this._toLocalInput(row.orderDate),
+			expectedDeliveryDate: this._toLocalInput(row.expectedDeliveryDate),
+			status: row.status ?? 1,
+			// remark: row.remark?.trim() || '',
+		};
+		this.detailRows.set(
+			this.detailApi.items()
+				.filter(d => d.purchaseOrderId === row.id)
+				.map(d => ({ ...d })));
 
+		this.scheduleRows.set(
+			this.scheduleApi.items()
+				.filter(s => s.purchaseOrderDetailId === this.formSchedule.purchaseOrderDetailId)
+				.map(s => ({ ...s })));
 
 		this.dialogOpen.set(true);
+	}
+
+	// ─── Detail grid ────────────────────────────────────────────────────────────
+
+	addDetailRow(): void {
+		this.detailRows.update(rows => [...rows, this._emptyDetailRow()]);
+	}
+
+	removeDetailRow(row: PurchaseOrderDetailDto): void {
+		// No bookkeeping for lines the server already stores: the save sends the whole set and
+		// the backend deletes whatever is missing from it.
+		this.detailRows.update(rows => rows.filter(r => r !== row));
+	}
+
+	/** Picking a product pulls in its default unit; the operator can still override it. */
+	onDetailProductChange(row: PurchaseOrderDetailDto, productId: number | null): void {
+		row.productId = productId ?? 0;
+		const product = this.productApi.items().find(p => p.id === productId);
+		// const receipDetail = this.goodsReceiptDetailApi.items().find(p => p.productId === productId);
+		row.unitId = product?.defaultUnitId ?? row.unitId;
+
+	}
+
+	/** Received quantity tracks the ordered one until someone edits it apart. */
+	// onDetailQuantityChange(row: GoodsIssueDetailDto, quantity: number | null): void {
+	//   const prev = row.quantity ?? 0;
+	//   const next = quantity ?? 0;
+	//   if (row.receivedQty === prev) {
+	//     row.receivedQty = next;
+	//   }
+	//   row.quantity = next;
+	// }
+
+	// ─── Schedule grid ────────────────────────────────────────────────────────────
+
+	addScheduleRow(): void {
+		this.scheduleRows.update(rows => [...rows, this._emptyScheduleRow()]);
+	}
+
+	removeScheduleRow(row: PurchaseOrderDeliveryScheduleDto): void {
+		// No bookkeeping for lines the server already stores: the save sends the whole set and
+		// the backend deletes whatever is missing from it.
+		this.scheduleRows.update(rows => rows.filter(r => r !== row));
+	}
+
+	onDetailPOChange(detailId: number | null): void {
+		this.scheduleRows.set(
+			this.scheduleApi.items()
+				.filter(s => s.purchaseOrderDetailId === detailId)
+				.map(s => ({ ...s })));
+
+	}
+
+
+	save(): void {
+		// const error = this._validate() || this._validateDetails();
+		// if (error) {
+		// 	this.formError.set(error);
+		// 	return;
+		// }
+
+		// this.saving.set(true);
+		// this.formError.set('');
+
+		// const id = this.editingId();
+
+		// // One call carrying the header and every line: the backend writes them in a single
+		// // transaction, so a rejected line cannot leave a receipt behind.
+		// this._saveIssue(id).subscribe({
+		// 	next: () => {
+		// 		this.saving.set(false);
+		// 		this.dialogOpen.set(false);
+		// 		this.reload();
+		// 		this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
+		// 			entity: this.i18n.t('goodsIssue.lower'),
+		// 		}));
+		// 	},
+		// 	error: (err: HttpErrorResponse) => {
+		// 		this.saving.set(false);
+		// 		this.formError.set(err.error?.message
+		// 			|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('goodsIssue.lower') }));
+		// 	},
+		// });
 	}
 
 	askDelete(): void {
@@ -431,7 +556,16 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		};
 	}
 
-	private _emptySchduleRow(): PurchaseOrderDeliveryScheduleDto {
+	private _emptyScheduleForm(): PurchaseOrderDeliveryScheduleDto {
+		return {
+			id: 0,
+			purchaseOrderDetailId: 0,
+			deliveryDate: formatDate(new Date(), DATETIME_LOCAL, 'en-US'),
+			quantity: 0,
+		};
+	}
+
+	private _emptyScheduleRow(): PurchaseOrderDeliveryScheduleDto {
 		return {
 			id: --this._tempDetailId,
 			purchaseOrderDetailId: 0,
