@@ -1,0 +1,255 @@
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+	let-showReload="showReload">
+	<div class="toolbar">
+		<button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<rect x="3" y="3" width="12" height="14" rx="1.5" />
+				<line x1="19" y1="9" x2="19" y2="17" />
+				<line x1="15" y1="13" x2="23" y2="13" />
+			</svg>
+			<span>{{ i18n.t('common.add') }}</span>
+		</button>
+		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+			(click)="openEdit()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M4 3h9l4 4v3" />
+				<path d="M4 3v18h13v-6" />
+				<path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+			</svg>
+			<span>{{ i18n.t('common.edit') }}</span>
+		</button>
+		<button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+			(click)="askDelete()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M4 7h16" />
+				<path d="M10 11v6" />
+				<path d="M14 11v6" />
+				<path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+				<path d="M9 7V4h6v3" />
+			</svg>
+			<span>{{ i18n.t('common.delete') }}</span>
+		</button>
+
+		@if (showReload) {
+		<span class="tool__sep"></span>
+		<button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<polyline points="23 4 23 10 17 10" />
+				<polyline points="1 20 1 14 7 14" />
+				<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+			</svg>
+			<span>{{ i18n.t('common.reload') }}</span>
+		</button>
+
+		<span class="tool__sep"></span>
+		<button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
+			(click)="askApprove(true)">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+				<path d="M5 12.5l4.2 4.2L19 2.5" />
+			</svg>
+			<span>{{ i18n.t('common.approve') }}</span>
+		</button>
+		<button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+			(click)="askApprove(false)">
+			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+				<line x1="6" y1="6" x2="18" y2="18" />
+				<line x1="18" y1="6" x2="6" y2="18" />
+			</svg>
+			<span>{{ i18n.t('common.unapprove') }}</span>
+		</button>
+		}
+
+		<input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+			[attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+	</div>
+</ng-template>
+
+
+
+<div class="page">
+	<p-splitter class="workspace__right" layout="vertical"
+		[panelSizes]="split.sizes('purchase-order:split-y', [34,33,33])" [minSizes]="[20, 20, 20]" [gutterSize]="6"
+		(onResizeEnd)="split.save('purchase-order:split-y', $event.sizes)">
+
+		<ng-template #panel>
+			<section class="panel">
+				<div class="panel__head">
+					<h2 class="panel__title">{{ i18n.t('purchaseOrder.title') }}</h2>
+					<span class="panel__count">{{ po().length }}</span>
+				</div>
+				<ng-container
+					*ngTemplateOutlet="toolbar; context: { kind: 'po', perms: perms.purchaseOrder, canAdd: true, hasSelection: !!selectedPo(), showReload: true }" />
+
+				<div class="table-scroll">
+					<p-table #poTable [value]="po()" [showGridlines]="true" class="grid"
+						[globalFilterFields]="filterFields.po" (onFilter)="onFiltered('po', $event.filteredValue)">
+						<ng-template #header>
+							<tr>
+								<th class="col-pono">{{ i18n.t('purchaseOrder.pono') }}</th>
+								<th class="col-supplierId">{{ i18n.t('purchaseOrder.supplier') }}</th>
+								<th class="col-orderDate">{{ i18n.t('purchaseOrder.orderDate') }}</th>
+								<th class="col-expectedDeliveryDate">{{ i18n.t('purchaseOrder.expectedDeliveryDate') }}
+								</th>
+								<th class="col-status">{{ i18n.t('common.status') }}</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-row>
+							<tr class="row" [class.row--selected]="selectedPo()?.id === row.id" (click)="selectPo(row)"
+								(dblclick)="openEdit()">
+								<td class="col-pono">{{ row.pono || '—' }}</td>
+								<td class="col-supplierId">{{ supplierLabel(row.supplierId) || '—' }}</td>
+								<td class="col-orderDate">{{ row.orderDate ? (row.orderDate | date) : '—' }}</td>
+								<td class="col-expectedDeliveryDate">{{ row.expectedDeliveryDate ?
+									(row.expectedDeliveryDate | date) : '—' }}</td>
+								<td class="col-status">{{
+									statusLabel(row.status) || '—'
+									}}</td>
+							</tr>
+						</ng-template>
+						<ng-template #emptymessage>
+							<tr>
+								<td colspan="5">
+									<p class="empty">{{
+										i18n.t('purchaseOrder.empty')
+										}}</p>
+								</td>
+							</tr>
+						</ng-template>
+					</p-table>
+				</div>
+			</section>
+		</ng-template>
+
+		<ng-template #panel>
+			<section class="panel">
+				<div class="panel__head">
+					<h2 class="panel__title">{{ i18n.t('purchaseOrderDetail.title') }}
+					</h2>
+					@if (selectedPo(); as po) {
+					<span class="panel__scope">{{ i18n.t('purchaseOrderDetail.scopeOf', {
+						name: po.pono })
+						}}</span>
+					<span class="panel__count">{{ poDetail().length }}</span>
+					}
+				</div>
+
+				<div class="table-scroll">
+					<p-table #detailTable [value]="poDetail()" dataKey="id" [showGridlines]="true" class="grid">
+						<ng-template #header>
+							<tr>
+								<th style="width: 3rem"></th>
+								<th class="col-productId">{{
+									i18n.t('purchaseOrderDetail.product')
+									}}</th>
+								<th class="col-unitId">{{
+									i18n.t('purchaseOrderDetail.unit')
+									}}</th>
+								<th class="col-quantity">{{
+									i18n.t('purchaseOrderDetail.quantity')
+									}}</th>
+								<th class="col-unitPrice">{{
+									i18n.t('purchaseOrderDetail.unitPrice')
+									}}</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-row let-expanded="expanded">
+							<tr class="row" [class.row--selected]="selectedDetail()?.id === row.id"
+								(click)="selectDetail(row)" (dblclick)="openEdit()">
+								<td>
+									<button type="button" pButton [pRowToggler]="row" variant="text"
+										severity="secondary" iconOnly rounded>
+										@if (expanded) {
+										<svg data-p-icon="chevron-down"></svg>
+										} @else {
+										<svg data-p-icon="chevron-right"></svg>
+										}
+									</button>
+								</td>
+								<td class="col-productId">{{
+									productLabel(row.productId) ||
+									'—' }}</td>
+								<td class="col-unitId">{{
+									unitLabel(row.unitId) || '—'
+									}}</td>
+								<td class="col-quantity">
+									{{ row.quantity != null ?
+									(row.quantity |
+									number:'1.0-2') : '—'}}
+								</td>
+								<td class="col-unitPrice">
+									{{ row.unitPrice != null ?
+									(row.unitPrice |
+									number:'1.0-2') :'—' }}
+								</td>
+							</tr>
+						</ng-template>
+						<ng-template #expandedrow let-row>
+							<tr>
+								<td colspan="5">
+									<div class="table-scroll">
+										<p-table #scheduleTable [value]="schedule()" dataKey="id" [showGridlines]="true"
+											class="grid">
+											<ng-template #header>
+							<tr>
+								<th class="col-deliveryDate">{{ i18n.t('purchaseOrderSchedule.deliveryDate') }}</th>
+								<th class="col-quantity">{{ i18n.t('purchaseOrderSchedule.quantity') }}</th>
+							</tr>
+						</ng-template>
+						<ng-template #body let-row>
+							<tr class="row" [class.row--selected]="selectedSchedule()?.id === row.id"
+								(click)="selectSchedule(row)" (dblclick)="openEdit()">
+								<td class="col-deliveryDate">{{ row.deliveryDate ? (row.deliveryDate | date) : '—' }}
+								</td>
+								<td class="col-quantity">{{ row.quantity != null ? (row.quantity | number:'1.0-2') : '—'
+									}}</td>
+							</tr>
+						</ng-template>
+						<ng-template #emptymessage>
+							<tr>
+								<td colspan="2">
+									<p class="empty">{{ selectedDetail() ? i18n.t('purchaseOrderSchedule.empty') :
+										i18n.t('purchaseOrderSchedule.emptyHint') }}</p>
+								</td>
+							</tr>
+						</ng-template>
+					</p-table>
+				</div>
+				</td>
+				</tr>
+		</ng-template>
+		<ng-template #emptymessage>
+			<tr>
+				<td colspan="4">
+					<p class="empty">
+						{{ selectedPo() ?
+						i18n.t('purchaseOrderDetail.emptyLine')
+						:
+						i18n.t('purchaseOrderDetail.emptyLineHint')
+						}}
+					</p>
+				</td>
+			</tr>
+		</ng-template>
+		</p-table>
+</div>
+</section>
+</ng-template>
+
+<!-- <ng-template #panel>
+			<section class="panel">
+				<div class="panel__head">
+					<h2 class="panel__title">{{ i18n.t('purchaseOrderSchedule.title') }}</h2>
+					@if (selectedDetail(); as detail) {
+					<span class="panel__scope">{{ i18n.t('purchaseOrderSchedule.scopeOf', {
+						name: productLabel(detail.productId)
+						}) }}</span>
+					<span class="panel__count">{{ schedule().length }}</span>
+					}
+				</div>
+
+				
+			</section>
+		</ng-template> -->
+
+</p-splitter>
+</div>

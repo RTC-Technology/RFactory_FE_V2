@@ -1,5 +1,3 @@
-import { GoodsReceiptDto } from "./goods-receipt.model";
-
 export interface GoodsIssueDto {
     id: number;
     issueNo: string;

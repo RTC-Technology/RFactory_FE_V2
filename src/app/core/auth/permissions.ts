@@ -46,6 +46,9 @@ export const PERMISSIONS = {
   goodsIssueDetail: crud('goods-issue-detail'),
   inventory: crud('inventory'),
   inventoryTransaction: crud('inventory-transaction'),
+  purchaseOrder: crud('purchase-order'),
+  purchaseOrderDetail: crud('purchase-order-detail'),
+  purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
