@@ -1,5 +1,4 @@
-<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
-	let-showReload="showReload">
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
 	<div class="toolbar">
 		<button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -9,8 +8,7 @@
 			</svg>
 			<span>{{ i18n.t("common.add") }}</span>
 		</button>
-		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
-			(click)="openEdit()">
+		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit()">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<path d="M4 3h9l4 4v3" />
 				<path d="M4 3v18h13v-6" />
@@ -18,8 +16,7 @@
 			</svg>
 			<span>{{ i18n.t("common.edit") }}</span>
 		</button>
-		<button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-			(click)="askDelete()">
+		<button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete()">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<path d="M4 7h16" />
 				<path d="M10 11v6" />
@@ -42,15 +39,21 @@
 		</button>
 
 		<span class="tool__sep"></span>
-		<button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
-			(click)="askApprove(true)">
+		<button *appHasPermission="perms.approve"
+				type="button"
+				class="tool tool--success"
+				[disabled]="!hasSelection"
+				(click)="askApprove(true)">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<path d="M5 12.5l4.2 4.2L19 2.5" />
 			</svg>
 			<span>{{ i18n.t("common.approve") }}</span>
 		</button>
-		<button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-			(click)="askApprove(false)">
+		<button *appHasPermission="perms.unapprove"
+				type="button"
+				class="tool tool--danger"
+				[disabled]="!hasSelection"
+				(click)="askApprove(false)">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
 				<line x1="6" y1="6" x2="18" y2="18" />
 				<line x1="18" y1="6" x2="6" y2="18" />
@@ -59,14 +62,21 @@
 		</button>
 		}
 
-		<input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
-			[attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+		<input class="tool-search"
+			   type="search"
+			   [placeholder]="i18n.t('common.search')"
+			   [attr.aria-label]="i18n.t('common.search')"
+			   (input)="applyFilter(kind, $any($event.target).value)" />
 	</div>
 </ng-template>
 
 <div class="page">
-	<p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
-		[minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+	<p-splitter class="workspace__right"
+				layout="vertical"
+				[panelSizes]="split.sizes('product:split-y', [42,58])"
+				[minSizes]="[20, 20]"
+				[gutterSize]="6"
+				(onResizeEnd)="split.save('product:split-y', $event.sizes)">
 
 		<ng-template #panel>
 			<section class="panel">
@@ -74,25 +84,44 @@
 					<h2 class="panel__title">{{ i18n.t('purchaseOrder.title') }}</h2>
 					<span class="panel__count">{{ po().length }}</span>
 				</div>
-				<ng-container
-					*ngTemplateOutlet="toolbar; context: { kind: 'purchaseOrder', perms: perms.purchaseOrder, canAdd: true, hasSelection: !!selectedPo(), showReload: true }" />
+				<ng-container *ngTemplateOutlet="toolbar; 
+							context: { kind: 'purchaseOrder', perms: perms.purchaseOrder, canAdd: true, hasSelection: !!selectedPo(), showReload: true }" />
 
 				<div class="table-scroll">
-					<p-table #poTable [value]="po()" [showGridlines]="true" class="grid"
-						[globalFilterFields]="filterFields.po" (onFilter)="onFiltered('po', $event.filteredValue)">
+					<p-table #poTable
+							 [value]="po()"
+							 [showGridlines]="true"
+							 class="grid"
+							 [globalFilterFields]="filterFields.po"
+							 (onFilter)="onFiltered('po', $event.filteredValue)">
 						<ng-template #header>
 							<tr>
 								<th class="col-pono">{{ i18n.t('purchaseOrder.pono') }}</th>
 								<th class="col-supplier">{{ i18n.t('purchaseOrder.supplier') }}</th>
 								<th class="col-orderDate">{{ i18n.t('purchaseOrder.orderDate') }}</th>
-								<th class="col-expectedDeliveryDate">{{ i18n.t('purchaseOrder.expectedDeliveryDate') }}
-								</th>
+								<th class="col-expectedDeliveryDate">{{ i18n.t('purchaseOrder.expectedDeliveryDate') }}</th>
 								<th class="col-status">{{ i18n.t('purchaseOrder.status') }}</th>
-
+								<th class="col-currency">{{ i18n.t('purchaseOrder.currency') }}</th>
+								<th class="col-exchangeRate">{{ i18n.t('purchaseOrder.exchangeRate') }}</th>
+								<th class="col-paymentTerm">{{ i18n.t('purchaseOrder.paymentTerm') }}</th>
+								<th class="col-deliveryTerm">{{ i18n.t('purchaseOrder.deliveryTerm') }}</th>
+								<th class="col-employee">{{ i18n.t('purchaseOrder.employee') }}</th>
+								<th class="col-requestedDate">{{ i18n.t('purchaseOrder.requestedDate') }}</th>
+								<th class="col-subTotal">{{ i18n.t('purchaseOrder.subTotal') }}</th>
+								<th class="col-discountAmount">{{ i18n.t('purchaseOrder.discountAmount') }}</th>
+								<th class="col-taxAmount">{{ i18n.t('purchaseOrder.taxAmount') }}</th>
+								<th class="col-shippingAmount">{{ i18n.t('purchaseOrder.shippingAmount') }}</th>
+								<th class="col-otherAmount">{{ i18n.t('purchaseOrder.otherAmount') }}</th>
+								<th class="col-totalAmount">{{ i18n.t('purchaseOrder.totalAmount') }}</th>
+								<th class="col-remark">{{ i18n.t('purchaseOrder.remark') }}</th>
+								<th class="col-approvedDate">{{ i18n.t('purchaseOrder.approvedDate') }}</th>
+								<th class="col-approvedBy">{{ i18n.t('purchaseOrder.approvedBy') }}</th>
 							</tr>
 						</ng-template>
 						<ng-template #body let-row>
-							<tr class="row" [class.row--selected]="selectedPo()?.id === row.id" (click)="selectPo(row)"
+							<tr class="row"
+								[class.row--selected]="selectedPo()?.id === row.id"
+								(click)="selectPo(row)"
 								(dblclick)="openEdit()">
 								<td class="col-pono">{{ row.pono || '—' }}</td>
 								<td class="col-supplierId">{{ supplierLabel(row.supplierId) || '—' }}</td>
@@ -101,11 +130,26 @@
 									{{row.expectedDeliveryDate ? (row.expectedDeliveryDate | date) :'—' }}
 								</td>
 								<td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+								<td class="col-currency">{{ row.currencyId || '—' }}</td>
+								<td class="col-exchangeRate">{{ row.exchangeRate || '—' }}</td>
+								<td class="col-paymentTerm">{{ row.paymentTermId || '—' }}</td>
+								<td class="col-deliveryTerm">{{ row.deliveryTermId || '—' }}</td>
+								<td class="col-employee">{{ row.employeeId || '—' }}</td>
+								<td class="col-requestedDate">{{ row.requestedDate ? (row.requestedDate | date) :'—' }}</td>
+								<td class="col-subTotal">{{ row.subTotal || '—' }}</td>
+								<td class="col-discountAmount">{{ row.discountAmount || '—' }}</td>
+								<td class="col-taxAmount">{{ row.taxAmount || '—' }}</td>
+								<td class="col-shippingAmount">{{ row.shippingAmount || '—' }}</td>
+								<td class="col-otherAmount">{{ row.otherAmount || '—' }}</td>
+								<td class="col-totalAmount">{{ row.totalAmount || '—' }}</td>
+								<td class="col-remark">{{ row.remark || '—' }}</td>
+								<td class="col-approvedDate">{{ row.approvedDate ? (row.approvedDate | date) :'—' }}</td>
+								<td class="col-approvedBy">{{ row.approvedBy || '—' }}</td>
 							</tr>
 						</ng-template>
 						<ng-template #emptymessage>
 							<tr>
-								<td colspan="12">
+								<td colspan="20">
 									<p class="empty">{{ i18n.t('purchaseOrder.empty') }}</p>
 								</td>
 							</tr>
@@ -130,19 +174,30 @@
 						<ng-template #header>
 							<tr>
 								<th style="width: 3rem"></th>
+								<th class="col-stt">{{ i18n.t('purchaseOrderDetail.stt') }}</th>
 								<th class="col-product">{{ i18n.t('purchaseOrderDetail.product') }}</th>
 								<th class="col-unit">{{ i18n.t('purchaseOrderDetail.unit') }}</th>
 								<th class="col-quantity">{{ i18n.t('purchaseOrderDetail.quantity') }}</th>
 								<th class="col-unitPrice">{{ i18n.t('purchaseOrderDetail.unitPrice') }}</th>
+								<th class="col-discountPercent">{{ i18n.t('purchaseOrderDetail.discountPercent') }}</th>
+								<th class="col-discountAmount">{{ i18n.t('purchaseOrderDetail.discountAmount') }}</th>
+								<th class="col-taxPercent">{{ i18n.t('purchaseOrderDetail.taxPercent') }}</th>
+								<th class="col-taxAmount">{{ i18n.t('purchaseOrderDetail.taxAmount') }}</th>
+								<th class="col-totalAmount">{{ i18n.t('purchaseOrderDetail.totalAmount') }}</th>
+								<th class="col-requiredDate">{{ i18n.t('purchaseOrderDetail.requiredDate') }}</th>
+								<th class="col-receivedQuantity">{{ i18n.t('purchaseOrderDetail.receivedQuantity') }}</th>
+								<th class="col-rejectedQuantity">{{ i18n.t('purchaseOrderDetail.rejectedQuantity') }}</th>
+								<th class="col-warehouse">{{ i18n.t('purchaseOrderDetail.warehouse') }}</th>
 								<th class="col-remark">{{ i18n.t('purchaseOrderDetail.remark') }}</th>
 							</tr>
 						</ng-template>
 						<ng-template #body let-row let-expanded="expanded">
-							<tr class="row" [class.row--selected]="selectedDetail()?.id === row.id"
-								(click)="selectDetail(row)" (dblclick)="openEdit()">
+							<tr class="row"
+								[class.row--selected]="selectedDetail()?.id === row.id"
+								(click)="selectDetail(row)"
+								(dblclick)="openEdit()">
 								<td>
-									<button type="button" pButton [pRowToggler]="row" variant="text"
-										severity="secondary" iconOnly rounded>
+									<button type="button" pButton [pRowToggler]="row" variant="text" severity="secondary" iconOnly rounded>
 										@if (expanded) {
 										<svg data-p-icon="chevron-down"></svg>
 										} @else {
@@ -150,6 +205,7 @@
 										}
 									</button>
 								</td>
+								<td class="col-stt">{{ row.stt || '—' }}</td>
 								<td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
 								<td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
 								<td class="col-quantity text-right">
@@ -158,12 +214,62 @@
 								<td class="col-unitPrice text-right">
 									{{ row.unitPrice != null ? (row.unitPrice | number:'1.0-2') :'—' }}
 								</td>
+								<td class="col-discountPercent text-right">
+									{{ row.discountPercent != null ? (row.discountPercent | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-discountAmount text-right">
+									{{ row.discountAmount != null ? (row.discountAmount | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-taxPercent text-right">
+									{{ row.taxPercent != null ? (row.taxPercent | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-taxAmount text-right">
+									{{ row.taxAmount != null ? (row.taxAmount | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-totalAmount text-right">
+									{{ row.amount != null ? (row.totalAmount | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-requiredDate text-right">
+									{{ row.requiredDate != null ? (row.requiredDate | date:'dd/MM/yyyy') :'—' }}
+								</td>
+								<td class="col-receivedQuantity text-right">
+									{{ row.receivedQuantity != null ? (row.receivedQuantity | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-rejectedQuantity text-right">
+									{{ row.rejectedQuantity != null ? (row.rejectedQuantity | number:'1.0-2') :'—' }}
+								</td>
+								<td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
 								<td class="col-remark">{{ row.remark || '—' }}</td>
 							</tr>
 						</ng-template>
+
+						<ng-template #expandedrow let-row>
+							<tr>
+								<td colspan="16">
+									<div class="flex justify-center">
+										<p-listbox [options]="schedule(row)" [(ngModel)]="selectedSchedule" optionLabel="deliveryDate" class="w-full md:w-56">
+											<ng-template #item let-schedule let-i="index">
+												<div class="flex items-center gap-2">
+													<span [ngStyle]="{width:'2.5em'}"> #:{{ i + 1 }} </span>|
+													<span>
+														{{i18n.t('purchaseOrderDeliverySchedule.deliveryDate')}}
+														: {{ schedule.deliveryDate | date:'dd/MM/yyyy' }}
+													</span>|
+													<span>
+														{{i18n.t('purchaseOrderDeliverySchedule.quantity')}}
+														: {{ schedule.quantity | number:'1.0-2' }}
+													</span>
+												</div>
+											</ng-template>
+										</p-listbox>
+									</div>
+								</td>
+							</tr>
+						</ng-template>
+
 						<ng-template #emptymessage>
 							<tr>
-								<td colspan="6">
+								<td colspan="16">
 									<p class="empty">
 										{{ selectedPo() ? i18n.t('purchaseOrderDetail.emptyLine') :
 										i18n.t('purchaseOrderDetail.emptyLineHint') }}
@@ -178,8 +284,13 @@
 	</p-splitter>
 </div>
 
-<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-	[draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
+<p-dialog [header]="dialogTitle()"
+		  [visible]="dialogOpen()"
+		  (visibleChange)="dialogOpen.set($event)"
+		  [modal]="true"
+		  [draggable]="false"
+		  [resizable]="false"
+		  [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 	<p-tabs [(value)]="activeTab" styleClass="detail-tabs">
 		<p-tablist>
 			<p-tab value="info">{{ i18n.t('purchaseOrder.title') }}</p-tab>
@@ -206,9 +317,14 @@
 								{{ i18n.t('purchaseOrder.supplier') }}
 								<span class="req">*</span>
 							</label>
-							<p-select inputId="po-supplierId" [options]="supplierOptions()" optionLabel="label"
-								optionValue="value" [(ngModel)]="form.supplierId"
-								[placeholder]="i18n.t('purchaseOrder.supplier.unset')" appendTo="body" class="w-full" />
+							<p-select inputId="po-supplierId"
+									  [options]="supplierOptions()"
+									  optionLabel="label"
+									  optionValue="value"
+									  [(ngModel)]="form.supplierId"
+									  [placeholder]="i18n.t('purchaseOrder.supplier.unset')"
+									  appendTo="body"
+									  class="w-full" />
 						</div>
 
 						<div class="field">
@@ -216,173 +332,366 @@
 								{{ i18n.t('purchaseOrder.orderDate') }}
 								<span class="req">*</span>
 							</label>
-							<input pInputText id="po-orderDate" name="orderDate" type="datetime-local"
-								[(ngModel)]="form.orderDate" />
+							<input pInputText id="po-orderDate" name="orderDate" type="datetime-local" [(ngModel)]="form.orderDate" />
+						</div>
+
+						<div class="field">
+							<label for="po-expectedDeliveryDate">
+								{{ i18n.t('purchaseOrder.expectedDeliveryDate') }}
+							</label>
+							<input pInputText id="po-expectedDeliveryDate" name="expectedDeliveryDate"
+								   type="datetime-local" [(ngModel)]="form.expectedDeliveryDate" />
 						</div>
 					</div>
 
-					<!-- <div class="field">
-			<label for="po-remark">{{ i18n.t('goodsIssue.remark') }}</label>
-			<textarea pInputTextarea id="po-remark" name="remark" rows="2" [(ngModel)]="form.remark"></textarea>
-		</div> -->
+					<div class="field-row">
+						<div class="field">
+							<label for="po-status">
+								{{ i18n.t('purchaseOrder.status') }}
+							</label>
+							<p-select inputId="po-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.status" [placeholder]="i18n.t('purchaseOrder.status.unset')"
+									  appendTo="body" class="w-full" />
+						</div>
+
+						<div class="field">
+							<label for="po-currencyId">
+								{{ i18n.t('purchaseOrder.currency') }}
+							</label>
+							<p-select inputId="po-currencyId" [options]="currencyOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.currencyId" [placeholder]="i18n.t('purchaseOrder.currency.unset')"
+									  appendTo="body" class="w-full" />
+						</div>
+
+						<div class="field">
+							<label for="po-exchangeRate">
+								{{ i18n.t('purchaseOrder.exchangeRate') }}
+							</label>
+							<input pInputText id="po-exchangeRate" name="exchangeRate"
+								   type="number" [(ngModel)]="form.exchangeRate" />
+						</div>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="po-paymentTermId">
+								{{ i18n.t('purchaseOrder.paymentTerm') }}
+							</label>
+							<p-select inputId="po-paymentTermId" [options]="paymentTermOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.paymentTermId" [placeholder]="i18n.t('purchaseOrder.paymentTerm.unset')"
+									  appendTo="body" class="w-full" />
+						</div>
+
+						<div class="field">
+							<label for="po-deliveryTermId">
+								{{ i18n.t('purchaseOrder.deliveryTerm') }}
+							</label>
+							<p-select inputId="po-deliveryTermId" [options]="deliveryTermOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.deliveryTermId" [placeholder]="i18n.t('purchaseOrder.deliveryTerm.unset')"
+									  appendTo="body" class="w-full" />
+						</div>
+
+						<div class="field">
+							<label for="po-employeeId">
+								{{ i18n.t('purchaseOrder.employee') }}
+							</label>
+							<p-select inputId="po-employeeId" [options]="employeeOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.employeeId" [placeholder]="i18n.t('purchaseOrder.employee.unset')"
+									  appendTo="body" class="w-full" />
+						</div>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="po-subTotal">
+								{{ i18n.t('purchaseOrder.subTotal') }}
+							</label>
+							<input pInputText id="po-subTotal" name="subTotal"
+								   type="number" [(ngModel)]="form.subTotal" />
+						</div>
+
+						<div class="field">
+							<label for="po-discountAmount">
+								{{ i18n.t('purchaseOrder.discountAmount') }}
+							</label>
+							<input pInputText id="po-discountAmount" name="discountAmount"
+								   type="number" [(ngModel)]="form.discountAmount" />
+						</div>
+
+						<div class="field">
+							<label for="po-taxAmount">
+								{{ i18n.t('purchaseOrder.taxAmount') }}
+							</label>
+							<input pInputText id="po-taxAmount" name="taxAmount"
+								   type="number" [(ngModel)]="form.taxAmount" />
+						</div>
+
+						<div class="field">
+							<label for="po-shippingAmount">
+								{{ i18n.t('purchaseOrder.shippingAmount') }}
+							</label>
+							<input pInputText id="po-shippingAmount" name="shippingAmount"
+								   type="number" [(ngModel)]="form.shippingAmount" />
+						</div>
+
+						<div class="field">
+							<label for="po-otherAmount">
+								{{ i18n.t('purchaseOrder.otherAmount') }}
+							</label>
+							<input pInputText id="po-otherAmount" name="otherAmount"
+								   type="number" [(ngModel)]="form.otherAmount" />
+						</div>
+
+						<div class="field">
+							<label for="po-totalAmount">
+								{{ i18n.t('purchaseOrder.totalAmount') }}
+							</label>
+							<input pInputText id="po-totalAmount" name="totalAmount"
+								   type="number" [(ngModel)]="form.totalAmount" />
+						</div>
+					</div>
+
+					<div class="field">
+						<label for="po-remark">{{ i18n.t('purchaseOrder.remark') }}</label>
+						<textarea pInputTextarea id="po-remark" name="remark" rows="2" [(ngModel)]="form.remark"></textarea>
+					</div>
+
+					<section class="panel lines">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('purchaseOrderDetail.title') }}</h2>
+							<span class="panel__scope">{{ i18n.t('purchaseOrderDetail.lineCount', { count:
+								detailRows().length })
+								}}</span>
+							<button type="button" class="lines__add" (click)="addDetailRow()">
+								<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+									 stroke-width="1.8">
+									<line x1="12" y1="5" x2="12" y2="19" />
+									<line x1="5" y1="12" x2="19" y2="12" />
+								</svg>
+								<span>{{ i18n.t('purchaseOrderDetail.addLine') }}</span>
+							</button>
+						</div>
+
+						<div class="lines__scroll">
+							<p-table [value]="detailRows()"
+									 dataKey="id"
+									 [showGridlines]="true"
+									 class="grid grid--edit"
+									 scrollable="true"
+									 scrollHeight="flex">
+								<ng-template #header>
+									<tr>
+										<th class="col-idx">#</th>
+										<th class="col-product">
+											{{ i18n.t('purchaseOrderDetail.product') }}
+											<span class="req">*</span>
+										</th>
+										<th class="col-unit">
+											{{ i18n.t('purchaseOrderDetail.unit') }}
+											<span class="req">*</span>
+										</th>
+										<th class="col-quantity">
+											{{ i18n.t('purchaseOrderDetail.quantity') }}
+											<span class="req">*</span>
+										</th>
+										<th class="col-unitPrice">{{ i18n.t('purchaseOrderDetail.unitPrice') }}</th>
+										<th class="col-discountPercent">{{ i18n.t('purchaseOrderDetail.discountPercent') }}</th>
+										<th class="col-discountAmount">{{ i18n.t('purchaseOrderDetail.discountAmount') }}</th>
+										<th class="col-taxPercent">{{ i18n.t('purchaseOrderDetail.taxPercent') }}</th>
+										<th class="col-taxAmount">{{ i18n.t('purchaseOrderDetail.taxAmount') }}</th>
+										<th class="col-totalAmount">{{ i18n.t('purchaseOrderDetail.totalAmount') }}</th>
+										<th class="col-requiredDate">{{ i18n.t('purchaseOrderDetail.requiredDate') }}</th>
+										<!-- <th class="col-receivedQuantity">{{ i18n.t('purchaseOrderDetail.receivedQuantity') }}</th>
+										<th class="col-rejectedQuantity">{{ i18n.t('purchaseOrderDetail.rejectedQuantity') }}</th> -->
+										<th class="col-warehouse">{{ i18n.t('purchaseOrderDetail.warehouse') }}</th>
+										<th class="col-remark">{{ i18n.t('purchaseOrderDetail.remark') }}</th>
+										<th class="col-act">{{ i18n.t('common.actions') }}</th>
+									</tr>
+								</ng-template>
+
+								<ng-template #body let-row let-i="rowIndex">
+									<tr class="row row--edit">
+										<td class="col-idx">{{ i + 1 }}</td>
+										<td class="col-product">
+											<p-select [options]="productOptions()"
+													  optionLabel="label"
+													  optionValue="value"
+													  [ngModel]="row.productId || null"
+													  (ngModelChange)="onDetailProductChange(row, $event)"
+													  [filter]="true"
+													  filterBy="label"
+													  [resetFilterOnHide]="true"
+													  [filterPlaceholder]="i18n.t('common.search')"
+													  [placeholder]="i18n.t('purchaseOrderDetail.selectProduct')"
+													  [emptyFilterMessage]="i18n.t('purchaseOrderDetail.noProduct')"
+													  appendTo="body"
+													  class="w-full"
+													  panelStyleClass="grid-picker"
+													  scrollHeight="18rem">
+
+												<ng-template #header>
+													<div class="picker-row picker-row--head">
+														<span class="picker-cell">{{ i18n.t('product.code') }}</span>
+														<span class="picker-cell">{{ i18n.t('product.name') }}</span>
+														<span class="picker-cell picker-cell--center">{{i18n.t('product.unit')}}</span>
+														<span class="picker-cell">{{i18n.t('product.drawingNo')}}</span>
+														<span class="picker-cell picker-cell--center">{{i18n.t('common.status')}}</span>
+													</div>
+												</ng-template>
+
+												<ng-template #item let-opt>
+													<div class="picker-row">
+														<span class="picker-cell picker-cell--code">{{ opt.code}}</span>
+														<span class="picker-cell" [title]="opt.name">{{ opt.name}}</span>
+														<span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+														<span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+															{{ opt.drawingNo || '—' }}
+														</span>
+														<span class="picker-cell picker-cell--center">
+															@if (opt.statusLabel) {
+															<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel" [rounded]="true" />
+															} @else {
+															<span class="picker-cell--muted">—</span>
+															}
+														</span>
+													</div>
+												</ng-template>
+											</p-select>
+										</td>
+
+										<td class="col-unit">
+											<p-select [options]="unitOptions()"
+													  optionLabel="label"
+													  optionValue="value"
+													  [ngModel]="row.unitId || null"
+													  (ngModelChange)="row.unitId = $event ?? 0"
+													  [filter]="true"
+													  filterBy="label"
+													  [placeholder]="i18n.t('purchaseOrderDetail.selectUnit')"
+													  appendTo="body"
+													  class="w-full" />
+										</td>
+
+										<td class="col-quantity">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.quantity"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-unitPrice">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.unitPrice"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-discountPercent">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.discountPercent"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-discountAmount">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.discountAmount"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+										<td class="col-taxPercent">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.taxPercent"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-taxAmount">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.taxAmount"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-totalAmount">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.totalAmount"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+										<td class="col-requiredDate">
+											<input pInputText id="po-requiredDate" name="requiredDate" type="datetime-local"
+												   [(ngModel)]="row.requiredDate" />
+										</td>
+										<td class="col-warehouse">
+											<p-select [options]="warehouseOptions()"
+													  optionLabel="label"
+													  optionValue="value"
+													  [ngModel]="row.unitId || null"
+													  (ngModelChange)="row.warehouseId = $event ?? 0"
+													  [filter]="true"
+													  filterBy="label"
+													  [placeholder]="i18n.t('purchaseOrderDetail.selectWarehouse')"
+													  appendTo="body"
+													  class="w-full" />
+										</td>
+
+										<td class="col-remark">
+											<textarea pTextarea
+													  class="cell-input"
+													  autocomplete="off"
+													  rows="2"
+													  [(ngModel)]="row.remark"></textarea>
+										</td>
+
+										<td class="col-act">
+											<button type="button"
+													class="row-del"
+													[title]="i18n.t('purchaseOrderDetail.removeLine')"
+													[attr.aria-label]="i18n.t('purchaseOrderDetail.removeLine')"
+													(click)="removeDetailRow(row)">
+												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+													<line x1="6" y1="6" x2="18" y2="18" />
+													<line x1="18" y1="6" x2="6" y2="18" />
+												</svg>
+											</button>
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #footer>
+									<tr class="lines__total">
+										<td colspan="5">{{ i18n.t('purchaseOrderDetail.total') }}</td>
+										<td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
+										<td colspan="8"></td>
+									</tr>
+								</ng-template>
+
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="14">
+											<p class="empty">{{ i18n.t('purchaseOrderDetail.emptyLine') }}</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
 				</div>
-
-				<section class="panel lines">
-					<div class="panel__head">
-						<h2 class="panel__title">{{ i18n.t('purchaseOrderDetail.title') }}</h2>
-						<span class="panel__scope">{{ i18n.t('purchaseOrderDetail.lineCount', { count:
-							detailRows().length })
-							}}</span>
-						<button type="button" class="lines__add" (click)="addDetailRow()">
-							<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-								stroke-width="1.8">
-								<line x1="12" y1="5" x2="12" y2="19" />
-								<line x1="5" y1="12" x2="19" y2="12" />
-							</svg>
-							<span>{{ i18n.t('purchaseOrderDetail.addLine') }}</span>
-						</button>
-					</div>
-
-					<div class="lines__scroll">
-						<p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
-							scrollable="true" scrollHeight="flex">
-							<ng-template #header>
-								<tr>
-									<th class="col-idx">#</th>
-									<th class="col-product">
-										{{ i18n.t('purchaseOrderDetail.product') }}
-										<span class="req">*</span>
-									</th>
-									<th class="col-unit">
-										{{ i18n.t('purchaseOrderDetail.unit') }}
-										<span class="req">*</span>
-									</th>
-									<th class="col-quantity">
-										{{ i18n.t('purchaseOrderDetail.quantity') }}
-										<span class="req">*</span>
-									</th>
-									<th class="col-unitPrice">{{ i18n.t('purchaseOrderDetail.unitPrice') }}</th>
-									<th class="col-totalPrice">{{ i18n.t('purchaseOrderDetail.totalPrice') }}</th>
-									<th class="col-remark">{{ i18n.t('purchaseOrderDetail.remark') }}</th>
-									<th class="col-act">{{ i18n.t('common.actions') }}</th>
-								</tr>
-							</ng-template>
-
-							<ng-template #body let-row let-i="rowIndex">
-								<tr class="row row--edit">
-									<td class="col-idx">{{ i + 1 }}</td>
-
-									<td class="col-product">
-										<p-select [options]="productOptions()" optionLabel="label" optionValue="value"
-											[ngModel]="row.productId || null"
-											(ngModelChange)="onDetailProductChange(row, $event)" [filter]="true"
-											filterBy="label" [resetFilterOnHide]="true"
-											[filterPlaceholder]="i18n.t('common.search')"
-											[placeholder]="i18n.t('purchaseOrderDetail.selectProduct')"
-											[emptyFilterMessage]="i18n.t('purchaseOrderDetail.noProduct')"
-											appendTo="body" class="w-full" panelStyleClass="grid-picker"
-											scrollHeight="18rem">
-
-											<ng-template #header>
-												<div class="picker-row picker-row--head">
-													<span class="picker-cell">{{ i18n.t('product.code') }}</span>
-													<span class="picker-cell">{{ i18n.t('product.name') }}</span>
-													<span class="picker-cell picker-cell--center">{{
-														i18n.t('product.unit')
-														}}</span>
-													<span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
-													<span class="picker-cell picker-cell--center">{{
-														i18n.t('common.status')
-														}}</span>
-												</div>
-											</ng-template>
-
-											<ng-template #item let-opt>
-												<div class="picker-row">
-													<span class="picker-cell picker-cell--code">{{ opt.code }}</span>
-													<span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
-													<span class="picker-cell picker-cell--center">{{ opt.unit || '—'
-														}}</span>
-													<span class="picker-cell picker-cell--muted"
-														[title]="opt.drawingNo">
-														{{ opt.drawingNo || '—' }}
-													</span>
-													<span class="picker-cell picker-cell--center">
-														@if (opt.statusLabel) {
-														<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
-															[rounded]="true" />
-														} @else {
-														<span class="picker-cell--muted">—</span>
-														}
-													</span>
-												</div>
-											</ng-template>
-										</p-select>
-									</td>
-
-									<td class="col-unit">
-										<p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
-											[ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0"
-											[filter]="true" filterBy="label"
-											[placeholder]="i18n.t('goodsIssueDetail.selectUnit')" appendTo="body"
-											class="w-full" />
-									</td>
-
-									<td class="col-quantity">
-										<p-inputnumber inputStyleClass="cell-input cell-input--num"
-											[(ngModel)]="row.quantity" mode="decimal" [showButtons]="true"
-											inputId="minmax-buttons" [min]="0" />
-									</td>
-
-									<td class="col-unitPrice">
-										<p-inputnumber inputStyleClass="cell-input cell-input--num"
-											[(ngModel)]="row.unitPrice" mode="decimal" [showButtons]="true"
-											inputId="minmax-buttons" [min]="0" />
-									</td>
-
-									<td class="col-totalPrice">
-										<p-inputnumber inputStyleClass="cell-input cell-input--num"
-											[(ngModel)]="row.totalPrice" mode="decimal" [showButtons]="true"
-											inputId="minmax-buttons" [min]="0" />
-									</td>
-
-									<td class="col-remark">
-										<textarea pTextarea class="cell-input" autocomplete="off" rows="2"
-											[(ngModel)]="row.remark"></textarea>
-									</td>
-
-									<td class="col-act">
-										<button type="button" class="row-del"
-											[title]="i18n.t('purchaseOrderDetail.removeLine')"
-											[attr.aria-label]="i18n.t('purchaseOrderDetail.removeLine')"
-											(click)="removeDetailRow(row)">
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-												<line x1="6" y1="6" x2="18" y2="18" />
-												<line x1="18" y1="6" x2="6" y2="18" />
-											</svg>
-										</button>
-									</td>
-								</tr>
-							</ng-template>
-
-							<ng-template #footer>
-								<tr class="lines__total">
-									<td colspan="5">{{ i18n.t('purchaseOrderDetail.total') }}</td>
-									<td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
-									<td colspan="2"></td>
-								</tr>
-							</ng-template>
-
-							<ng-template #emptymessage>
-								<tr>
-									<td colspan="7">
-										<p class="empty">{{ i18n.t('purchaseOrderDetail.emptyLine') }}</p>
-									</td>
-								</tr>
-							</ng-template>
-						</p-table>
-					</div>
-				</section>
 			</p-tabpanel>
 			<p-tabpanel value="schedule">
 				<div class="form">
@@ -395,14 +704,23 @@
 							{{ i18n.t('purchaseOrderDetail.selectProduct') }}
 							<span class="req">*</span>
 						</label>
-						<p-select inputId="po-supplierId" [options]="detailOptions()" optionLabel="label"
-							[(ngModel)]="formSchedule.purchaseOrderDetailId" optionValue="value"
-							(ngModelChange)="onDetailPOChange($event)"
-							[placeholder]="i18n.t('purchaseOrderDetail.selectProduct')" appendTo="body" class="w-full"
-							[filter]="true" filterBy="label" [resetFilterOnHide]="true"
-							[filterPlaceholder]="i18n.t('common.search')"
-							[emptyFilterMessage]="i18n.t('purchaseOrderDetail.noProduct')" class="w-full"
-							panelStyleClass="grid-picker" scrollHeight="18rem">
+						<p-select inputId="po-supplierId"
+								  [options]="detailOptions()"
+								  optionLabel="label"
+								  [(ngModel)]="formSchedule.purchaseOrderDetailId"
+								  optionValue="value"
+								  (ngModelChange)="onDetailPOChange($event)"
+								  [placeholder]="i18n.t('purchaseOrderDetail.selectProduct')"
+								  appendTo="body"
+								  class="w-full"
+								  [filter]="true"
+								  filterBy="label"
+								  [resetFilterOnHide]="true"
+								  [filterPlaceholder]="i18n.t('common.search')"
+								  [emptyFilterMessage]="i18n.t('purchaseOrderDetail.noProduct')"
+								  class="w-full"
+								  panelStyleClass="grid-picker"
+								  scrollHeight="18rem">
 							<ng-template #header>
 								<div class="picker-row picker-row--head">
 									<span class="picker-cell">{{ i18n.t('product.code') }}</span>
@@ -415,109 +733,130 @@
 								</div>
 							</ng-template>
 
-							<ng-template #item let-opt>
+							<ng-template #item
+										 let-opt>
 								<div class="picker-row">
 									<span class="picker-cell picker-cell--code">{{ opt.productCode }}</span>
-									<span class="picker-cell" [title]="opt.productName">{{ opt.productName }}</span>
+									<span class="picker-cell"
+										  [title]="opt.productName">{{ opt.productName }}</span>
 									<span class="picker-cell picker-cell--center">{{ opt.unit || '—'
 										}}</span>
-									<span class="picker-cell picker-cell--right" [title]="opt.quantity">
-										{{ opt.quantity || '—' }}
+									<span class="picker-cell picker-cell--right"
+										  [title]="opt.quantity">
+										{{ opt.quantity != null ? (opt.quantity | number:'1.0-2') :'—' }}
 									</span>
-									<span class="picker-cell picker-cell--right" [title]="opt.unitPrice">
-										{{ opt.unitPrice || '—' }}
+									<span class="picker-cell picker-cell--right"
+										  [title]="opt.unitPrice">
+										{{ opt.unitPrice != null ? (opt.unitPrice | number:'1.0-2') :'—' }}
 									</span>
 								</div>
 							</ng-template>
 						</p-select>
 					</div>
+
+					<section class="panel lines">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('purchaseOrderDeliverySchedule.title') }}</h2>
+							<span class="panel__scope">
+								{{ i18n.t('purchaseOrderDeliverySchedule.lineCount', { count: scheduleRows().length }) }}
+							</span>
+							<button type="button" class="lines__add" (click)="addScheduleRow()">
+								<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+									<line x1="12" y1="5" x2="12" y2="19" />
+									<line x1="5" y1="12" x2="19" y2="12" />
+								</svg>
+								<span>{{ i18n.t('purchaseOrderDeliverySchedule.addLine') }}</span>
+							</button>
+						</div>
+
+						<div class="lines__scroll">
+							<p-table [value]="scheduleRows()"
+									 dataKey="id"
+									 [showGridlines]="true"
+									 class="grid grid--edit"
+									 scrollable="true"
+									 scrollHeight="flex">
+								<ng-template #header>
+									<tr>
+										<th class="col-idx">#</th>
+										<th class="col-quantity">
+											{{ i18n.t('purchaseOrderDeliverySchedule.quantity') }}
+											<span class="req">*</span>
+										</th>
+										<th class="col-deliveryDate">{{
+											i18n.t('purchaseOrderDeliverySchedule.deliveryDate')
+											}}</th>
+										<!-- <th class="col-remark">{{ i18n.t('purchaseOrderDeliverySchedule.remark') }}</th> -->
+										<th class="col-act">{{ i18n.t('common.actions') }}</th>
+									</tr>
+								</ng-template>
+
+								<ng-template #body let-row let-i="rowIndex">
+									<tr class="row row--edit">
+										<td class="col-idx">{{ i + 1 }}</td>
+										<td class="col-quantity">
+											<p-inputnumber inputStyleClass="cell-input cell-input--num"
+														   [(ngModel)]="row.quantity"
+														   mode="decimal"
+														   [showButtons]="true"
+														   inputId="minmax-buttons"
+														   [min]="0" />
+										</td>
+
+										<td class="col-deliveryDate">
+											<input pInputText
+												   class="w-full"
+												   id="ds-deliveryDate"
+												   name="deliveryDate"
+												   type="datetime-local"
+												   [(ngModel)]="row.deliveryDate" />
+										</td>
+
+										<!-- <td class="col-remark">
+											<textarea pTextarea
+													  class="cell-input"
+													  autocomplete="off"
+													  rows="2"
+													  [(ngModel)]="row.remark"></textarea>
+										</td> -->
+
+										<td class="col-act">
+											<button type="button"
+													class="row-del"
+													[title]="i18n.t('purchaseOrderDetail.removeLine')"
+													[attr.aria-label]="i18n.t('purchaseOrderDetail.removeLine')"
+													(click)="removeScheduleRow(row)">
+												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+													<line x1="6" y1="6" x2="18" y2="18" />
+													<line x1="18" y1="6" x2="6" y2="18" />
+												</svg>
+											</button>
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #footer>
+									<tr class="lines__total">
+										<td colspan="2">{{ i18n.t('purchaseOrderDeliverySchedule.total') }}</td>
+										<td class="col-totalquantity">{{ scheduleTotalQuantity() | number: '1.0-2' }}
+										</td>
+										<td colspan="1"></td>.
+									</tr>
+								</ng-template>
+
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="4">
+											<p class="empty">{{ i18n.t('purchaseOrderDeliverySchedule.emptyLine') }}</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
 				</div>
 
-				<section class="panel lines">
-					<div class="panel__head">
-						<h2 class="panel__title">{{ i18n.t('purchaseOrderDeliverySchedule.schedule') }}</h2>
-						<span class="panel__scope">{{ i18n.t('purchaseOrderDeliverySchedule.lineCount', { count:
-							scheduleRows().length })
-							}}</span>
-						<button type="button" class="lines__add" (click)="addScheduleRow()">
-							<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-								stroke-width="1.8">
-								<line x1="12" y1="5" x2="12" y2="19" />
-								<line x1="5" y1="12" x2="19" y2="12" />
-							</svg>
-							<span>{{ i18n.t('purchaseOrderDetail.addLine') }}</span>
-						</button>
-					</div>
 
-					<div class="lines__scroll">
-						<p-table [value]="scheduleRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
-							scrollable="true" scrollHeight="flex">
-							<ng-template #header>
-								<tr>
-									<th class="col-idx">#</th>
-									<th class="col-quantity">
-										{{ i18n.t('purchaseOrderDeliverySchedule.quantity') }}
-										<span class="req">*</span>
-									</th>
-									<th class="col-deliveryDate">{{ i18n.t('purchaseOrderDeliverySchedule.deliveryDate')
-										}}</th>
-									<th class="col-remark">{{ i18n.t('purchaseOrderDeliverySchedule.remark') }}</th>
-									<th class="col-act">{{ i18n.t('common.actions') }}</th>
-								</tr>
-							</ng-template>
-
-							<ng-template #body let-row let-i="rowIndex">
-								<tr class="row row--edit">
-									<td class="col-idx">{{ i + 1 }}</td>
-
-									<td class="col-quantity">
-										<p-inputnumber inputStyleClass="cell-input cell-input--num"
-											[(ngModel)]="row.quantity" mode="decimal" [showButtons]="true"
-											inputId="minmax-buttons" [min]="0" />
-									</td>
-
-									<td class="col-deliveryDate">
-										<input pInputText id="ds-deliveryDate" name="deliveryDate" type="datetime-local"
-											[(ngModel)]="row.deliveryDate" />
-									</td>
-
-									<td class="col-remark">
-										<textarea pTextarea class="cell-input" autocomplete="off" rows="2"
-											[(ngModel)]="row.remark"></textarea>
-									</td>
-
-									<td class="col-act">
-										<button type="button" class="row-del"
-											[title]="i18n.t('purchaseOrderDetail.removeLine')"
-											[attr.aria-label]="i18n.t('purchaseOrderDetail.removeLine')"
-											(click)="removeScheduleRow(row)">
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-												<line x1="6" y1="6" x2="18" y2="18" />
-												<line x1="18" y1="6" x2="6" y2="18" />
-											</svg>
-										</button>
-									</td>
-								</tr>
-							</ng-template>
-
-							<ng-template #footer>
-								<tr class="lines__total">
-									<td colspan="1">{{ i18n.t('purchaseOrderDeliverySchedule.totalQuantity') }}</td>
-									<td class="col-totalquantity">{{ scheduleTotalQuantity() | number: '1.0-2' }}</td>
-									<td colspan="3"></td>.
-								</tr>
-							</ng-template>
-
-							<ng-template #emptymessage>
-								<tr>
-									<td colspan="8">
-										<p class="empty">{{ i18n.t('purchaseOrderDetail.emptyLine') }}</p>
-									</td>
-								</tr>
-							</ng-template>
-						</p-table>
-					</div>
-				</section>
 			</p-tabpanel>
 		</p-tabpanels>
 	</p-tabs>

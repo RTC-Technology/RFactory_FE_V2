@@ -25,13 +25,14 @@ import { SupplierApiService } from '../../core/services/master-data-api.service'
 import { PurchaseOrderApiService, PurchaseOrderDeliveryScheduleApiService, PurchaseOrderDetailApiService } from '../../core/services/purchase-order-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { PURCHASE_ORDER_STATUSES, PurchaseOrderDeliveryScheduleDto, PurchaseOrderDeliveryScheduleRequest, PurchaseOrderDetailDto, PurchaseOrderDetailRequest, PurchaseOrderDto } from '../../domain/models/purchase-order.model';
+import { PURCHASE_ORDER_STATUSES, PurchaseOrderDeliveryScheduleDto, PurchaseOrderDeliveryScheduleRequest, PurchaseOrderDetailDto, PurchaseOrderDetailRequest, PurchaseOrderDto, PurchaseOrderRequest } from '../../domain/models/purchase-order.model';
 import { productStatusOf } from '../../domain/models/product.model';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, throwError } from 'rxjs';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChevronDownIcon, ChevronRightIcon } from 'primeng/icons';
 import { TabsModule } from 'primeng/tabs';
+import { ListboxModule } from 'primeng/listbox';
 
 type EntityKind = 'po' | 'poDetail' | 'deliverySchedule';
 
@@ -66,7 +67,7 @@ interface PoDetailOption {
 		TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
 		InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
 		HasPermissionDirective, PanelModule, CardModule, InputNumberModule, AutoCompleteModule,
-		ChevronDownIcon, ChevronRightIcon, TabsModule
+		ChevronDownIcon, ChevronRightIcon, TabsModule, ListboxModule
 	],
 	providers: [MessageService, ConfirmationService],
 	templateUrl: './purchase-order.component.html',
@@ -184,6 +185,21 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 			// .filter(s => s.a)
 			.map(s => ({ label: `${s.supplierCode} · ${s.supplierName}`, value: s.id })));
 
+	readonly statusOptions = computed(() =>
+		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
+	readonly currencyOptions = computed(() =>
+		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
+	readonly paymentTermOptions = computed(() =>
+		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
+	readonly deliveryTermOptions = computed(() =>
+		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
+	readonly employeeOptions = computed(() =>
+		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+
 	readonly detailOptions = computed<PoDetailOption[]>(() => {
 
 		const details = this.detailApi.items()
@@ -242,6 +258,8 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 	readonly unassignedReceipts = computed(() =>
 		this.poApi.items().filter(b => b.id == null).length);
 
+	readonly isScheduleChanged = signal(false);
+
 	constructor() {
 		// The toolbar still gates through `*appHasPermission`: its `<ng-template>` already
 		// binds a `canAdd` context variable meaning "a row can be added right now", which
@@ -262,6 +280,10 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		// 	const schedules = this.schedule();
 		// 	untracked(() => this.selectedSchedule.set(this._reconcile(this.selectedSchedule(), schedules)));
 		// });
+		effect(() => {
+			this.scheduleRows();
+			this.isScheduleChanged.set(true);
+		});
 	}
 
 	ngOnInit(): void {
@@ -369,15 +391,35 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		this.editingId.set(row.id);
 		this.formError.set('');
 
+		// console.log("row:", row);
+
 		this.form = {
 			id: row.id,
+
 			pono: row.pono ?? '',
-			supplierId: row.supplierId ?? null,
+			supplierId: row.supplierId ?? 0,
 			orderDate: this._toLocalInput(row.orderDate),
-			expectedDeliveryDate: this._toLocalInput(row.expectedDeliveryDate),
+			expectedDeliveryDate: this._toLocalInput(row.expectedDeliveryDate) || null,
 			status: row.status ?? 1,
-			// remark: row.remark?.trim() || '',
+
+			currencyId: row.currencyId ?? null,
+			exchangeRate: row.exchangeRate ?? null,
+			paymentTermId: row.paymentTermId ?? null,
+			deliveryTermId: row.deliveryTermId ?? null,
+			employeeId: row.employeeId ?? null,
+
+			requestedDate: this._toLocalInput(row.requestedDate) || null,
+
+			subTotal: row.subTotal ?? 0,
+			discountAmount: row.discountAmount ?? 0,
+			taxAmount: row.taxAmount ?? 0,
+			shippingAmount: row.shippingAmount ?? 0,
+			otherAmount: row.otherAmount ?? 0,
+			totalAmount: row.totalAmount ?? 0,
+
+			remark: row.remark?.trim() ?? null,
 		};
+
 		this.detailRows.set(
 			this.detailApi.items()
 				.filter(d => d.purchaseOrderId === row.id)
@@ -424,54 +466,167 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 
 	// ─── Schedule grid ────────────────────────────────────────────────────────────
 
+	private _currentDetailId: number | null = null;
+
+	/** Snapshot schedule ban đầu của từng Detail */
+	private _originalSchedules = new Map<number, string>();
+
+	/** Trạng thái changed của từng Detail */
+	private _scheduleChanged = new Map<number, boolean>();
+
 	addScheduleRow(): void {
-		this.scheduleRows.update(rows => [...rows, this._emptyScheduleRow()]);
+		// this.scheduleRows.update(rows => [...rows, this._emptyScheduleRow()]);
+		const detailId = this._currentDetailId;
+		if (detailId == null) return;
+
+		const row: PurchaseOrderDeliveryScheduleDto = {
+			...this._emptyScheduleForm(),
+			id: --this._tempDetailId,
+			purchaseOrderDetailId: detailId
+		};
+
+		this.scheduleRows.update(rows => [...rows, row]);
 	}
 
 	removeScheduleRow(row: PurchaseOrderDeliveryScheduleDto): void {
 		// No bookkeeping for lines the server already stores: the save sends the whole set and
 		// the backend deletes whatever is missing from it.
-		this.scheduleRows.update(rows => rows.filter(r => r !== row));
+		// this.scheduleRows.update(rows => rows.filter(r => r !== row));
+		this.scheduleRows.update(rows => rows.filter(x => x.id !== row.id));
 	}
 
 	onDetailPOChange(detailId: number | null): void {
-		this.scheduleRows.set(
-			this.scheduleApi.items()
-				.filter(s => s.purchaseOrderDetailId === detailId)
-				.map(s => ({ ...s })));
+		// ============================
+		// 1. Check Detail cũ trước khi đổi
+		// ============================
+		if (this._currentDetailId != null) {
+			const currentDetailId = this._currentDetailId;
 
+			const changed = this.hasScheduleChanged(currentDetailId);
+
+			this._scheduleChanged.set(currentDetailId, changed);
+
+			console.log(
+				`Detail ${currentDetailId} schedule changed:`,
+				changed, this.scheduleRows()
+			);
+
+			if (changed) {
+				// One call carrying the header and every line: the backend writes them in a single
+				// transaction, so a rejected line cannot leave a receipt behind.
+				this._saveSchedule(currentDetailId).subscribe({
+					next: () => {
+						// this.saving.set(false);
+						// this.dialogOpen.set(false);
+						this.reload();
+						this._ok(this.i18n.t(currentDetailId ? 'plant.ok.updated' : 'plant.ok.created', {
+							entity: this.i18n.t('purchaseOrderDeliverySchedule.lower'),
+						}));
+					},
+					error: (err: HttpErrorResponse) => {
+						this.saving.set(false);
+						this.formError.set(err.error?.message
+							|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('purchaseOrder.lower') }));
+					},
+				});
+			}
+		}
+
+		// ============================
+		// 2. Đổi sang Detail mới
+		// ============================
+		this._currentDetailId = detailId;
+
+		if (detailId == null) {
+			this.scheduleRows.set([]);
+			return;
+		}
+
+		// ============================
+		// 3. Lấy schedule của Detail mới
+		// ============================
+		const rows = this.scheduleApi.items()
+			.filter(s => s.purchaseOrderDetailId === detailId)
+			.map(s => ({ ...s }));
+
+		// ============================
+		// 4. Lưu snapshot ban đầu
+		// ============================
+		if (!this._originalSchedules.has(detailId)) {
+			this._originalSchedules.set(
+				detailId,
+				JSON.stringify(rows)
+			);
+
+			this._scheduleChanged.set(
+				detailId,
+				false
+			);
+		}
+
+		// ============================
+		// 5. Hiển thị schedule của Detail mới
+		// ============================
+		this.scheduleRows.set(rows);
 	}
 
+	hasScheduleChanged(detailId: number): boolean {
+		const original =
+			this._originalSchedules.get(detailId) ?? '[]';
+
+		const current = JSON.stringify(
+			this.scheduleRows()
+		);
+
+		return original !== current;
+	}
 
 	save(): void {
-		// const error = this._validate() || this._validateDetails();
-		// if (error) {
-		// 	this.formError.set(error);
-		// 	return;
-		// }
+		const error = this._validate() || this._validateDetails();
+		if (error) {
+			this.formError.set(error);
+			return;
+		}
 
-		// this.saving.set(true);
-		// this.formError.set('');
+		this.saving.set(true);
+		this.formError.set('');
 
-		// const id = this.editingId();
+		const id = this.editingId();
 
-		// // One call carrying the header and every line: the backend writes them in a single
-		// // transaction, so a rejected line cannot leave a receipt behind.
-		// this._saveIssue(id).subscribe({
-		// 	next: () => {
-		// 		this.saving.set(false);
-		// 		this.dialogOpen.set(false);
-		// 		this.reload();
-		// 		this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
-		// 			entity: this.i18n.t('goodsIssue.lower'),
-		// 		}));
-		// 	},
-		// 	error: (err: HttpErrorResponse) => {
-		// 		this.saving.set(false);
-		// 		this.formError.set(err.error?.message
-		// 			|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('goodsIssue.lower') }));
-		// 	},
-		// });
+		// One call carrying the header and every line: the backend writes them in a single
+		// transaction, so a rejected line cannot leave a receipt behind.
+		this._savePO(id).subscribe({
+			next: () => {
+				this.saving.set(false);
+				this.dialogOpen.set(false);
+				this.reload();
+				this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
+					entity: this.i18n.t('purchaseOrder.lower'),
+				}));
+
+
+				this._saveSchedule(this.formSchedule.purchaseOrderDetailId).subscribe({
+					next: () => {
+						// this.saving.set(false);
+						// this.dialogOpen.set(false);
+						this.reload();
+						this._ok(this.i18n.t(this.formSchedule.purchaseOrderDetailId ? 'plant.ok.updated' : 'plant.ok.created', {
+							entity: this.i18n.t('purchaseOrderDeliverySchedule.lower'),
+						}));
+					},
+					error: (err: HttpErrorResponse) => {
+						this.saving.set(false);
+						this.formError.set(err.error?.message
+							|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('purchaseOrder.lower') }));
+					},
+				});
+			},
+			error: (err: HttpErrorResponse) => {
+				this.saving.set(false);
+				this.formError.set(err.error?.message
+					|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('purchaseOrder.lower') }));
+			},
+		});
 	}
 
 	askDelete(): void {
@@ -479,20 +634,20 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		if (!row) return;
 
 		// this.confirm.confirm({
-		// this.confirm.confirm({
-		//     header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t('goodsIssue.lower') }),
-		//     message: `${this.i18n.t('plant.confirm.message', { label: row.issueNo })} ${this.i18n.t('common.notUndoable')}`,
-		//     acceptLabel: this.i18n.t('common.delete'),
-		//     rejectLabel: this.i18n.t('common.cancel'),
-		//     acceptButtonStyleClass: 'p-button-danger',
-		//     rejectButtonStyleClass: 'p-button-text',
-		//     // The backend owns the "still used by products" rule and returns its own message.
-		//     accept: () => this.goodsIssueApi.remove(row.id).subscribe({
-		//         next: () => { this.reload(); this._ok(this.i18n.t('plant.ok.deleted', { label: row.issueNo })); },
-		//         error: (err: HttpErrorResponse) =>
-		//             this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t('goodsIssue.lower') }), err),
-		//     }),
-		// });
+		this.confirm.confirm({
+			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t('purchaseOrder.lower') }),
+			message: `${this.i18n.t('plant.confirm.message', { label: row.pono })} ${this.i18n.t('common.notUndoable')}`,
+			acceptLabel: this.i18n.t('common.delete'),
+			rejectLabel: this.i18n.t('common.cancel'),
+			acceptButtonStyleClass: 'p-button-danger',
+			rejectButtonStyleClass: 'p-button-text',
+			// The backend owns the "still used by products" rule and returns its own message.
+			accept: () => this.poApi.remove(row.id).subscribe({
+				next: () => { this.reload(); this._ok(this.i18n.t('plant.ok.deleted', { label: row.pono })); },
+				error: (err: HttpErrorResponse) =>
+					this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t('purchaseOrder.lower') }), err),
+			}),
+		});
 	}
 
 	askApprove(isApprove: boolean): void {
@@ -503,45 +658,60 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		const messageKey = isApprove ? 'plant.confirm.approve.message' : 'plant.confirm.unapprove.message';
 		const acceptLabelKey = isApprove ? 'common.approve' : 'common.unapprove';
 
-		// this.confirm.confirm({
-		// 	header: this.i18n.t(headerKey, { entity: this.i18n.t('goodsIssue.lower') }),
-		// 	message: `${this.i18n.t(messageKey, { label: row.issueNo })}`,
-		// 	acceptLabel: this.i18n.t(acceptLabelKey),
-		// 	rejectLabel: this.i18n.t('common.cancel'),
-		// 	acceptButtonStyleClass: isApprove ? 'p-button-success' : 'p-button-danger',
-		// 	rejectButtonStyleClass: 'p-button-text',
-		// 	// The backend owns the "still used by products" rule and returns its own message.
-		// 	accept: () => this._approveIssue(row.id, isApprove).subscribe({
-		// 		next: () => {
-		// 			this.saving.set(false);
-		// 			this.dialogOpen.set(false);
-		// 			this.reload();
-		// 			this._ok(this.i18n.t(isApprove ? 'plant.ok.approved' : 'plant.ok.unapproved', {
-		// 				label: row.issueNo
-		// 			}));
-		// 		},
-		// 		error: (err: HttpErrorResponse) => {
-		// 			this.saving.set(false);
-		// 			this.formError.set(err.error?.message
-		// 				|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('goodsIssue.lower') }));
-		// 		},
-		// 	}),
-		// });
+		this.confirm.confirm({
+			header: this.i18n.t(headerKey, { entity: this.i18n.t('purchaseOrder.lower') }),
+			message: `${this.i18n.t(messageKey, { label: row.pono })}`,
+			acceptLabel: this.i18n.t(acceptLabelKey),
+			rejectLabel: this.i18n.t('common.cancel'),
+			acceptButtonStyleClass: isApprove ? 'p-button-success' : 'p-button-danger',
+			rejectButtonStyleClass: 'p-button-text',
+			// The backend owns the "still used by products" rule and returns its own message.
+			accept: () => this._approvePO(row.id, isApprove).subscribe({
+				next: () => {
+					this.saving.set(false);
+					this.dialogOpen.set(false);
+					this.reload();
+					this._ok(this.i18n.t(isApprove ? 'plant.ok.approved' : 'plant.ok.unapproved', {
+						label: row.pono
+					}));
+				},
+				error: (err: HttpErrorResponse) => {
+					this.saving.set(false);
+					this.formError.set(err.error?.message
+						|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('goodsIssue.lower') }));
+				},
+			}),
+		});
 	}
-
-
-
 
 
 	// ─── Internals ──────────────────────────────────────────────────────────────
 	private _emptyForm() {
 		return {
 			id: 0,
+
 			pono: '',
 			supplierId: 0,
 			orderDate: formatDate(new Date(), DATETIME_LOCAL, 'en-US'),
 			expectedDeliveryDate: null as string | null,
 			status: 1,
+
+			currencyId: null as number | null,
+			exchangeRate: null as number | null,
+			paymentTermId: null as number | null,
+			deliveryTermId: null as number | null,
+			employeeId: null as number | null,
+
+			requestedDate: null as string | null,
+
+			subTotal: 0,
+			discountAmount: 0,
+			taxAmount: 0,
+			shippingAmount: 0,
+			otherAmount: 0,
+			totalAmount: 0,
+
+			remark: null as string | null,
 		};
 	}
 
@@ -549,17 +719,28 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		return {
 			id: --this._tempDetailId,
 			purchaseOrderId: 0,
+			stt: 0,
 			productId: 0,
 			unitId: 0,
+			requiredDate: null as string | null,
 			quantity: 0,
-			unitPrice: null as number | null,
+			receivedQuantity: 0,
+			rejectedQuantity: 0,
+			unitPrice: 0,
+			discountPercent: 0,
+			discountAmount: 0,
+			taxPercent: 0,
+			taxAmount: 0,
+			totalAmount: 0,
+			warehouseId: null as number | null,
+			remark: null as string | null
 		};
 	}
 
 	private _emptyScheduleForm(): PurchaseOrderDeliveryScheduleDto {
 		return {
 			id: 0,
-			purchaseOrderDetailId: 0,
+			purchaseOrderDetailId: this._currentDetailId ?? 0,
 			deliveryDate: formatDate(new Date(), DATETIME_LOCAL, 'en-US'),
 			quantity: 0,
 		};
@@ -568,7 +749,7 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 	private _emptyScheduleRow(): PurchaseOrderDeliveryScheduleDto {
 		return {
 			id: --this._tempDetailId,
-			purchaseOrderDetailId: 0,
+			purchaseOrderDetailId: this.formSchedule.purchaseOrderDetailId,
 			deliveryDate: formatDate(new Date(), DATETIME_LOCAL, 'en-US'),
 			quantity: 0,
 		};
@@ -613,118 +794,163 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 	}
 
 
-	// private _validate(): string {
-	//     const issueNo = this.form.issueNo.trim();
+	private _validate(): string {
+		const pono = this.form.pono.trim();
 
-	//     if (!issueNo) {
-	//         return this.i18n.t('goodsIssue.err.issueNoRequired');
-	//     }
+		if (!pono) {
+			return this.i18n.t('purchaseOrder.err.poNoRequired');
+		}
 
-	//     if (!this.form.issueDate) {
-	//         return this.i18n.t('goodsIssue.err.issueDateRequired');
-	//     }
+		if (!this.form.orderDate) {
+			return this.i18n.t('purchaseOrder.err.orderDateRequired');
+		}
 
-	//     if (!this.form.status) {
-	//         return this.i18n.t('goodsIssue.err.statusRequired');
-	//     }
+		if (!this.form.supplierId) {
+			return this.i18n.t('purchaseOrder.err.supplierRequired');
+		}
 
-	//     // IssueNo is unique across the entire goods issue list.
-	//     const clash = this.goodsIssueApi.items().find(
-	//         issue =>
-	//             issue.issueNo.toLowerCase() === issueNo.toLowerCase() &&
-	//             issue.id !== this.editingId(),
-	//     );
+		// IssueNo is unique across the entire goods issue list.
+		const clash = this.po().find(
+			po =>
+				po.pono.toLowerCase() === pono.toLowerCase() &&
+				po.id !== this.editingId(),
+		);
 
-	//     return clash
-	//         ? this.i18n.t('goodsIssue.err.issueNoTaken', { issueNo })
-	//         : '';
-	// }
+		return clash
+			? this.i18n.t('purchaseOrder.err.poNoTaken', { pono })
+			: '';
+	}
 
 	/** Reports the first bad line by its position — the operator reads the grid by row, not by id. */
-	// private _validateDetails(): string {
-	//     const rows = this.detailRows();
-	//     if (rows.length === 0) return this.i18n.t('goodsIssueDetail.err.linesRequired');
+	private _validateDetails(): string {
+		const rows = this.detailRows();
+		if (rows.length === 0) return this.i18n.t('purchaseOrderDetail.err.linesRequired');
 
-	//     for (let i = 0; i < rows.length; i++) {
-	//         const row = rows[i];
-	//         const line = i + 1;
+		for (let i = 0; i < rows.length; i++) {
+			const row = rows[i];
+			const line = i + 1;
 
-	//         if (!row.productId) return this.i18n.t('goodsIssueDetail.err.productRequired', { line });
-	//         if (!row.unitId) return this.i18n.t('goodsIssueDetail.err.unitRequired', { line });
-	//         if (!row.locationId) return this.i18n.t('goodsIssueDetail.err.locationRequired', { line });
-	//         if (!row.serialNo) return this.i18n.t('goodsIssueDetail.err.serialNoRequired', { line });
-	//         if (!row.quantity || row.quantity <= 0) return this.i18n.t('goodsIssueDetail.err.quantityRequired', { line });
+			if (!row.productId) return this.i18n.t('purchaseOrderDetail.err.productRequired', { line });
+			if (!row.unitId) return this.i18n.t('purchaseOrderDetail.err.unitRequired', { line });
+			if (!row.quantity || row.quantity <= 0) return this.i18n.t('purchaseOrderDetail.err.quantityRequired', { line });
 
-	//     }
+		}
 
-	//     return '';
-	// }
+		return '';
+	}
 
-	// private _savePo(id: number | null): Observable<GoodsIssueDto> {
-	//     const body: GoodsIssueRequest = {
-	//         issueNo: this.form.issueNo.trim(),
-	//         issueType: this.form.issueType ?? 1,
-	//         warehouseId: this.form.warehouseId,
-	//         referenceType: this.form.referenceType?.trim() || null,
-	//         referenceId: this.form.referenceId,
-	//         issueDate: this.form.issueDate,
-	//         status: this.form.status ?? 1,
-	//         remark: this.form.remark?.trim() || null,
-	//         approvedBy: this.form.approvedBy,
-	//         approvedDate: this.form.approvedDate,
-	//         postedBy: this.form.postedBy,
-	//         postedDate: this.form.postedDate,
-	//         // The whole line set every time: the backend replaces what it holds, which is how a
-	//         // line the operator removed from the grid gets deleted.
-	//         goodsIssueDetails: this.detailRows().map(row => ({
-	//             // Drafts carry a negative id so the grid can key them; the server reads 0 as "new".
-	//             id: row.id > 0 ? row.id : 0,
-	//             goodsIssueId: row.goodsIssueId ?? 0,
-	//             productId: row.productId,
-	//             unitId: row.unitId,
-	//             locationId: row.locationId ?? null,
-	//             lotNo: row.lotNo?.trim() || null,
-	//             serialNo: row.serialNo?.trim() || null,
-	//             quantity: row.quantity ?? null,
-	//             unitPrice: row.unitPrice ?? null,
-	//             remark: row.remark?.trim() || null,
-	//         })),
-	//     };
-	//     return id ? this.goodsIssueApi.update(id, body) : this.goodsIssueApi.create(body);
-	// }
+	private _savePO(id: number | null): Observable<PurchaseOrderDto> {
+		const body: PurchaseOrderRequest = {
+			pono: this.form.pono.trim(),
+			supplierId: this.form.supplierId ?? 0,
+			orderDate: this.form.orderDate,
+			expectedDeliveryDate: this.form.expectedDeliveryDate || null,
+			currencyId: this.form.currencyId,
+			exchangeRate: this.form.exchangeRate,
+			paymentTermId: this.form.paymentTermId,
+			deliveryTermId: this.form.deliveryTermId,
+			employeeId: this.form.employeeId,
+			requestedDate: this.form.requestedDate,
+			subTotal: this.form.subTotal,
+			discountAmount: this.form.discountAmount,
+			taxAmount: this.form.taxAmount,
+			shippingAmount: this.form.shippingAmount,
+			otherAmount: this.form.otherAmount,
+			totalAmount: this.form.totalAmount,
+			status: this.form.status,
+			remark: this.form.remark?.trim() || null,
 
-	// private _approveIssue(id: number | null, isApprove: boolean): Observable<GoodsIssueDto> {
-	//     if (id == null) {
-	//         return throwError(() => new Error(this.i18n.t('goodsIssue.err.notFound')));
-	//     }
+			// The whole line set every time: the backend replaces what it holds, which is how a
+			// line the operator removed from the grid gets deleted.
+			purchaseOrderDetailRequests: this.detailRows().map((row, i) => ({
+				// Drafts carry a negative id so the grid can key them; the server reads 0 as "new".
+				id: row.id > 0 ? row.id : 0,
+				stt: i + 1,
+				purchaseOrderId: row.purchaseOrderId ?? 0,
+				productId: row.productId,
+				unitId: row.unitId,
+				requiredDate: row.requiredDate,
+				quantity: row.quantity ?? null,
+				receivedQuantity: row.receivedQuantity,
+				rejectedQuantity: row.rejectedQuantity,
+				unitPrice: row.unitPrice ?? null,
+				discountPercent: row.discountPercent,
+				discountAmount: row.discountAmount,
+				taxPercent: row.taxPercent,
+				taxAmount: row.taxAmount,
+				totalAmount: row.totalAmount,
+				warehouseId: row.warehouseId,
+				remark: row.remark?.trim() || null,
+			})),
+		};
+		return id ? this.poApi.update(id, body) : this.poApi.create(body);
+	}
 
-	//     const issue = this.goodsIssueApi.items().find(r => r.id === id);
-	//     if (!issue) {
-	//         return throwError(() => new Error(this.i18n.t('goodsIssue.err.notFound')));
-	//     }
+	private _approvePO(id: number | null, isApprove: boolean): Observable<PurchaseOrderDto> {
+		if (id == null) {
+			return throwError(() => new Error(this.i18n.t('purchaseOrder.err.notFound')));
+		}
 
-	//     const body: GoodsIssueRequest = {
-	//         issueNo: issue.issueNo,
-	//         warehouseId: issue.warehouseId,
-	//         referenceType: issue.referenceType ?? null,
-	//         referenceId: issue.referenceId,
-	//         issueDate: issue.issueDate,
-	//         remark: issue.remark ?? null,
+		const po = this.po().find(r => r.id === id);
+		if (!po) {
+			return throwError(() => new Error(this.i18n.t('purchaseOrder.err.notFound')));
+		}
 
-	//         approvedBy: issue.approvedBy,
-	//         approvedDate: isApprove
-	//             ? formatDate(new Date(), DATETIME_LOCAL, 'en-US')
-	//             : null,
+		const body: PurchaseOrderRequest = {
+			pono: po.pono.trim(),
+			supplierId: po.supplierId ?? 0,
+			orderDate: po.orderDate,
+			expectedDeliveryDate: po.expectedDeliveryDate || null,
+			currencyId: po.currencyId,
+			exchangeRate: po.exchangeRate,
+			paymentTermId: po.paymentTermId,
+			deliveryTermId: po.deliveryTermId,
+			employeeId: po.employeeId,
+			requestedDate: po.requestedDate || null,
+			subTotal: po.subTotal,
+			discountAmount: po.discountAmount,
+			taxAmount: po.taxAmount,
+			shippingAmount: po.shippingAmount,
+			otherAmount: po.otherAmount,
+			totalAmount: po.totalAmount,
+			status: po.status,
+			remark: po.remark?.trim() || null,
 
-	//         postedBy: issue.postedBy,
-	//         postedDate: issue.postedDate,
+			approvedBy: po.approvedBy,
+			approvedDate: isApprove ? formatDate(new Date(), DATETIME_LOCAL, 'en-US') : null,
+		};
 
-	//         issueType: issue.issueType ?? 1,
-	//         status: issue.status ?? 1,
-	//     };
+		return this.poApi.update(id, body);
+	}
 
-	//     return this.goodsIssueApi.update(id, body);
-	// }
+	private _saveSchedule(id: number | null): Observable<PurchaseOrderDetailDto> {
+		const body: PurchaseOrderDetailRequest = {
+			purchaseOrderId: 0,
+			stt: 0,
+			productId: 0,
+			unitId: 0,
+			requiredDate: null,
+			quantity: 0,
+			receivedQuantity: 0,
+			rejectedQuantity: 0,
+			unitPrice: 0,
+			discountPercent: 0,
+			discountAmount: 0,
+			taxPercent: 0,
+			taxAmount: 0,
+			totalAmount: 0,
+			warehouseId: 0,
+			remark: '',
+			purchaseOrderDeliveryScheduleRequests: this.scheduleRows().map((row, i) => ({
+				id: row.id > 0 ? row.id : 0,
+				purchaseOrderDetailId: row.purchaseOrderDetailId ?? 0,
+				deliveryDate: row.deliveryDate,
+				quantity: row.quantity ?? 0,
+			})),
+		};
+		return id ? this.detailApi.update(id, body) : this.detailApi.create(body);
+	}
+
 
 	private _reconcile<T extends { id: number }>(current: T | null, rows: T[]): T | null {
 		const match = current ? rows.find(row => row.id === current.id) : undefined;

@@ -1,20 +1,58 @@
 //Dto
 export interface PurchaseOrderDto {
     id: number;
+
     pono: string;
     supplierId: number;
     orderDate: string;
     expectedDeliveryDate?: string | null;
     status?: number | null;
+
+    currencyId?: number | null;
+    exchangeRate?: number | null;
+    paymentTermId?: number | null;
+    deliveryTermId?: number | null;
+    employeeId?: number | null;
+
+    requestedDate?: string | null;
+
+    subTotal?: number | null;
+    discountAmount?: number | null;
+    taxAmount?: number | null;
+    shippingAmount?: number | null;
+    otherAmount?: number | null;
+    totalAmount?: number | null;
+
+    remark?: string | null;
+
+    approvedDate?: string | null;
+    approvedBy?: string | null;
 }
 
 export interface PurchaseOrderDetailDto {
     id: number;
     purchaseOrderId: number;
+    stt: number;
     productId: number;
     unitId: number;
+    requiredDate?: string | null;
+
     quantity: number;
-    unitPrice?: number | null;
+    receivedQuantity?: number | null;
+    rejectedQuantity?: number | null;
+
+    unitPrice: number;
+
+    discountPercent: number;
+    discountAmount: number;
+
+    taxPercent: number;
+    taxAmount: number;
+
+    totalAmount: number;
+
+    warehouseId?: number | null;
+    remark?: string | null;
 }
 
 export interface PurchaseOrderDeliveryScheduleDto {

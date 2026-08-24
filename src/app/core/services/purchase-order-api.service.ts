@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { CrudApiService } from './crud-api.service';
-import { PurchaseOrderDeliveryScheduleDto, PurchaseOrderDeliveryScheduleRequest, PurchaseOrderDetailDto, PurchaseOrderDto, PurchaseOrderRequest } from '../../domain/models/purchase-order.model';
+import { PurchaseOrderDeliveryScheduleDto, PurchaseOrderDeliveryScheduleRequest, PurchaseOrderDetailDto, PurchaseOrderDetailRequest, PurchaseOrderDto, PurchaseOrderRequest } from '../../domain/models/purchase-order.model';
 import { GoodsIssueDetailRequest } from '../../domain/models/goods-issue.model';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class PurchaseOrderApiService extends CrudApiService<PurchaseOrderDto, Pu
 @Injectable({
 	providedIn: 'root',
 })
-export class PurchaseOrderDetailApiService extends CrudApiService<PurchaseOrderDetailDto, GoodsIssueDetailRequest> {
+export class PurchaseOrderDetailApiService extends CrudApiService<PurchaseOrderDetailDto, PurchaseOrderDetailRequest> {
 	protected readonly baseUrl = `${environment.apiUrl}/purchase-order/details`;
 }
 

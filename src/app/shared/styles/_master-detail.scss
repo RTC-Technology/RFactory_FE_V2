@@ -454,6 +454,10 @@
 	color: var(--text-muted);
 }
 
+.picker-cell--right {
+	text-align: right;
+}
+
 .field-row {
 	display: flex;
 	gap: 12px;

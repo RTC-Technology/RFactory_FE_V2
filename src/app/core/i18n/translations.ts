@@ -2105,14 +2105,55 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	},
 
 	// purchase-order
-	'purchaseOrder.title': { vi: 'Đơn mua hàng', en: 'Purchase Order' },
-	'purchaseOrder.lower': { vi: 'đơn mua hàng', en: 'purchase order' },
-	'purchaseOrder.empty': { vi: 'Chưa có đơn mua hàng nào.', en: 'No purchase orders found.' },
-	'purchaseOrder.pono': { vi: 'Số đơn mua', en: 'PO No' },
+	'purchaseOrder.title': { vi: 'Đơn đặt hàng', en: 'Purchase Order' },
+	'purchaseOrder.lower': { vi: 'đơn đặt hàng', en: 'purchase order' },
+	'purchaseOrder.empty': { vi: 'Chưa có đơn đặt hàng nào.', en: 'No purchase orders found.' },
+
+	'purchaseOrder.pono': { vi: 'Số đơn', en: 'PO No' },
 	'purchaseOrder.supplier': { vi: 'Nhà cung cấp', en: 'Supplier' },
 	'purchaseOrder.orderDate': { vi: 'Ngày đặt hàng', en: 'Order Date' },
 	'purchaseOrder.expectedDeliveryDate': { vi: 'Ngày giao dự kiến', en: 'Expected Delivery Date' },
+	'purchaseOrder.status': { vi: 'Trạng thái', en: 'Status' },
+	'purchaseOrder.currency': { vi: 'Tiền tệ', en: 'Currency' },
+	'purchaseOrder.exchangeRate': { vi: 'Tỷ giá', en: 'Exchange Rate' },
+	'purchaseOrder.paymentTerm': { vi: 'Điều khoản thanh toán', en: 'Payment Terms' },
+	'purchaseOrder.deliveryTerm': { vi: 'Điều khoản giao hàng', en: 'Delivery Terms' },
+	'purchaseOrder.deliveryAddress': { vi: 'Địa chỉ giao hàng', en: 'Delivery Address' },
+	'purchaseOrder.employee': { vi: 'Nhân viên', en: 'Employee' },
+	'purchaseOrder.requestedDate': { vi: 'Ngày yêu cầu', en: 'Expected Delivery Date' },
+	'purchaseOrder.subTotal': { vi: 'Tổng trước thuế', en: 'Sub Total' },
+	'purchaseOrder.discountAmount': { vi: 'Số tiền giảm giá', en: 'Discount Amount' },
+	'purchaseOrder.taxAmount': { vi: 'Số tiền thuế', en: 'Tax Amount' },
+	'purchaseOrder.shippingAmount': { vi: 'Phí vận chuyển', en: 'Shipping Amount' },
+	'purchaseOrder.otherAmount': { vi: 'Chi phí khác', en: 'Other Amount' },
+	'purchaseOrder.totalAmount': { vi: 'Tổng tiền', en: 'Total Amount' },
+	'purchaseOrder.remark': { vi: 'Ghi chú', en: 'Remark' },
+	'purchaseOrder.approvedDate': { vi: 'Ngày duyệt', en: 'Approved Date' },
+	'purchaseOrder.approvedBy': { vi: 'Người duyệt', en: 'Approved By' },
+
+	'purchaseOrder.supplier.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'purchaseOrder.status.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'purchaseOrder.currency.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'purchaseOrder.paymentTerm.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'purchaseOrder.deliveryTerm.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'purchaseOrder.employee.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+
 	'purchaseOrder.err.load': { vi: 'Không tải được dữ liệu đơn mua hàng.', en: 'Could not load purchase order data.' },
+	'purchaseOrder.err.ponoRequired': {
+		vi: 'Số PO không được để trống.',
+		en: 'PO number is required.',
+	},
+
+	'purchaseOrder.err.supplierRequired': {
+		vi: 'Nhà cung cấp không được để trống.',
+		en: 'Supplier is required.',
+	},
+
+	'purchaseOrder.err.orderDateRequired': {
+		vi: 'Ngày đặt hàng không được để trống.',
+		en: 'Order date is required.',
+	},
+
 	'purchaseOrder.status.draft': { vi: 'Nháp', en: 'Draft' },
 	'purchaseOrder.status.approved': { vi: 'Đã duyệt', en: 'Approved' },
 	'purchaseOrder.status.partiallyReceived': { vi: 'Nhận một phần', en: 'Partially Received' },
@@ -2120,22 +2161,80 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'purchaseOrder.status.cancelled': { vi: 'Đã huỷ', en: 'Cancelled' },
 	'purchaseOrder.status.closed': { vi: 'Đã đóng', en: 'Closed' },
 
-	'purchaseOrderDetail.title': { vi: 'Chi tiết đơn mua hàng', en: 'Purchase Order Details' },
-	'purchaseOrderDetail.lower': { vi: 'chi tiết đơn mua hàng', en: 'purchase Order Details' },
+	'purchaseOrderDetail.title': { vi: 'Chi tiết đơn đặt hàng', en: 'Purchase Order Details' },
+	'purchaseOrderDetail.lower': { vi: 'chi tiết đơn đặt hàng', en: 'purchase Order Details' },
 	'purchaseOrderDetail.scopeOf': { vi: 'của {name}', en: 'of {name}' },
 	'purchaseOrderDetail.emptyLine': { vi: 'Đơn mua hàng này chưa có dòng nào.', en: 'This purchase order has no detail lines yet.' },
 	'purchaseOrderDetail.emptyLineHint': { vi: 'Chọn một đơn mua hàng ở panel phía trên.', en: 'Pick a purchase order in the panel above.' },
+
+	'purchaseOrderDetail.stt': { vi: 'STT', en: 'STT' },
 	'purchaseOrderDetail.product': { vi: 'Sản phẩm', en: 'Product' },
 	'purchaseOrderDetail.unit': { vi: 'Đơn vị tính', en: 'Unit' },
 	'purchaseOrderDetail.quantity': { vi: 'Số lượng', en: 'Quantity' },
 	'purchaseOrderDetail.unitPrice': { vi: 'Đơn giá', en: 'Unit Price' },
+	'purchaseOrderDetail.requiredDate': { vi: 'Ngày yêu cầu', en: 'Required Date' },
+	'purchaseOrderDetail.receivedQuantity': { vi: 'Đã nhận', en: 'Received Quantity' },
+	'purchaseOrderDetail.rejectedQuantity': { vi: 'Đã từ chối', en: 'Rejected Quantity' },
+	'purchaseOrderDetail.discountPercent': { vi: 'Chiết khấu (%)', en: 'Discount (%)' },
+	'purchaseOrderDetail.discountAmount': { vi: 'Tiền chiết khấu', en: 'Discount Amount' },
+	'purchaseOrderDetail.taxPercent': { vi: 'Thuế (%)', en: 'Tax (%)' },
+	'purchaseOrderDetail.taxAmount': { vi: 'Tiền thuế', en: 'Tax Amount' },
+	'purchaseOrderDetail.totalAmount': { vi: 'Thành tiền', en: 'Total Amount' },
+	'purchaseOrderDetail.warehouse': { vi: 'Kho nhận hàng', en: 'Warehouse' },
+	'purchaseOrderDetail.remark': { vi: 'Ghi chú', en: 'Remark' },
+
+	'purchaseOrderDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+	'purchaseOrderDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+	'purchaseOrderDetail.removeLine': { vi: 'Xoá dòng', en: 'Remove line' },
+
+	'purchaseOrderDetail.selectProduct': { vi: 'Chọn sản phẩm…', en: 'Pick a product…' },
+	'purchaseOrderDetail.selectUnit': { vi: 'Chọn ĐVT…', en: 'Pick a unit…' },
+	'purchaseOrderDetail.selectWarehouse': { vi: 'Chọn kho…', en: 'Pick a warehouse…' },
+
+	'purchaseOrderDetail.err.linesRequired': {
+		vi: 'Đơn mua hàng phải có ít nhất một sản phẩm.',
+		en: 'A purchase order needs at least one product line.',
+	},
+
+	'purchaseOrderDetail.err.productRequired': {
+		vi: 'Dòng {line}: chưa chọn sản phẩm.',
+		en: 'Line {line}: no product selected.',
+	},
+
+	'purchaseOrderDetail.err.unitRequired': {
+		vi: 'Dòng {line}: chưa chọn đơn vị tính.',
+		en: 'Line {line}: no unit selected.',
+	},
+
+	'purchaseOrderDetail.err.quantityRequired': {
+		vi: 'Dòng {line}: số lượng không được để trống.',
+		en: 'Line {line}: quantity is required.',
+	},
+
+	'purchaseOrderDetail.err.unitPriceRequired': {
+		vi: 'Dòng {line}: đơn giá không được để trống.',
+		en: 'Line {line}: unit price is required.',
+	},
+
+	'purchaseOrderDetail.err.requiredDateRequired': {
+		vi: 'Dòng {line}: ngày yêu cầu không được để trống.',
+		en: 'Line {line}: required date is required.',
+	},
+	'purchaseOrderDetail.total': { vi: 'Tổng tiền', en: 'Total' },
 
 	'purchaseOrderDeliverySchedule.title': { vi: 'Lịch giao hàng', en: 'Delivery Schedule' },
 	'purchaseOrderDeliverySchedule.lower': { vi: 'lịch giao hàng', en: 'delivery schedule' },
 	'purchaseOrderDeliverySchedule.scopeOf': { vi: 'của {name}', en: 'of {name}' },
 	'purchaseOrderDeliverySchedule.deliveryDate': { vi: 'Ngày giao', en: 'Delivery Date' },
 	'purchaseOrderDeliverySchedule.quantity': { vi: 'Số lượng', en: 'Quantity' },
+
+	'purchaseOrderDeliverySchedule.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+	'purchaseOrderDeliverySchedule.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+	'purchaseOrderDeliverySchedule.removeLine': { vi: 'Xoá dòng', en: 'Remove line' },
+	'purchaseOrderDeliverySchedule.total': { vi: 'Tổng số', en: 'Total' },
+
 	'purchaseOrderDeliverySchedule.empty': { vi: 'Dòng này chưa có lịch giao hàng.', en: 'This detail line has no delivery schedule yet.' },
 	'purchaseOrderDeliverySchedule.emptyHint': { vi: 'Chọn một dòng chi tiết ở panel phía trên.', en: 'Pick a detail line in the panel above.' },
+	'purchaseOrderDeliverySchedule.emptyLine': { vi: 'Sản phẩm này chưa có lịch giao hàng.', en: 'This product has no delivery schedule yet.' },
 
 };
