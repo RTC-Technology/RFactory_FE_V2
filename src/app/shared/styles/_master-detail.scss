@@ -7,405 +7,405 @@
    `::ng-deep` blocks below. */
 
 :host {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  animation: fadeUp 0.3s ease;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	animation: fadeUp 0.3s ease;
 
-  --grid-line: color-mix(in srgb, var(--text-muted) 42%, transparent);
+	--grid-line: color-mix(in srgb, var(--text-muted) 42%, transparent);
 }
 
 .page {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
 }
 
 /* ─── Layout ───────────────────────────────────────────────────────────── */
 .workspace {
-  flex: 1;
-  min-height: 0;
+	flex: 1;
+	min-height: 0;
 }
 
 .panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background: var(--card-bg);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	overflow: hidden;
 }
 
 .panel__head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
 }
 
 .panel__title {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+	margin: 0;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text-primary);
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
 }
 
 .panel__scope {
-  font-size: 12px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .panel__count {
-  margin-left: auto;
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--input-bg);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 1px 8px;
+	margin-left: auto;
+	flex-shrink: 0;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--input-bg);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	padding: 1px 8px;
 }
 
 /* ─── Toolbar (icon over label, per the reference layout) ──────────────── */
 .toolbar {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
 }
 
 .tool__sep {
-  width: 1px;
-  align-self: stretch;
-  margin: 4px 6px;
-  background: var(--border);
+	width: 1px;
+	align-self: stretch;
+	margin: 4px 6px;
+	background: var(--border);
 }
 
 .tool-search {
-  margin-left: auto;
-  width: 150px;
-  min-width: 0;
-  padding: 5px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 12px;
-  outline: none;
+	margin-left: auto;
+	width: 150px;
+	min-width: 0;
+	padding: 5px 10px;
+	border-radius: 6px;
+	border: 1px solid var(--border);
+	background: var(--input-bg);
+	color: var(--text-primary);
+	font: inherit;
+	font-size: 12px;
+	outline: none;
 
-  &:focus {
-    border-color: var(--accent);
-  }
+	&:focus {
+		border-color: var(--accent);
+	}
 
-  &::placeholder {
-    color: var(--text-muted);
-  }
+	&::placeholder {
+		color: var(--text-muted);
+	}
 }
 
 .tool {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 52px;
-  padding: 5px 8px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 11.5px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-width: 52px;
+	padding: 5px 8px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-secondary);
+	font: inherit;
+	font-size: 11.5px;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
 
-  &:hover:not(:disabled) {
-    background: var(--item-hover);
-    color: var(--text-primary);
-  }
+	&:hover:not(:disabled) {
+		background: var(--item-hover);
+		color: var(--text-primary);
+	}
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+	&:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
 }
 
 .tool__ico {
-  width: 17px;
-  height: 17px;
+	width: 17px;
+	height: 17px;
 }
 
 .tool--danger:not(:disabled) {
-  color: #ef4444;
+	color: #ef4444;
 }
 
 .tool--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, #ef4444 12%, transparent);
-  color: #ef4444;
+	background: color-mix(in srgb, #ef4444 12%, transparent);
+	color: #ef4444;
 }
 
 .tool--success:not(:disabled) {
-  color: #198754;
+	color: #198754;
 }
 
 .tool--success:hover:not(:disabled) {
-  background: color-mix(in srgb, #198754 12%, transparent);
-  color: #198754;
+	background: color-mix(in srgb, #198754 12%, transparent);
+	color: #198754;
 }
 
 /* ─── Table ────────────────────────────────────────────────────────────── */
 .table-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
 }
 
 .col-code {
-  width: 130px;
+	width: 130px;
 }
 
 .col-status {
-  width: 140px;
+	width: 140px;
 }
 
 .muted {
-  color: var(--text-muted);
-  font-size: 12.5px;
+	color: var(--text-muted);
+	font-size: 12.5px;
 }
 
 .empty {
-  padding: 28px 14px;
-  margin: 0;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--text-muted);
+	padding: 28px 14px;
+	margin: 0;
+	text-align: center;
+	font-size: 12.5px;
+	color: var(--text-muted);
 }
 
 .notice {
-  margin: 0;
-  padding: 7px 14px;
-  font-size: 12px;
-  color: #b45309;
-  background: color-mix(in srgb, #f59e0b 12%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
-  flex-shrink: 0;
+	margin: 0;
+	padding: 7px 14px;
+	font-size: 12px;
+	color: #b45309;
+	background: color-mix(in srgb, #f59e0b 12%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+	flex-shrink: 0;
 }
 
 /* ─── Dialog form ──────────────────────────────────────────────────────── */
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
 }
 
 .form__error {
-  font-size: 12.5px;
-  color: #ef4444;
-  background: color-mix(in srgb, #ef4444 10%, transparent);
-  border: 1px solid color-mix(in srgb, #ef4444 25%, transparent);
-  border-radius: 8px;
-  padding: 8px 12px;
+	font-size: 12.5px;
+	color: #ef4444;
+	background: color-mix(in srgb, #ef4444 10%, transparent);
+	border: 1px solid color-mix(in srgb, #ef4444 25%, transparent);
+	border-radius: 8px;
+	padding: 8px 12px;
 }
 
 .form__scope {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-muted);
+	margin: 0;
+	font-size: 12px;
+	color: var(--text-muted);
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .field label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 .hint {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  line-height: 1.45;
+	font-size: 11.5px;
+	color: var(--text-muted);
+	line-height: 1.45;
 }
 
 .req {
-  color: #ef4444;
+	color: #ef4444;
 }
 
 /* ─── PrimeNG surface alignment ────────────────────────────────────────── */
 :host ::ng-deep {
-  .w-full {
-    width: 100%;
-  }
+	.w-full {
+		width: 100%;
+	}
 
-  /* Splitter: Aura frames it like a card, but here the panels carry their own
+	/* Splitter: Aura frames it like a card, but here the panels carry their own
      borders — the splitter is only a layout mechanism, so strip its chrome. */
-  .p-splitter {
-    height: 100%;
-    border: 0;
-    background: transparent;
-  }
+	.p-splitter {
+		height: 100%;
+		border: 0;
+		background: transparent;
+	}
 
-  .p-splitterpanel {
-    /* Without these a panel refuses to shrink past its table's intrinsic width and
+	.p-splitterpanel {
+		/* Without these a panel refuses to shrink past its table's intrinsic width and
        the gutter stops responding once you drag past that point. */
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
+		min-width: 0;
+		min-height: 0;
+		overflow: hidden;
 
-    /* `nestedState()` belongs to the splitter, not the panel, so a splitter holding a
+		/* `nestedState()` belongs to the splitter, not the panel, so a splitter holding a
        nested one marks *every* panel `p-splitterpanel-nested` — which the base CSS
        gives `display: flex`, row direction. A card inside then sizes to its content
        horizontally while still stretching vertically. Pinning the column axis makes
        width the cross axis again, so the child stretches to fill. */
-    display: flex;
-    flex-direction: column;
+		display: flex;
+		flex-direction: column;
 
-    >* {
-      flex: 1;
-      min-width: 0;
-      min-height: 0;
-    }
-  }
+		>* {
+			flex: 1;
+			min-width: 0;
+			min-height: 0;
+		}
+	}
 
-  .p-splitter-gutter {
-    background: transparent;
-    border-radius: 4px;
-    transition: background 0.15s;
+	.p-splitter-gutter {
+		background: transparent;
+		border-radius: 4px;
+		transition: background 0.15s;
 
-    &:hover,
-    &[data-p-gutter-resizing='true'] {
-      background: color-mix(in srgb, var(--accent) 25%, transparent);
-    }
-  }
+		&:hover,
+		&[data-p-gutter-resizing='true'] {
+			background: color-mix(in srgb, var(--accent) 25%, transparent);
+		}
+	}
 
-  /* Only recoloured — the base stylesheet already orients the handle per axis via the
+	/* Only recoloured — the base stylesheet already orients the handle per axis via the
      `p-splitter-horizontal` / `p-splitter-vertical` class on the root. */
-  .p-splitter-gutter-handle {
-    background: var(--border);
-    border-radius: 3px;
+	.p-splitter-gutter-handle {
+		background: var(--border);
+		border-radius: 3px;
 
-    &:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
-    }
-  }
+		&:focus-visible {
+			outline: 2px solid var(--accent);
+			outline-offset: 1px;
+		}
+	}
 
-  .grid {
+	.grid {
 
-    /* .table-scroll is the only scrollport, so the sticky header anchors to it. */
-    .p-datatable-table-container,
-    .p-datatable-wrapper {
-      overflow: visible;
-    }
+		/* .table-scroll is the only scrollport, so the sticky header anchors to it. */
+		.p-datatable-table-container,
+		.p-datatable-wrapper {
+			overflow: visible;
+		}
 
-    table {
-      font-size: 13px;
-    }
+		table {
+			font-size: 13px;
+		}
 
-    .p-datatable-thead>tr>th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: var(--card-bg);
-      /* border-collapse: collapse hands border painting to the table, so a sticky th
+		.p-datatable-thead>tr>th {
+			position: sticky;
+			top: 0;
+			z-index: 1;
+			background: var(--card-bg);
+			/* border-collapse: collapse hands border painting to the table, so a sticky th
          loses its own borders as the body scrolls. Insets stay with the cell. */
-      border-width: 0;
-      box-shadow: inset -1px 0 0 var(--border), inset 0 -1px 0 var(--grid-line);
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      padding: 8px 12px;
-      text-align: center;
-      white-space: nowrap;
+			border-width: 0;
+			box-shadow: inset -1px 0 0 var(--border), inset 0 -1px 0 var(--grid-line);
+			color: var(--text-secondary);
+			font-size: 11px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.6px;
+			padding: 8px 12px;
+			text-align: center;
+			white-space: nowrap;
 
-      &:last-child {
-        box-shadow: inset 0 -1px 0 var(--grid-line);
-      }
-    }
+			&:last-child {
+				box-shadow: inset 0 -1px 0 var(--grid-line);
+			}
+		}
 
-    .p-datatable-tbody>tr {
-      background: transparent;
-      color: var(--text-primary);
-      cursor: pointer;
+		.p-datatable-tbody>tr {
+			background: transparent;
+			color: var(--text-primary);
+			cursor: pointer;
 
-      >td {
-        border-color: var(--border);
-        padding: 7px 12px;
-      }
+			>td {
+				border-color: var(--border);
+				padding: 7px 12px;
+			}
 
-      >td:first-child {
-        border-left-width: 0;
-      }
+			>td:first-child {
+				border-left-width: 0;
+			}
 
-      >td:last-child {
-        border-right-width: 0;
-      }
+			>td:last-child {
+				border-right-width: 0;
+			}
 
-      &:last-child>td {
-        border-bottom-width: 0;
-      }
+			&:last-child>td {
+				border-bottom-width: 0;
+			}
 
-      &:hover>td {
-        background: var(--item-hover);
-      }
-    }
+			&:hover>td {
+				background: var(--item-hover);
+			}
+		}
 
-    /* Selected row anchors the whole master-detail chain, so it has to read as selected
+		/* Selected row anchors the whole master-detail chain, so it has to read as selected
        even while the panel is unfocused — but a solid accent fill for that is far louder
        than the job needs. A soft tint carries the state, and the accent bar down the
        leading edge is what makes it unmistakable at a glance. Text keeps its normal
        colour, so status tags and muted cells stay legible instead of fighting a
        saturated background. */
-    .p-datatable-tbody>tr.row--selected>td {
-      background: color-mix(in srgb, var(--accent) 14%, transparent);
-      color: var(--text-primary);
-      font-weight: 500;
-    }
+		.p-datatable-tbody>tr.row--selected>td {
+			background: color-mix(in srgb, var(--accent) 14%, transparent);
+			color: var(--text-primary);
+			font-weight: 500;
+		}
 
-    .p-datatable-tbody>tr.row--selected>td:first-child {
-      /* Inset rather than a border: it must not shift the cell's own padding, which the
+		.p-datatable-tbody>tr.row--selected>td:first-child {
+			/* Inset rather than a border: it must not shift the cell's own padding, which the
          function screen already drives per row for tree indentation. */
-      box-shadow: inset 3px 0 0 var(--accent);
-    }
+			box-shadow: inset 3px 0 0 var(--accent);
+		}
 
-    /* Hovering the selected row still needs to answer, so lift the tint a little. */
-    .p-datatable-tbody>tr.row--selected:hover>td {
-      background: color-mix(in srgb, var(--accent) 22%, transparent);
-    }
-  }
+		/* Hovering the selected row still needs to answer, so lift the tint a little. */
+		.p-datatable-tbody>tr.row--selected:hover>td {
+			background: color-mix(in srgb, var(--accent) 22%, transparent);
+		}
+	}
 }
 
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 /* ─── Dialog: product picker rows ─────────────────────────────────────────── */
@@ -417,39 +417,53 @@
    markup is declared in this template, so it carries this component's style scope. The
    panel around it is not, and is styled in `styles.scss`. */
 .picker-row {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 56px 120px 84px;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  font-size: 12.5px;
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr) 56px 120px 84px;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	font-size: 12.5px;
 }
 
 .picker-row--head {
-  padding: 7px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+	padding: 7px 12px;
+	border-bottom: 1px solid var(--border);
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
 }
 
 /* One line per cell: a long product name must not push the columns beside it out of line. */
 .picker-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .picker-cell--code {
-  font-weight: 600;
+	font-weight: 600;
 }
 
 .picker-cell--center {
-  text-align: center;
+	text-align: center;
 }
 
 .picker-cell--muted {
-  color: var(--text-muted);
+	color: var(--text-muted);
+}
+
+.picker-cell--right {
+	text-align: right;
+}
+
+.field-row {
+	display: flex;
+	gap: 12px;
+
+	>.field {
+		flex: 1;
+		min-width: 0;
+	}
 }
