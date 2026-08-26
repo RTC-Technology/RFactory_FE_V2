@@ -79,6 +79,13 @@ export const routes: Routes = [
 				data: { permissions: [PERMISSIONS.productType.view] },
 			},
 			{
+				path: 'product-groups',
+				loadComponent: () =>
+					import('./pages/product-group/product-group.component').then(m => m.ProductGroupComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.productGroup.view] },
+			},
+			{
 				// Reads types and units to label and pick, plus BOMs, routings and their operations.
 				path: 'products',
 				loadComponent: () =>

@@ -378,6 +378,17 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'ptype.empty': { vi: 'Chưa có loại sản phẩm nào.', en: 'No product types yet.' },
 	'ptype.err.load': { vi: 'Không tải được danh sách loại sản phẩm.', en: 'Could not load the product types.' },
 
+	'productGroup.title': { vi: 'Nhóm vật tư', en: 'Product group' },
+	'productGroup.lower': { vi: 'nhóm vật tư', en: 'product group' },
+	'productGroup.groupNo': { vi: 'Mã nhóm', en: 'Group no.' },
+	'productGroup.groupName': { vi: 'Tên nhóm', en: 'Group name' },
+	'productGroup.parent': { vi: 'Nhóm cha', en: 'Parent group' },
+	'productGroup.empty': { vi: 'Chưa có nhóm vật tư nào.', en: 'No product groups yet.' },
+	'productGroup.err.load': { vi: 'Không tải được danh sách nhóm vật tư.', en: 'Could not load the product groups.' },
+	'productGroup.err.groupNoRequired': { vi: 'Mã nhóm không được để trống.', en: 'Group no is required.' },
+	'productGroup.err.groupNameRequired': { vi: 'Tên nhóm không được để trống.', en: 'Group name is required.' },
+	'productGroup.parent.unset': { vi: '— Cấp cha —', en: '— Top level —' },
+
 	'product.title': { vi: 'Sản phẩm', en: 'Product' },
 	'product.lower': { vi: 'sản phẩm', en: 'product' },
 	'product.code': { vi: 'Mã sản phẩm', en: 'Product code' },
@@ -2139,9 +2150,9 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'purchaseOrder.employee.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
 
 	'purchaseOrder.err.load': { vi: 'Không tải được dữ liệu đơn mua hàng.', en: 'Could not load purchase order data.' },
-	'purchaseOrder.err.ponoRequired': {
+	'purchaseOrder.err.poNoRequired': {
 		vi: 'Số PO không được để trống.',
-		en: 'PO number is required.',
+		en: 'PO no is required.',
 	},
 
 	'purchaseOrder.err.supplierRequired': {

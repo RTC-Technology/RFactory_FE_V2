@@ -9,6 +9,13 @@ export interface ProductTypeDto {
   isActive: boolean;
 }
 
+export interface ProductGroupDto {
+  id: number;
+  groupNo: string;
+  groupName: string;
+  parentId: number;
+}
+
 export interface ProductDto {
   id: number;
   productCode: string;
@@ -102,6 +109,7 @@ export function conversionFactor(row: UnitConversionDto): number | null {
 }
 
 export type ProductTypeRequest = Omit<ProductTypeDto, 'id'>;
+export type ProductGroupRequest = Omit<ProductGroupDto, 'id'>;
 export type ProductRequest = Omit<ProductDto, 'id'>;
 export type BomRequest = Omit<BomDto, 'id'>;
 export type BomDetailRequest = Omit<BomDetailDto, 'id'>;
