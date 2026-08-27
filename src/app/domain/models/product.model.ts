@@ -1,7 +1,5 @@
 /** Mirrors the Product module DTOs plus UnitDto from MasterData. */
 
-import { Signal } from "@angular/core";
-
 export interface ProductTypeDto {
 	id: number;
 	productTypeCode: string;
@@ -30,7 +28,7 @@ export interface ProductDto {
 	drawingNo?: string | null;
 	drawingPath?: string | null;
 
-	status?: number | null;
+	status: number;
 
 	productNature?: number | null;
 	productGroupId?: number | null;
@@ -144,7 +142,8 @@ export function conversionFactor(row: UnitConversionDto): number | null {
 export type ProductTypeRequest = Omit<ProductTypeDto, 'id'>;
 export type ProductGroupRequest = Omit<ProductGroupDto, 'id'>;
 export type ProductRequest = Omit<ProductDto, 'id'> & {
-	boms?: BomRequest[]
+	boms?: BomRequest[],
+	routings?: RoutingRequest[]
 };
 export type BomRequest = Omit<BomDto, 'id'> & {
 	bomDetails?: BomDetailRequest[]

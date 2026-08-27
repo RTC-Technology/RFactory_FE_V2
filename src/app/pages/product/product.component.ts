@@ -36,31 +36,10 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { PanelModule } from 'primeng/panel';
+import { SplitterModule } from 'primeng/splitter';
+import { SplitStateService } from '../../core/services/split-state.service';
 
 type EntityKind = 'product' | 'bom' | 'bomDetail' | 'routing' | 'routingOp';
-
-interface EntityForm {
-	code: string;
-	name: string;
-	typeId: number | null;
-	unitId: number | null;
-	/** The component consumed by the selected BOM — used only by the BOM-detail form. */
-	productId: number | null;
-	drawingNo: string;
-	drawingPath: string;
-	status: number | null;
-	version: string;
-	isActive: boolean;
-	sequence: number | null;
-	description: string;
-	quantity: number | null;
-	scrapRate: number | null;
-	fixedScrapQty: number | null;
-	isFinishOperation: boolean;
-	isOutputOperation: boolean;
-	isOutsourced: boolean;
-}
-
 const LABEL_KEYS: Record<EntityKind, string> = {
 	product: 'product.lower',
 	bom: 'bom.lower',
@@ -68,6 +47,7 @@ const LABEL_KEYS: Record<EntityKind, string> = {
 	routing: 'routing.lower',
 	routingOp: 'routing.op.lower',
 };
+
 
 interface ProductOption {
 	value: number;
@@ -87,7 +67,7 @@ interface ProductOption {
 		CommonModule, FormsModule,
 		TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
 		InputTextModule, InputNumberModule, SelectModule, TagModule, ToggleSwitchModule, CheckboxModule, TabsModule,
-		HasPermissionDirective,
+		HasPermissionDirective, SplitterModule,
 		Textarea, InputGroupModule, InputGroupAddonModule, ColorPickerModule, PanelModule
 	],
 	providers: [MessageService, ConfirmationService],
@@ -108,7 +88,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
 	readonly i18n = inject(I18nService);
-
+	readonly split = inject(SplitStateService);
 	readonly statusOf = productStatusOf;
 
 	readonly loading = computed(() =>
@@ -117,7 +97,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
 
-	typeName(id?: number | null): string {
+	productTypeLabel(id?: number | null): string {
 		return this.typeApi.items().find(t => t.id === id)?.productTypeName ?? '';
 	}
 
@@ -125,6 +105,27 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		const unit = this.unitApi.items().find(u => u.id === id);
 		return unit ? (unit.symbol || unit.unitCode) : '';
 	}
+
+	productGroupLabel(id?: number | null): string {
+		const group = this.groupApi.items().find(g => g.id === id);
+		return group ? `${group.groupNo} · ${group.groupName}` : '';
+	}
+
+	warrantyPeriodUnitLabel(value?: number | null): string {
+		const unit = PRODUCT_WARRANTY_PERIOD_UNITS.find(s => s.value === value);
+		return unit ? this.i18n.t(unit.labelKey) : '';
+	}
+
+	warehouseLabel(id?: number | null): string {
+		const warehouse = this.warehouseApi.items().find(w => w.id === id);
+		return warehouse ? `${warehouse.warehouseCode} · ${warehouse.warehouseName}` : '';
+	}
+
+	productNatureLabel(value?: number | null): string {
+		const unit = PRODUCT_NATURES.find(s => s.value === value);
+		return unit ? this.i18n.t(unit.labelKey) : '';
+	}
+
 
 	routingLabel(id?: number | null): string {
 		const routing = this.routingApi.items().find(r => r.id === id);
@@ -307,6 +308,21 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		table?.filterGlobal(value, 'contains');
 	}
 
+	onFiltered(kind: EntityKind, rows: unknown[] | null | undefined): void {
+		const visible = (rows ?? []) as { id: number }[];
+		if (kind === 'product') {
+			this.selectedProduct.set(this._reconcile(this.selectedProduct(), visible as ProductDto[]));
+		} else if (kind === 'bom') {
+			this.selectedBom.set(this._reconcile(this.selectedBom(), visible as BomDto[]));
+		} else if (kind === 'bomDetail') {
+			this.selectedBomDetail.set(this._reconcile(this.selectedBomDetail(), visible as BomDetailDto[]));
+		} else if (kind === 'routing') {
+			this.selectedRouting.set(this._reconcile(this.selectedRouting(), visible as RoutingDto[]));
+		} else if (kind === 'routingOp') {
+			this.selectedRoutingOp.set(this._reconcile(this.selectedRoutingOp(), visible as RoutingOperationDto[]));
+		}
+	}
+
 	selectProduct(product: ProductDto): void {
 		if (this.selectedProduct()?.id === product.id) return;
 		this.selectedProduct.set(product);
@@ -344,37 +360,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	});
 
 	/** True while the detail modal is open for a brand-new product (blank Thông tin form). */
-	readonly creatingProduct = computed(() => this.detailOpen() && !this.selectedProduct());
-
-	/** Opens the modal. `product` null = a fresh product: the Thông tin tab becomes the create
-	 *  form and the BOM / Công đoạn tabs stay empty until it is saved. */
-	openDetail(product: ProductDto | null): void {
-		this.selectedProduct.set(product);
-		this.selectedBom.set(this._first(this.boms()));
-		this.selectedBomDetail.set(this._first(this.bomDetails()));
-		this.selectedRouting.set(this._first(this.routings()));
-		this.selectedRoutingOp.set(this._first(this.routingOps()));
-		this.formError.set('');
-
-		if (product) {
-			this.editingId.set(product.id);
-			this.formOld = {
-				...this._emptyFormOld(),
-				code: product.productCode, name: product.productName,
-				typeId: product.productTypeId ?? null, unitId: product.defaultUnitId ?? null,
-				drawingNo: product.drawingNo ?? '', drawingPath: product.drawingPath ?? '',
-				status: product.status ?? null,
-			};
-		} else {
-			this.editingId.set(null);
-			// A new product lands in whatever type the list is filtered to — that is nearly
-			// always the one being worked on.
-			this.formOld = { ...this._emptyFormOld(), typeId: this.typeFilter() };
-		}
-
-		this.detailTab.set('info');
-		this.detailOpen.set(true);
-	}
+	// readonly creatingProduct = computed(() => this.detailOpen() && !this.selectedProduct());
 
 	// ─── CRUD dialog ───────────────────────────────────────────────────────────
 
@@ -384,7 +370,6 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	readonly saving = signal(false);
 	readonly formError = signal('');
 
-	formOld: EntityForm = this._emptyFormOld();
 	form = this._emptyForm();
 
 	readonly bomRows = signal<BomDto[]>([]);
@@ -393,173 +378,145 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	// readonly routingOpRows = signal<RoutingOperationDto[]>([]);
 
 	private _tempDetailId = 0;
-
 	readonly dialogTitle = computed(() =>
 		this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
-			entity: this.i18n.t(LABEL_KEYS[this.dialogKind()]),
+			entity: this.i18n.t('product.lower'),
 		}));
 
 	openCreate(kind: EntityKind): void {
 
-		this.bomRows.set([this._emptyBom()]);
-		// this.bomDetailRows.set([this._emptyBomDetail()]);
-		this.routingRows.set([this._emptyRouting()])
-
-		// Products are composed in the detail modal — the small "add product" dialog is gone.
-		if (kind === 'product') {
-			this.openDetail(null);
-			return;
-		}
-		this.dialogKind.set(kind);
 		this.editingId.set(null);
 		this.formError.set('');
-		this.formOld = {
-			...this._emptyFormOld(),
-			typeId: null,
-		};
-		// A BOM line is always bound to the product the detail modal is editing.
-		if (kind === 'bomDetail') this.formOld.productId = this.selectedProduct()?.id ?? null;
-
-
-
-
-		console.log(this.boms(), this.routingRows());
-		console.log(kind);
+		this.form = { ...this._emptyForm() };
+		// A receipt with no line is meaningless, so start the operator on one.
+		this.bomRows.set([this._emptyBom()]);
+		this.routingRows.set([this._emptyRouting()]);
 
 		this.dialogOpen.set(true);
 	}
 
-	openEdit(kind: EntityKind): void {
-		// Editing a product happens inside its detail modal; sub-entities keep the small dialog.
-		if (kind === 'product') {
-			const product = this.selectedProduct();
-			if (product) this.openDetail(product);
-			return;
-		}
-		const row = {
-			product: this.selectedProduct(), bom: this.selectedBom(), bomDetail: this.selectedBomDetail(),
-			routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
-		}[kind];
-		if (!row) return;
+	openEdit(): void {
 
-		this.dialogKind.set(kind);
+		const row = this.selectedProduct();
+		if (!row) return;
 		this.editingId.set(row.id);
 		this.formError.set('');
+		this.form = {
+			productCode: row.productCode.trim(),
+			productName: row.productName.trim(),
+			productTypeId: row.productTypeId ?? null,
+			defaultUnitId: row.defaultUnitId ?? null,
+			drawingNo: row.drawingNo?.trim() || null,
+			drawingPath: row.drawingPath?.trim() || null,
+			status: row.status ?? 1,
+			productNature: row.productNature ?? null,
+			productGroupId: row.productGroupId ?? null,
+			productionUnitId: row.productionUnitId ?? null,
+			defaultWarehouseId: row.defaultWarehouseId ?? null,
+			minStock: row.minStock ?? null,
+			maxStock: row.maxStock ?? null,
+			fixedPurchasePrice: row.fixedPurchasePrice ?? null,
+			wastageRate: row.wastageRate ?? null,
+			preparationTime: row.preparationTime ?? null,
+			warrantyPeriod: row.warrantyPeriod ?? null,
+			warrantyPeriodUnit: row.warrantyPeriodUnit ?? 2,
+			vatRate: row.vatRate ?? null,
+			standardProductionTime: row.standardProductionTime ?? null,
+			isOutsourced: row.isOutsourced ?? false,
+			description: row.description ?? null,
+			productionColor: row.productionColor ?? null,
+			// boms: this.bomRows().map(row => ({
+			// 	id: row.id > 0 ? row.id : 0,
+			// 	productId: row.productId,
+			// 	bomCode: row.bomCode?.trim() || '',
+			// 	bomName: row.bomName?.trim() || '',
+			// 	version: row.version?.trim() || null,
+			// 	status: row.status,
+			// 	isActive: row.isActive,
+			// 	bomDetails: row.bomDetails.map((op: BomDetailDto) => ({
+			// 		id: op.id > 0 ? op.id : 0,
+			// 		bomId: op.bomId,
+			// 		productId: op.productId,
+			// 		quantity: op.quantity,
+			// 		unitId: op.unitId,
+			// 		scrapRate: op.scrapRate,
+			// 		fixedScrapQty: op.fixedScrapQty,
+			// 	})),
+			// })),
+			// routings: this.routingRows().map(row => ({
+			// 	id: row.id > 0 ? row.id : 0,
+			// 	productId: row.productId,
+			// 	version: row.version?.trim() || '',
+			// 	isActive: row.isActive,
+			// 	routingOperations: row.routingOperations.map((op: RoutingOperationDto) => ({
+			// 		id: op.id > 0 ? op.id : 0,
+			// 		routingId: op.routingId,
+			// 		sequence: op.sequence,
+			// 		routingOperationCode: op.routingOperationCode?.trim() || '',
+			// 		routingOperationName: op.routingOperationName?.trim() || '',
+			// 		description: op.description?.trim() || null,
+			// 		isFinishOperation: op.isFinishOperation,
+			// 		isOutputOperation: op.isOutputOperation,
+			// 	})),
+			// })),
+		};
 
-		if (kind === 'bom') {
-			const b = row as BomDto;
-			this.formOld = {
-				...this._emptyFormOld(),
-				code: b.bomCode, name: b.bomName,
-				version: b.version ?? '', status: b.status ?? null, isActive: b.isActive,
-			};
-		} else if (kind === 'routing') {
-			const r = row as RoutingDto;
-			this.formOld = {
-				...this._emptyFormOld(),
-				version: r.version ?? '', isActive: r.isActive,
-			};
-		} else if (kind === 'bomDetail') {
-			const d = row as BomDetailDto;
-			this.formOld = {
-				...this._emptyFormOld(),
-				// The component is locked to the product the modal edits; the picker is disabled.
-				productId: this.selectedProduct()?.id ?? null, quantity: d.quantity ?? null,
-				unitId: d.unitId ?? null, scrapRate: d.scrapRate ?? null, fixedScrapQty: d.fixedScrapQty ?? null,
-			};
-		} else {
-			const o = row as RoutingOperationDto;
-			this.formOld = {
-				...this._emptyFormOld(),
-				sequence: o.sequence ?? null, code: o.routingOperationCode, name: o.routingOperationName,
-				description: o.description ?? '',
-				isFinishOperation: o.isFinishOperation, isOutputOperation: o.isOutputOperation,
-			};
-		}
+		this.bomRows.set(
+			this.bomApi.items()
+				.filter(bom => bom.productId === row.id)
+				.map(bom => ({
+					...bom,
+					bomDetails: this.bomDetailApi.items()
+						.filter(detail => detail.bomId === bom.id)
+						.map(detail => ({ ...detail }))
+				}))
+		);
+
+		this.routingRows.set(
+			this.routingApi.items()
+				.filter(routing => routing.productId === row.id)
+				.map(routing => ({
+					...routing,
+					routingOperations: this.routingOpApi.items()
+						.filter(op => op.routingId === routing.id)
+						.map(op => ({ ...op }))
+				}))
+		);
 
 		this.dialogOpen.set(true);
 	}
 
 	save(): void {
-		// const error = this._validate();
-		// if (error) {
-		// 	this.formError.set(error);
-		// 	return;
-		// }
+		const error = this._validate() || this._validateBoms() || this._validateRouting();
+		if (error) {
+			this.formError.set(error);
+			return;
+		}
 
 		this.saving.set(true);
 		this.formError.set('');
 
 		const id = this.editingId();
-		console.log('boms:', this.bomRows());
-		console.log('routings:', this.routingRows());
 
 		// One call carrying the header and every line: the backend writes them in a single
 		// transaction, so a rejected line cannot leave a receipt behind.
-		// this._saveProduct(id).subscribe({
-		// 	next: () => {
-		// 		this.saving.set(false);
-		// 		this.dialogOpen.set(false);
-		// 		this.reload();
-		// 		this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
-		// 			entity: this.i18n.t('purchaseOrder.lower'),
-		// 		}));
+		this._saveProduct(id).subscribe({
+			next: () => {
+				this.saving.set(false);
+				this.dialogOpen.set(false);
+				this.reload();
+				this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
+					entity: this.i18n.t('purchaseOrder.lower'),
+				}));
 
-
-
-		// 	},
-		// 	error: (err: HttpErrorResponse) => {
-		// 		this.saving.set(false);
-		// 		this.formError.set(err.error?.message
-		// 			|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('purchaseOrder.lower') }));
-		// 	},
-		// });
-
-		this.saving.set(false);
+			},
+			error: (err: HttpErrorResponse) => {
+				this.saving.set(false);
+				this.formError.set(err.error?.message
+					|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('purchaseOrder.lower') }));
+			},
+		});
 	}
-
-	/** Saves the product edited in the detail modal's Thông tin tab — create or update. The
-	 *  modal stays open either way so BOMs and work steps can follow right after. */
-	// saveProduct(): void {
-	// 	const error = this._validate('product');
-	// 	if (error) {
-	// 		this.formError.set(error);
-	// 		return;
-	// 	}
-
-	// 	this.saving.set(true);
-	// 	this.formError.set('');
-
-	// 	const id = this.editingId();
-	// 	const request = this._buildRequest('product', id);
-	// 	if (!request) {
-	// 		this.saving.set(false);
-	// 		return;
-	// 	}
-
-	// 	request.subscribe({
-	// 		next: saved => {
-	// 			this.saving.set(false);
-	// 			this.reload();
-	// 			if (!id) {
-	// 				// A brand-new product: adopt it so the BOM / Công đoạn tabs become usable.
-	// 				const created = saved as ProductDto | undefined;
-	// 				if (created?.id) {
-	// 					this.selectedProduct.set(created);
-	// 					this.editingId.set(created.id);
-	// 				}
-	// 			}
-	// 			this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
-	// 				entity: this.i18n.t('product.lower'),
-	// 			}));
-	// 		},
-	// 		error: (err: HttpErrorResponse) => {
-	// 			this.saving.set(false);
-	// 			this.formError.set(err.error?.message
-	// 				|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('product.lower') }));
-	// 		},
-	// 	});
-	// }
 
 	askDelete(kind: EntityKind): void {
 		const row = {
@@ -651,25 +608,6 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		);
 	}
 
-	// onDetailProductChange(
-	// 	row: BomDetailDto,
-	// 	productId: number | null
-	// ): void {
-	// 	row.productId = productId ?? 0;
-
-	// 	const product = this.productApi.items()
-	// 		.find(p => p.id === productId);
-
-	// 	row.unitId = product?.defaultUnitId ?? row.unitId;
-	// }
-
-	// bomDetailTotal(bom: BomDto): number {
-	// 	return bom.bomDetails.reduce(
-	// 		(total, d) => total + (d.quantity || 0),
-	// 		0
-	// 	);
-	// }
-
 	// ─── Internals ──────────────────────────────────────────────────────────────
 
 	private _apiFor(kind: EntityKind) {
@@ -679,20 +617,9 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		}[kind];
 	}
 
-	private _emptyFormOld(): EntityForm {
-		return {
-			code: '', name: '', typeId: null, unitId: null, productId: null,
-			drawingNo: '', drawingPath: '', status: 1,
-			version: '', isActive: true,
-			sequence: null, description: '',
-			quantity: null, scrapRate: null, fixedScrapQty: null,
-			isFinishOperation: false, isOutputOperation: false, isOutsourced: false,
-		};
-	}
-
 	private _emptyForm() {
 		return {
-			id: 0,
+			// id: 0,
 			productCode: '',
 			productName: '',
 			productTypeId: null as number | null,
@@ -774,57 +701,85 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		return rows[0] ?? null;
 	}
 
-	private _validate(kind: EntityKind): string {
-		if (kind === 'product') {
-			const code = this.formOld.code.trim();
-			if (!code) return this.i18n.t('plant.err.codeRequired');
-			if (!this.formOld.name.trim()) return this.i18n.t('plant.err.nameRequired');
+	private _validate(): string {
+		const productCode = this.form.productCode.trim();
 
-			// Compared against every product, not just the filtered view — the code is a
-			// plant-wide identifier and a duplicate hidden by the filter is still a duplicate.
-			const clash = this.productApi.items().find(
-				p => p.productCode.toLowerCase() === code.toLowerCase() && p.id !== this.editingId(),
-			);
-			return clash ? this.i18n.t('plant.err.codeTaken', { code }) : '';
+		if (!productCode) {
+			return this.i18n.t('product.err.productCodeRequired');
 		}
 
-		if (kind === 'bom') {
-			if (!this.selectedProduct()) return this.i18n.t('bom.err.pickProduct');
-			const code = this.formOld.code.trim();
-			if (!code) return this.i18n.t('plant.err.codeRequired');
-			if (!this.formOld.name.trim()) return this.i18n.t('plant.err.nameRequired');
-
-			const clash = this.bomApi.items().find(
-				b => b.bomCode.toLowerCase() === code.toLowerCase() && b.id !== this.editingId(),
-			);
-			return clash ? this.i18n.t('plant.err.codeTaken', { code }) : '';
+		if (!this.form.productName) {
+			return this.i18n.t('product.err.productNameRequired');
 		}
 
-		if (kind === 'routing') {
-			if (!this.selectedProduct()) return this.i18n.t('bom.err.pickProduct');
-			if (!this.formOld.version.trim()) return this.i18n.t('plant.err.nameRequired');
-			return '';
-		}
-
-		if (kind === 'bomDetail') {
-			if (!this.selectedBom()) return this.i18n.t('bomDetail.err.pickBom');
-			if (this.formOld.productId == null) return this.i18n.t('bomDetail.err.pickProduct');
-			if ((this.formOld.quantity ?? 0) <= 0) return this.i18n.t('bomDetail.err.quantity');
-			return '';
-		}
-
-		if (!this.selectedRouting()) return this.i18n.t('routing.err.pickRouting');
-		if (!this.formOld.code.trim()) return this.i18n.t('routing.err.opCodeRequired');
-		if (!this.formOld.name.trim()) return this.i18n.t('routing.err.opNameRequired');
-
-		const duplicate = this.routingOps().find(
-			o => o.routingOperationCode.toLowerCase() === this.formOld.code.trim().toLowerCase()
-				&& o.id !== this.editingId(),
+		// ProductCode is unique across the entire product list.
+		const clash = this.productApi.items().find(
+			product =>
+				product.productCode.toLowerCase() === productCode.toLowerCase() &&
+				product.id !== this.editingId(),
 		);
-		return duplicate
-			? this.i18n.t('routing.err.duplicate', { name: duplicate.routingOperationName })
+
+		return clash
+			? this.i18n.t('product.err.productCodeTaken', { productCode })
 			: '';
 	}
+
+	private _validateBoms(): string {
+
+		if (this.bomRows().length > 0) {
+			for (let i = 0; i < this.bomRows().length; i++) {
+				const row = this.bomRows()[i];
+				const line = i + 1;
+
+				if (!row.bomCode) return this.i18n.t('bom.err.codeRequired', { line });
+				if (!row.bomName) return this.i18n.t('bom.err.nameRequired', { line });
+
+				// Validate bom details
+				if (!row.bomDetails) return this.i18n.t('bom.err.lineRequired', { line });
+
+				if (row.bomDetails.length === 0) return this.i18n.t('bom.err.lineRequired', { line });
+
+				for (let j = 0; j < row.bomDetails.length; j++) {
+					const detail = row.bomDetails[j];
+					const detailLine = j + 1;
+
+					if (!detail.productId) return this.i18n.t('bomDetail.err.productRequired', { line, detailLine });
+					if (!detail.quantity) return this.i18n.t('bomDetail.err.quantityRequired', { line, detailLine });
+					if (detail.quantity <= 0) return this.i18n.t('bomDetail.err.quantityInvalid', { line, detailLine });
+				}
+			}
+		}
+		return '';
+	}
+
+	private _validateRouting(): string {
+
+		if (this.routingRows().length > 0) {
+			for (let i = 0; i < this.routingRows().length; i++) {
+				const row = this.routingRows()[i];
+				const line = i + 1;
+
+				if (!row.version) return this.i18n.t('routing.err.versionRequired', { line });
+
+				// Validate bom details
+				if (!row.routingOperations) return this.i18n.t('routingOperation.err.lineRequired', { line });
+
+				if (row.routingOperations.length === 0) return this.i18n.t('routingOperation.err.lineRequired', { line });
+
+				for (let j = 0; j < row.routingOperations.length; j++) {
+					const detail = row.routingOperations[j];
+					const detailLine = j + 1;
+
+					if (!detail.sequence) return this.i18n.t('routingOperation.err.sequenceRequired', { line, detailLine });
+					if (!detail.routingOperationCode) return this.i18n.t('routingOperation.err.codeRequired', { line, detailLine });
+					if (!detail.routingOperationName) return this.i18n.t('routingOperation.err.nameRequired', { line, detailLine });
+
+				}
+			}
+		}
+		return '';
+	}
+
 
 	private _saveProduct(id: number | null): Observable<ProductDto> {
 		const body: ProductRequest = {
@@ -851,80 +806,43 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 			isOutsourced: this.form.isOutsourced ?? false,
 			description: this.form.description ?? null,
 			productionColor: this.form.productionColor ?? null,
-			boms: []
+			boms: this.bomRows().map(row => ({
+				id: row.id > 0 ? row.id : 0,
+				productId: row.productId,
+				bomCode: row.bomCode?.trim() || '',
+				bomName: row.bomName?.trim() || '',
+				version: row.version?.trim() || null,
+				status: row.status,
+				isActive: row.isActive,
+				bomDetails: row.bomDetails.map((op: BomDetailDto) => ({
+					id: op.id > 0 ? op.id : 0,
+					bomId: op.bomId,
+					productId: op.productId,
+					quantity: op.quantity,
+					unitId: op.unitId,
+					scrapRate: op.scrapRate,
+					fixedScrapQty: op.fixedScrapQty,
+				})),
+			})),
+			routings: this.routingRows().map(row => ({
+				id: row.id > 0 ? row.id : 0,
+				productId: row.productId,
+				version: row.version?.trim() || '',
+				isActive: row.isActive,
+				routingOperations: row.routingOperations.map((op: RoutingOperationDto) => ({
+					id: op.id > 0 ? op.id : 0,
+					routingId: op.routingId,
+					sequence: op.sequence,
+					routingOperationCode: op.routingOperationCode?.trim() || '',
+					routingOperationName: op.routingOperationName?.trim() || '',
+					description: op.description?.trim() || null,
+					isFinishOperation: op.isFinishOperation,
+					isOutputOperation: op.isOutputOperation,
+				})),
+			})),
 		};
 		return id ? this.productApi.update(id, body) : this.productApi.create(body);
 	}
-
-	// private _buildRequest(kind: EntityKind, id: number | null): Observable<unknown> | null {
-	// 	if (kind === 'product') {
-	// 		const body = {
-	// 			productCode: this.formOld.code.trim(),
-	// 			productName: this.formOld.name.trim(),
-	// 			productTypeId: this.formOld.typeId,
-	// 			defaultUnitId: this.formOld.unitId,
-	// 			drawingNo: this.formOld.drawingNo.trim() || null,
-	// 			drawingPath: this.formOld.drawingPath.trim() || null,
-	// 			status: this.formOld.status,
-	// 			isOutsourced: this.formOld.isOutsourced,
-	// 		};
-	// 		return id ? this.productApi.update(id, body) : this.productApi.create(body);
-	// 	}
-
-	// 	if (kind === 'bom') {
-	// 		const productId = this.selectedProduct()?.id;
-	// 		if (productId == null) return null;
-	// 		const body:BomRequest = {
-	// 			productId,
-	// 			bomCode: this.formOld.code.trim(),
-	// 			bomName: this.formOld.name.trim(),
-	// 			version: this.formOld.version.trim() || null,
-	// 			status: this.formOld.status,
-	// 			isActive: this.formOld.isActive,
-	// 			bomDetails: this.bomRows().bomDetails,
-	// 		};
-	// 		return id ? this.bomApi.update(id, body) : this.bomApi.create(body);
-	// 	}
-
-	// 	if (kind === 'bomDetail') {
-	// 		const bomId = this.selectedBom()?.id;
-	// 		if (bomId == null) return null;
-	// 		const body = {
-	// 			bomId,
-	// 			// Locked to the current product whatever the form holds.
-	// 			productId: this.selectedProduct()?.id ?? this.formOld.productId,
-	// 			quantity: this.formOld.quantity,
-	// 			unitId: this.formOld.unitId,
-	// 			scrapRate: this.formOld.scrapRate,
-	// 			fixedScrapQty: this.formOld.fixedScrapQty,
-	// 		};
-	// 		return id ? this.bomDetailApi.update(id, body) : this.bomDetailApi.create(body);
-	// 	}
-
-	// 	if (kind === 'routing') {
-	// 		const productId = this.selectedProduct()?.id;
-	// 		if (productId == null) return null;
-	// 		const body = {
-	// 			productId,
-	// 			version: this.formOld.version.trim() || null,
-	// 			isActive: this.formOld.isActive,
-	// 		};
-	// 		return id ? this.routingApi.update(id, body) : this.routingApi.create(body);
-	// 	}
-
-	// 	const routingId = this.selectedRouting()?.id;
-	// 	if (routingId == null) return null;
-	// 	const body = {
-	// 		routingId,
-	// 		sequence: this.formOld.sequence,
-	// 		routingOperationCode: this.formOld.code.trim(),
-	// 		routingOperationName: this.formOld.name.trim(),
-	// 		description: this.formOld.description.trim() || null,
-	// 		isFinishOperation: this.formOld.isFinishOperation,
-	// 		isOutputOperation: this.formOld.isOutputOperation,
-	// 	};
-	// 	return id ? this.routingOpApi.update(id, body) : this.routingOpApi.create(body);
-	// }
 
 	private _ok(detail: string): void {
 		this.messages.add({ severity: 'success', summary: this.i18n.t('common.success'), detail, life: 2500 });

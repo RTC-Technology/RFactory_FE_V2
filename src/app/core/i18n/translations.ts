@@ -487,6 +487,25 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'routing.scope.op': { vi: 'Công đoạn sẽ thuộc quy trình {name}.', en: 'The work step will belong to routing {name}.' },
 	'routing.emptyOp': { vi: 'Quy trình này chưa có công đoạn nào.', en: 'This routing has no operations yet.' },
 
+	'routing.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'routing.emptyLine': { vi: 'Sản phẩm này chưa có quy trình nào.', en: 'This product has no routing yet.' },
+	'routing.emptyHint': { vi: 'Chọn một sản phẩm ở panel phía trên.', en: 'Pick a product in the panel above.' },
+	'routing.isActive': { vi: 'Hoạt động', en: 'Active' },
+
+	'routing.addRouting': { vi: 'Thêm quy trình', en: 'Add routing' },
+	'routing.removeRouting': { vi: 'Xóa quy trình', en: 'Remove routing' },
+
+	'routingOperation.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+	'routingOperation.removeLine': { vi: 'Xóa dòng', en: 'Remove line' },
+	'routingOperation.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+	'routingOperation.sequence': { vi: 'Thứ tự', en: 'Order' },
+	'routingOperation.operationCode': { vi: 'Mã công đoạn', en: 'Operation code' },
+	'routingOperation.operationName': { vi: 'Tên công đoạn', en: 'Operation name' },
+	'routingOperation.description': { vi: 'Mô tả', en: 'Description' },
+	'routingOperation.isFinishOperation': { vi: 'Công đoạn cuối', en: 'Finish operation' },
+	'routingOperation.isOutputOperation': { vi: 'Xuất thành phẩm', en: 'Output operation' },
+	'routingOperation.total': { vi: 'Tổng', en: 'Total' },
+
 	'bom.title': { vi: 'BOM', en: 'BOM' },
 	'bom.lower': { vi: 'BOM', en: 'BOM' },
 	'bom.line': { vi: 'Thành phần', en: 'Component' },
@@ -496,7 +515,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'bom.version': { vi: 'Phiên bản', en: 'Version' },
 	'bom.status': { vi: 'Trạng thái', en: 'Status' },
 	'bom.activeField': { vi: 'Đang áp dụng', en: 'Active' },
-	'bom.active': { vi: 'Đang áp dụng', en: 'Active' },
+	'bom.isActive': { vi: 'Hoạt động', en: 'Active' },
 	'bom.quantity': { vi: 'Định mức', en: 'Quantity' },
 	'bom.scrapRate': { vi: 'Hao hụt (%)', en: 'Scrap rate (%)' },
 	'bom.fixedScrap': { vi: 'Hao hụt cố định', en: 'Fixed scrap' },
@@ -508,7 +527,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'bom.component': { vi: 'Sản phẩm thành phần', en: 'Component product' },
 	'bom.scopeOf': { vi: 'của {name}', en: 'of {name}' },
 	'bom.empty': { vi: 'Sản phẩm này chưa có BOM nào.', en: 'This product has no BOM yet.' },
-	'bom.emptyHint': { vi: 'Chọn một sản phẩm ở panel bên trái.', en: 'Pick a product in the left panel.' },
+	'bom.emptyHint': { vi: 'Chọn một sản phẩm ở panel phía trên.', en: 'Pick a product in the panel above.' },
 	'bom.emptyLine': { vi: 'BOM này chưa có thành phần nào.', en: 'This BOM has no components yet.' },
 	'bom.emptyLineHint': { vi: 'Chọn một BOM ở panel phía trên.', en: 'Pick a BOM in the panel above.' },
 	'bom.scope.line': { vi: 'Thành phần sẽ thuộc BOM {name}.', en: 'The component will belong to BOM {name}.' },
@@ -525,6 +544,17 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 		vi: 'Có {count} BOM chưa gán sản phẩm nên không hiện ở panel nào. Hãy gán sản phẩm cho chúng trong cơ sở dữ liệu.',
 		en: '{count} BOMs have no product assigned, so no panel here can reach them. Assign one in the database.',
 	},
+
+	'bom.addBom': { vi: 'Thêm BOM', en: 'Add BOM' },
+	'bom.removeBom': { vi: 'Xóa BOM', en: 'Remove BOM' },
+
+	'bomDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
+	'bomDetail.removeLine': { vi: 'Xóa dòng', en: 'Remove line' },
+	'bomDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
+	'bomDetail.total': { vi: 'Tổng', en: 'Total' },
+	'bomDetail.unit': { vi: 'Đơn vị tính', en: 'Unit' },
+	'bomDetail.fixedScrapQty': { vi: 'Số lượng phế liệu', en: 'Fixed scrap quantity' },
+	'bomDetail.selectProduct': { vi: 'Chọn sản phẩm…', en: 'Pick a product…' },
 
 	// ─── Shift / shift break ──────────────────────────────────────────────────
 	'shift.shift': { vi: 'Ca làm việc', en: 'Shift' },

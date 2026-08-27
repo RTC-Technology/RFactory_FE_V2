@@ -60,6 +60,33 @@
 	font-size: 12px;
 }
 
+/* Text alignment */
+.text-right {
+	text-align: right !important;
+}
+
+/* Font */
+.font-bold {
+	font-weight: 700 !important;
+}
+
+/* Padding end: 12 */
+.pe-12 {
+	padding-right: 12px !important;
+}
+
+.flex {
+	display: flex !important;
+}
+
+.items-center {
+	align-items: center !important;
+}
+
+.gap-2 {
+	gap: 0.5rem !important;
+}
+
 /* ─── Detail modal tabs ──────────────────────────────────────────────────── */
 .tab-panel {
 	display: flex;
@@ -197,7 +224,8 @@
 	overflow: auto;
 }
 
-.lines__add {
+.lines__add,
+.lines__remove {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -222,6 +250,10 @@
 		width: 14px;
 		height: 14px;
 	}
+}
+
+.lines__remove {
+	color: var(--text-danger);
 }
 
 /* Edit-grid columns. Scoped to `.grid--edit` so the read-only grids above keep the
@@ -313,6 +345,13 @@
 /* ─── PrimeNG surface alignment ───────────────────────────────────────────── */
 :host ::ng-deep {
 
+
+	.p-panel-icons-end {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	/* Rows here are edited in place, not selected, so drop the pointer affordance and
           the hover tint that would fight the focused input. */
 	.grid--edit {
@@ -384,6 +423,5 @@
 	.lines__total>td {
 		font-weight: 600;
 	}
-
 
 }
