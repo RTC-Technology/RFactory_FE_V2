@@ -43,6 +43,30 @@
 	text-align: center;
 }
 
+.col-isActive,
+.col-isFinishOperation,
+.col-isOutputOperation,
+.col-isOutsourced {
+	text-align: center;
+	width: 50px;
+}
+
+.check-ico {
+	width: 16px;
+	height: 16px;
+	color: #10b981;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.cancel-ico {
+	width: 16px;
+	height: 16px;
+	color: #ef4444;
+	display: inline-block;
+	vertical-align: middle;
+}
+
 /* Scopes the whole list rather than acting on a row, so it lives in the panel header. */
 .type-filter {
 	margin-left: 8px;

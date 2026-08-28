@@ -1,4 +1,4 @@
-﻿<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
 <ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
 			 let-showReload="showReload">
 	<div class="toolbar">
@@ -63,7 +63,8 @@
 					<p-table #productTable [value]="products()" [showGridlines]="true" class="grid"
 							 [globalFilterFields]="filterFields.product"
 							 (onFilter)="onFiltered('product', $event.filteredValue)"
-							 [scrollable]="true" scrollHeight="flex">
+							 [scrollable]="true" scrollHeight="flex"
+							 rowGroupMode="subheader" groupRowsBy="productGroupId">
 						<ng-template #header>
 							<tr>
 								<th class="col-productCode">{{ i18n.t('product.code') }}</th>
@@ -74,7 +75,7 @@
 								<th class="col-drawingPath">{{ i18n.t('product.drawingPath') }}</th>
 								<th class="col-status">{{ i18n.t('product.status') }}</th>
 								<th class="col-productNature">{{ i18n.t('product.productNature') }}</th>
-								<th class="col-productGroup">{{ i18n.t('product.productGroup') }}</th>
+								<!-- <th class="col-productGroup">{{ i18n.t('product.productGroup') }}</th> -->
 								<th class="col-productionUnit">{{ i18n.t('product.productionUnit') }}</th>
 								<th class="col-defaultWarehouse">{{ i18n.t('product.defaultWarehouse') }}</th>
 								<th class="col-minStock">{{ i18n.t('product.minStock') }}</th>
@@ -91,10 +92,37 @@
 								<th class="col-productionColor">{{ i18n.t('product.productionColor') }}</th>
 							</tr>
 						</ng-template>
+
+						<ng-template #groupheader let-row>
+							<tr pRowGroupHeader [ngStyle]="{ 'background-color':'#dee2e6'}">
+								<td colspan="22">
+									<div class="flex items-center gap-2">
+										<span class="font-bold">
+											{{ productGroupLabel(row.productGroupId ) || '—' }}
+											({{calculateProductTotal(row.productGroupId) | number:'1.0-2' }})
+										</span>
+									</div>
+								</td>
+							</tr>
+						</ng-template>
+						<!-- <ng-template #groupfooter let-row>
+							<tr>
+								<td colspan="22">
+									<div class="text-right font-bold pe-12">{{i18n.t('inventory.totalProduct')}}:
+										{{calculateProductTotal(row.productGroupId) }}
+									</div>
+								</td>
+							</tr>
+						</ng-template> -->
+
 						<ng-template #body let-row>
 							<tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
 								(click)="selectProduct(row)" (dblclick)="openEdit('product')">
-								<td class="col-productCode">{{ row.productCode || '—' }}</td>
+								<td class="col-productCode">
+									<!-- <span [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'.5em'}"></span> -->
+									<p-tag severity="success" value="" />
+									{{ row.productCode || '—' }}
+								</td>
 								<td class="col-productName">{{ row.productName || '—' }}</td>
 								<td class="col-productType">{{ productTypeLabel(row.productTypeId) || '—' }}</td>
 								<td class="col-defaultUnit">{{ unitLabel(row.defaultUnitId) || '—' }}</td>
@@ -108,7 +136,7 @@
 									}
 								</td>
 								<td class="col-productNature">{{ productNatureLabel(row.productNature) || '—' }}</td>
-								<td class="col-productGroup">{{ productGroupLabel(row.productGroupId) || '—' }}</td>
+								<!-- <td class="col-productGroup">{{ productGroupLabel(row.productGroupId) || '—' }}</td> -->
 								<td class="col-productionUnit">{{ unitLabel(row.productionUnitId) || '—' }}</td>
 								<td class="col-defaultWarehouse">{{ warehouseLabel(row.defaultWarehouseId) || '—'}}</td>
 								<td class="col-minStock text-right">
@@ -139,10 +167,17 @@
 									{{ row.standardProductionTime != null ? (row.standardProductionTime | number:'1.0-2') : 0 }}
 									{{i18n.t('product.standardProductionTime.unit')}}
 								</td>
-								<td class="col-isOutsourced">{{ row.isOutsourced || '—' }}</td>
+								<td class="col-isOutsourced">
+									@if (row.isOutsourced) {
+									<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+										 stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+									}
+								</td>
 								<td class="col-description">{{ row.description || '—' }}</td>
 								<td class="col-productionColor">
-									<p [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'.5em'}">
+									<p>
 										{{row.productionColor}}
 									</p>
 								</td>
@@ -178,31 +213,56 @@
 						</div>
 
 						<div class="table-scroll">
-							<p-table #bomTable [value]="boms()" [showGridlines]="true" class="grid"
+							<p-table #bomTable [value]="boms()" dataKey="id" [showGridlines]="true" class="grid"
 									 [globalFilterFields]="filterFields.bom"
 									 (onFilter)="onFiltered('bom', $event.filteredValue)"
 									 [scrollable]="true" scrollHeight="flex">
 								<ng-template #header>
 									<tr>
-										<!-- <th class="col-product">{{ i18n.t('bom.product') }}</th> -->
+										<th style="width: 3rem"></th>
 										<th class="col-bomCode">{{ i18n.t('bom.code') }}</th>
 										<th class="col-bomName">{{ i18n.t('bom.name') }}</th>
 										<th class="col-version">{{ i18n.t('bom.version') }}</th>
-										<!-- <th class="col-status">{{ i18n.t('bom.status') }}</th> -->
 										<th class="col-isActive">{{ i18n.t('bom.isActive') }}</th>
 									</tr>
 								</ng-template>
-								<ng-template #body let-row>
+
+								<ng-template #body let-row let-expanded="expanded">
 									<tr class="row" [class.row--selected]="selectedBom()?.id === row.id"
 										(click)="selectBom(row)" (dblclick)="openEdit('bom')">
-										<!-- <td>{{ productLabel(row.productId) || '—' }}</td> -->
+										<td>
+											<p-button type="button" pRipple [pRowToggler]="row" [text]="true"
+													  severity="secondary"
+													  [rounded]="true"
+													  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+										</td>
 										<td class="col-bomCode">{{ row.bomCode || '—' }}</td>
 										<td class="col-bomName">{{ row.bomName || '—' }}</td>
 										<td class="col-version">{{ row.version || '—' }}</td>
-										<!-- <td class="col-status">{{ row.status || '—' }}</td> -->
-										<td class="col-isActive">{{ row.isActive || '—' }}</td>
+										<td class="col-isActive">
+											@if (row.isActive) {
+											<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+												 stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+											} @else {
+											<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+												<line x1="6" y1="6" x2="18" y2="18" />
+												<line x1="18" y1="6" x2="6" y2="18" />
+											</svg>
+											}
+										</td>
 									</tr>
 								</ng-template>
+
+								<ng-template #expandedrow let-row>
+									<tr>
+										<td colspan="5">
+											<ng-container *ngTemplateOutlet="tableBomDetail; context: { row: row }"></ng-container>
+										</td>
+									</tr>
+								</ng-template>
+
 								<ng-template #emptymessage>
 									<tr>
 										<td colspan="10">
@@ -232,28 +292,54 @@
 						</div>
 
 						<div class="table-scroll">
-							<p-table #routingTable [value]="routings()" [showGridlines]="true" class="grid"
+							<p-table #routingTable [value]="routings()" dataKey="id" [showGridlines]="true" class="grid"
 									 [globalFilterFields]="filterFields.routing"
 									 (onFilter)="onFiltered('routing', $event.filteredValue)"
 									 [scrollable]="true" scrollHeight="flex">
 								<ng-template #header>
 									<tr>
-										<!-- <th class="col-product">{{ i18n.t('routing.product') }}</th> -->
+										<th style="width: 3rem"></th>
 										<th class="col-version">{{ i18n.t('routing.version') }}</th>
 										<th class="col-isActive">{{ i18n.t('routing.isActive') }}</th>
 									</tr>
 								</ng-template>
-								<ng-template #body let-row>
+								<ng-template #body let-row let-expanded="expanded">
 									<tr class="row" [class.row--selected]="selectedRouting()?.id === row.id"
 										(click)="selectRouting(row)" (dblclick)="openEdit('routing')">
-										<!-- <td>{{ productLabel(row.productId) || '—' }}</td> -->
+										<td>
+											<p-button type="button" pRipple [pRowToggler]="row" [text]="true"
+													  severity="secondary"
+													  [rounded]="true"
+													  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+										</td>
 										<td class="col-version">{{ row.version || '—' }}</td>
-										<td class="col-isActive">{{ row.isActive || '—' }}</td>
+										<td class="col-isActive">
+											@if (row.isActive) {
+											<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+												 stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+											} @else {
+											<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+												<line x1="6" y1="6" x2="18" y2="18" />
+												<line x1="18" y1="6" x2="6" y2="18" />
+											</svg>
+											}
+										</td>
 									</tr>
 								</ng-template>
+
+								<ng-template #expandedrow let-row>
+									<tr>
+										<td colspan="3">
+											<ng-container *ngTemplateOutlet="tableRoutingOp; context: { row: row }"></ng-container>
+										</td>
+									</tr>
+								</ng-template>
+
 								<ng-template #emptymessage>
 									<tr>
-										<td colspan="10">
+										<td colspan="3">
 											<p class="empty">
 												{{ selectedProduct() ? i18n.t('routing.emptyLine') :
 												i18n.t('routing.emptyHint') }}
@@ -967,3 +1053,106 @@
 
 <p-confirmDialog />
 <p-toast position="top-right" />
+
+<ng-template #tableBomDetail let-row="row">
+	<div>
+		<p-table #routingTable [value]="bomDetails(row)" [showGridlines]="true"
+				 [globalFilterFields]="filterFields.routing"
+				 [scrollable]="true" scrollHeight="flex"
+				 [ngStyle]="{maxHeight:'150px'}">
+			<ng-template #header>
+				<tr>
+					<th class="col-product">{{ i18n.t('bomDetail.product') }}</th>
+					<th class="col-quantity">{{ i18n.t('bomDetail.quantity') }}</th>
+					<th class="col-unit">{{ i18n.t('bomDetail.unit') }}</th>
+					<th class="col-scrapRate">{{ i18n.t('bomDetail.scrapRate') }}</th>
+					<th class="col-fixedScrapQty">{{ i18n.t('bomDetail.fixedScrapQty') }}</th>
+				</tr>
+			</ng-template>
+			<ng-template #body let-row>
+				<tr class="row" [class.row--selected]="selectedBomDetail()?.id === row.id"
+					(click)="selectBomDetail(row)" (dblclick)="openEdit('bom')">
+					<td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+					<td class="col-quantity text-right">{{ row.quantity ?? 0 | number: '1.0-2' }}</td>
+					<td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+					<td class="col-scrapRate text-right">{{ (row.scrapRate ?? 0) | number: '1.0-2' }} %</td>
+					<td class="col-fixedScrapQty text-right">{{ (row.fixedScrapQty ?? 0) | number: '1.0-2' }}</td>
+				</tr>
+			</ng-template>
+			<ng-template #emptymessage>
+				<tr>
+					<td colspan="5">
+						<p class="empty">
+							{{ selectedBom() ? i18n.t('bomDetail.emptyLine') :
+							i18n.t('bomDetail.emptyHint') }}
+						</p>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</div>
+</ng-template>
+
+<ng-template #tableRoutingOp let-row="row">
+	<div>
+		<p-table #routingTable [value]="routingOps(row)" [showGridlines]="true"
+				 [scrollable]="true" scrollHeight="flex"
+				 [ngStyle]="{maxHeight:'150px'}">
+			<ng-template #header>
+				<tr>
+					<th class="col-sequence">{{ i18n.t('routingOperation.sequence') }}</th>
+					<th class="col-routingOperationCode">{{ i18n.t('routingOperation.operationCode') }}</th>
+					<th class="col-routingOperationName">{{ i18n.t('routingOperation.operationName') }}</th>
+					<th class="col-description">{{ i18n.t('routingOperation.description') }}</th>
+					<th class="col-isFinishOperation">{{ i18n.t('routingOperation.isFinishOperation') }}</th>
+					<th class="col-isOutputOperation">{{ i18n.t('routingOperation.isOutputOperation') }}</th>
+				</tr>
+			</ng-template>
+			<ng-template #body let-row>
+				<tr class="row" [class.row--selected]="selectedRoutingOp()?.id === row.id"
+					(click)="selectRoutingOp(row)" (dblclick)="openEdit('routing')">
+					<td class="col-sequence">{{ row.sequence || '—' }}</td>
+					<td class="col-routingOperationCode">{{ row.routingOperationCode || '—' }}</td>
+					<td class="col-routingOperationName">{{ row.routingOperationName || '—' }}</td>
+					<td class="col-description">{{ row.description || '—' }}</td>
+					<td class="col-isFinishOperation">
+						@if (row.isFinishOperation) {
+						<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+							 stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						} @else {
+						<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="6" y1="6" x2="18" y2="18" />
+							<line x1="18" y1="6" x2="6" y2="18" />
+						</svg>
+						}
+					</td>
+					<td class="col-isOutputOperation">
+						@if (row.isOutputOperation) {
+						<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+							 stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						} @else {
+						<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="6" y1="6" x2="18" y2="18" />
+							<line x1="18" y1="6" x2="6" y2="18" />
+						</svg>
+						}
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template #emptymessage>
+				<tr>
+					<td colspan="6">
+						<p class="empty">
+							{{ selectedRouting() ? i18n.t('routingOperation.emptyLine') :
+							i18n.t('routingOperation.emptyHint') }}
+						</p>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</div>
+</ng-template>

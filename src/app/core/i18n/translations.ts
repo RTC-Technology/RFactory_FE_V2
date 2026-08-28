@@ -429,7 +429,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'product.preparationTime': { vi: 'Thời gian chuẩn bị', en: 'Preparation Time' },
 	'product.vatRate': { vi: '% VAT', en: '% VAT' },
 	'product.standardProductionTime': { vi: 'Thời gian sản xuất tiêu chuẩn', en: 'Standard Production Time' },
-	'product.isOutsourced': { vi: 'Mua ngoài', en: 'Outsourced' },
+	'product.isOutsourced': { vi: 'Gia công ngoài', en: 'Outsourced' },
 	'product.description': { vi: 'Mô tả', en: 'Description' },
 
 	'product.warrantyUnit.day': { vi: 'Ngày', en: 'Day' },
@@ -449,6 +449,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'product.preparationTime.unit': { vi: 'Ngày', en: 'Day' },
 	'product.standardProductionTime.unit': { vi: 'Giờ', en: 'Hour' },
 
+	'product.err.productCodeRequired': { vi: 'Mã sản phẩm không được để trống.', en: 'Product code is required.' },
+	'product.err.productNameRequired': { vi: 'Tên sản phẩm không được để trống.', en: 'Product name is required.' },
+	'product.err.productCodeTaken': { vi: 'Mã sản phẩm "{code}" đã tồn tại.', en: 'Product code "{code}" already exists.' },
+
 	'bomDetail.title': { vi: 'Chi tiết BOM', en: 'BOM detail' },
 	'bomDetail.lower': { vi: 'chi tiết BOM', en: 'BOM line' },
 	'bomDetail.product': { vi: 'Vật tư / bán thành phẩm', en: 'Material / semi-finished' },
@@ -465,6 +469,8 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 		en: 'Pick a material or semi-finished product.',
 	},
 	'bomDetail.err.quantity': { vi: 'Định lượng phải lớn hơn 0.', en: 'Quantity must be greater than 0.' },
+
+
 
 	'routing.title': { vi: 'Quy trình', en: 'Routing' },
 	'routing.lower': { vi: 'quy trình', en: 'routing' },
@@ -505,6 +511,32 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'routingOperation.isFinishOperation': { vi: 'Công đoạn cuối', en: 'Finish operation' },
 	'routingOperation.isOutputOperation': { vi: 'Xuất thành phẩm', en: 'Output operation' },
 	'routingOperation.total': { vi: 'Tổng', en: 'Total' },
+	'routing.err.versionRequired': { vi: 'Phiên bản quy trình không được để trống.', en: 'Version routing is required.' },
+
+	'routingOperation.err.linesRequired': {
+		vi: 'Quy trình phải có ít nhất một công đoạn.',
+		en: 'A routing needs at least one operation.',
+	},
+
+	'routingOperation.err.sequenceRequired': {
+		vi: 'Dòng {line}: thứ tự không được để trống.',
+		en: 'Line {line}: sequence is required.',
+	},
+
+	'routingOperation.err.codeRequired': {
+		vi: 'Dòng {line}: mã công đoạn không được để trống.',
+		en: 'Line {line}: operation code is required.',
+	},
+
+	'routingOperation.err.nameRequired': {
+		vi: 'Dòng {line}: tên công đoạn không được để trống.',
+		en: 'Line {line}: operation name is required.',
+	},
+
+	'routingOperation.err.codeTaken': {
+		vi: 'Dòng {line}: công đoạn có mã "{value}" đã tồn tại trong quy trình này.',
+		en: 'Line {line}: operation with code "{value}" already exists in this routing.',
+	},
 
 	'bom.title': { vi: 'BOM', en: 'BOM' },
 	'bom.lower': { vi: 'BOM', en: 'BOM' },
@@ -547,7 +579,11 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 
 	'bom.addBom': { vi: 'Thêm BOM', en: 'Add BOM' },
 	'bom.removeBom': { vi: 'Xóa BOM', en: 'Remove BOM' },
+	'bom.err.codeRequired': { vi: 'Mã BOM không được để trống.', en: 'BOM code is required.' },
+	'bom.err.nameRequired': { vi: 'Tên BOM không được để trống.', en: 'BOM name is required.' },
+	'bom.err.codeTaken': { vi: 'Mã BOM "{code}" đã tồn tại.', en: 'BOM code "{code}" already exists.' },
 
+	'bomDetail.err.linesRequired': { vi: 'Mỗi BOM phải có ít nhất 1 dòng.', en: 'Each BOM must have at least 1 line.' },
 	'bomDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
 	'bomDetail.removeLine': { vi: 'Xóa dòng', en: 'Remove line' },
 	'bomDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },
@@ -555,6 +591,30 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'bomDetail.unit': { vi: 'Đơn vị tính', en: 'Unit' },
 	'bomDetail.fixedScrapQty': { vi: 'Số lượng phế liệu', en: 'Fixed scrap quantity' },
 	'bomDetail.selectProduct': { vi: 'Chọn sản phẩm…', en: 'Pick a product…' },
+
+	'bomDetail.err.productRequired': {
+		vi: 'Dòng {line}: chưa chọn sản phẩm.',
+		en: 'Line {line}: no product selected.',
+	},
+	'bomDetail.err.quantityRequired': {
+		vi: 'Dòng {line}: định lượng phải lớn hơn 0.',
+		en: 'Line {line}: quantity must be greater than 0.',
+	},
+	'bomDetail.err.selfReference': {
+		vi: 'Không thể dùng chính sản phẩm này làm thành phần của BOM của nó.',
+		en: 'A product cannot be a component of its own BOM.',
+	},
+	'bomDetail.err.duplicate': {
+		vi: 'Dòng {line}: sản phẩm "{name}" đã có trong BOM này.',
+		en: 'Line {line}: "{name}" is already in this BOM.',
+	},
+
+	'bomDetail.err.versionRequired': {
+		vi: 'Dòng {line}: phiên bản không được để trống.',
+		en: 'Line {line}: version is required.',
+	},
+
+
 
 	// ─── Shift / shift break ──────────────────────────────────────────────────
 	'shift.shift': { vi: 'Ca làm việc', en: 'Shift' },

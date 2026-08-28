@@ -228,17 +228,30 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		return this.routingApi.items().filter(r => r.productId === productId);
 	});
 
-	readonly routingOps = computed(() => {
-		const routingId = this.selectedRouting()?.id;
-		if (routingId == null) return [];
-		return this.routingOpApi.items().filter(o => o.routingId === routingId);
-	});
+	bomDetails(row: BomDto | null) {
+		if (!row) return [];
+		return this.bomDetailApi.items().filter(
+			x => x.bomId === row.id
+		);
+	}
+	routingOps(row: RoutingDto | null) {
+		if (!row) return [];
+		return this.routingOpApi.items().filter(
+			x => x.routingId === row.id
+		);
+	}
 
-	readonly bomDetails = computed(() => {
-		const bomId = this.selectedBom()?.id;
-		if (bomId == null) return [];
-		return this.bomDetailApi.items().filter(d => d.bomId === bomId);
-	});
+	// readonly routingOps = computed(() => {
+	// 	const routingId = this.selectedRouting()?.id;
+	// 	if (routingId == null) return [];
+	// 	return this.routingOpApi.items().filter(o => o.routingId === routingId);
+	// });
+
+	// readonly bomDetails = computed(() => {
+	// 	const bomId = this.selectedBom()?.id;
+	// 	if (bomId == null) return [];
+	// 	return this.bomDetailApi.items().filter(d => d.bomId === bomId);
+	// });
 
 	/** BOMs the backend holds with no product. No panel here can reach them. */
 	readonly unassignedBoms = computed(() =>
@@ -253,7 +266,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 			untracked(() => this.selectedBom.set(this._reconcile(this.selectedBom(), boms)));
 		});
 		effect(() => {
-			const details = this.bomDetails();
+			const details = this.bomDetails(this.selectedBom());
 			untracked(() => this.selectedBomDetail.set(this._reconcile(this.selectedBomDetail(), details)));
 		});
 		effect(() => {
@@ -261,7 +274,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 			untracked(() => this.selectedRouting.set(this._reconcile(this.selectedRouting(), routings)));
 		});
 		effect(() => {
-			const ops = this.routingOps();
+			const ops = this.routingOps(this.selectedRouting());
 			untracked(() => this.selectedRoutingOp.set(this._reconcile(this.selectedRoutingOp(), ops)));
 		});
 	}
@@ -284,6 +297,20 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
 		});
+	}
+
+	calculateProductTotal(productGroupId: number) {
+		let total = 0;
+
+		if (this.products()) {
+			for (let product of this.products()) {
+				if ((product.productGroupId ?? 0) === productGroupId) {
+					total++;
+				}
+			}
+		}
+
+		return total;
 	}
 
 	// ─── Global filter ──────────────────────────────────────────────────────────
@@ -340,7 +367,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 	selectRouting(routing: RoutingDto): void {
 		this.selectedRouting.set(routing);
-		this.selectedRoutingOp.set(this._first(this.routingOps()));
+		this.selectedRoutingOp.set(this._first(this.routingOps(routing)));
 	}
 
 	selectRoutingOp(op: RoutingOperationDto): void {
@@ -735,11 +762,12 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 				if (!row.bomCode) return this.i18n.t('bom.err.codeRequired', { line });
 				if (!row.bomName) return this.i18n.t('bom.err.nameRequired', { line });
+				if (!row.version) return this.i18n.t('bom.err.versionRequired', { line });
 
 				// Validate bom details
-				if (!row.bomDetails) return this.i18n.t('bom.err.lineRequired', { line });
+				if (!row.bomDetails) return this.i18n.t('bomDetail.err.linesRequired', { line });
 
-				if (row.bomDetails.length === 0) return this.i18n.t('bom.err.lineRequired', { line });
+				if (row.bomDetails.length === 0) return this.i18n.t('bomDetail.err.linesRequired', { line });
 
 				for (let j = 0; j < row.bomDetails.length; j++) {
 					const detail = row.bomDetails[j];
@@ -764,9 +792,9 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 				if (!row.version) return this.i18n.t('routing.err.versionRequired', { line });
 
 				// Validate bom details
-				if (!row.routingOperations) return this.i18n.t('routingOperation.err.lineRequired', { line });
+				if (!row.routingOperations) return this.i18n.t('routingOperation.err.linesRequired', { line });
 
-				if (row.routingOperations.length === 0) return this.i18n.t('routingOperation.err.lineRequired', { line });
+				if (row.routingOperations.length === 0) return this.i18n.t('routingOperation.err.linesRequired', { line });
 
 				for (let j = 0; j < row.routingOperations.length; j++) {
 					const detail = row.routingOperations[j];
