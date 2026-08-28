@@ -3,7 +3,7 @@
 			 let-showReload="showReload">
 	<div class="toolbar">
 		<button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
-				(click)="openCreate(kind)">
+				(click)="openCreate()">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<rect x="3" y="3" width="12" height="14" rx="1.5" />
 				<line x1="19" y1="9" x2="19" y2="17" />
@@ -12,7 +12,7 @@
 			<span>{{ i18n.t('common.add') }}</span>
 		</button>
 		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
-				(click)="openEdit()">
+				(click)="openEdit(kind)">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<path d="M4 3h9l4 4v3" />
 				<path d="M4 3v18h13v-6" />
@@ -83,7 +83,7 @@
 								<th class="col-wastageRate">{{ i18n.t('product.wastageRate') }}</th>
 								<th class="col-preparationTime">{{ i18n.t('product.preparationTime') }}</th>
 								<th class="col-warrantyPeriod">{{ i18n.t('product.warrantyPeriod') }}</th>
-								<th class="col-warrantyPeriodUnit">{{ i18n.t('product.warrantyPeriodUnit') }}</th>
+								<!-- <th class="col-warrantyPeriodUnit">{{ i18n.t('product.warrantyPeriodUnit') }}</th> -->
 								<th class="col-vatRate">{{ i18n.t('product.vatRate') }}</th>
 								<th class="col-standardProductionTime">{{ i18n.t('product.standardProductionTime') }}</th>
 								<th class="col-isOutsourced">{{ i18n.t('product.isOutsourced') }}</th>
@@ -93,11 +93,11 @@
 						</ng-template>
 						<ng-template #body let-row>
 							<tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
-								(click)="selectProduct(row)" (dblclick)="openEdit()">
+								(click)="selectProduct(row)" (dblclick)="openEdit('product')">
 								<td class="col-productCode">{{ row.productCode || '—' }}</td>
 								<td class="col-productName">{{ row.productName || '—' }}</td>
-								<td class="col-productType">{{ productTypeLabel(row.productTypeId) }}</td>
-								<td class="col-defaultUnit">{{ unitLabel(row.defaultUnitId) }}</td>
+								<td class="col-productType">{{ productTypeLabel(row.productTypeId) || '—' }}</td>
+								<td class="col-defaultUnit">{{ unitLabel(row.defaultUnitId) || '—' }}</td>
 								<td class="col-drawingNo">{{ row.drawingNo || '—' }}</td>
 								<td class="col-drawingPath">{{ row.drawingPath || '—' }}</td>
 								<td class="col-status">
@@ -107,39 +107,42 @@
 									<span class="muted">—</span>
 									}
 								</td>
-								<td class="col-productNature">{{ productNatureLabel(row.productNature || '—') }}</td>
-								<td class="col-productGroup">{{ productGroupLabel(row.productGroupId || '—') }}</td>
-								<td class="col-productionUnit">{{ unitLabel(row.productionUnitId || '—') }}</td>
-								<td class="col-defaultWarehouse">{{ warehouseLabel(row.defaultWarehouseId || '—') }}</td>
+								<td class="col-productNature">{{ productNatureLabel(row.productNature) || '—' }}</td>
+								<td class="col-productGroup">{{ productGroupLabel(row.productGroupId) || '—' }}</td>
+								<td class="col-productionUnit">{{ unitLabel(row.productionUnitId) || '—' }}</td>
+								<td class="col-defaultWarehouse">{{ warehouseLabel(row.defaultWarehouseId) || '—'}}</td>
 								<td class="col-minStock text-right">
-									{{ row.minStock != null ? (row.minStock | number:'1.0-2') : '—' }}
+									{{ row.minStock != null ? (row.minStock | number:'1.0-2') : 0 }}
 								</td>
 								<td class="col-maxStock text-right">
-									{{ row.maxStock != null ? (row.maxStock | number:'1.0-2') : '—' }}
+									{{ row.maxStock != null ? (row.maxStock | number:'1.0-2') : 0 }}
 								</td>
 								<td class="col-fixedPurchasePrice text-right">
-									{{ row.fixedPurchasePrice != null ? (row.fixedPurchasePrice | number:'1.0-2') : '—' }}
+									{{ row.fixedPurchasePrice != null ? (row.fixedPurchasePrice | number:'1.0-2') : 0 }}
+									{{i18n.t('product.fixedPurchasePrice.unit')}}
 								</td>
 								<td class="col-wastageRate text-right">
-									{{ row.wastageRate != null ? (row.wastageRate | number:'1.0-2') : '—' }}
+									{{ row.wastageRate != null ? (row.wastageRate | number:'1.0-2') : 0 }}
 								</td>
 								<td class="col-preparationTime text-right">
-									{{ row.preparationTime != null ? (row.preparationTime | number:'1.0-2') : '—' }}
+									{{ row.preparationTime != null ? (row.preparationTime | number:'1.0-2') : 0 }}
+									{{i18n.t('product.preparationTime.unit')}}
 								</td>
 								<td class="col-warrantyPeriod text-right">
-									{{ row.warrantyPeriod != null ? (row.warrantyPeriod | number:'1.0-2') : '—' }}
+									{{ row.warrantyPeriod != null ? (row.warrantyPeriod | number:'1.0-2') : 0 }}
+									{{ warrantyPeriodUnitLabel(row.warrantyPeriodUnit || '—') }}
 								</td>
-								<td class="col-warrantyPeriodUnit">{{ warrantyPeriodUnitLabel(row.warrantyPeriodUnit || '—') }}</td>
 								<td class="col-vatRate text-right">
-									{{ row.vatRate != null ? (row.vatRate | number:'1.0-2') : '—' }}
+									{{ row.vatRate != null ? (row.vatRate | number:'1.0-2') : 0 }}
 								</td>
 								<td class="col-standardProductionTime text-right">
-									{{ row.standardProductionTime != null ? (row.standardProductionTime | number:'1.0-2') : '—' }}
+									{{ row.standardProductionTime != null ? (row.standardProductionTime | number:'1.0-2') : 0 }}
+									{{i18n.t('product.standardProductionTime.unit')}}
 								</td>
 								<td class="col-isOutsourced">{{ row.isOutsourced || '—' }}</td>
 								<td class="col-description">{{ row.description || '—' }}</td>
 								<td class="col-productionColor">
-									<p [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'2.5em'}">
+									<p [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'.5em'}">
 										{{row.productionColor}}
 									</p>
 								</td>
@@ -147,8 +150,8 @@
 						</ng-template>
 						<ng-template #emptymessage>
 							<tr>
-								<td colspan="12">
-									<p class="empty">{{ i18n.t('bom.emptyHint') }}</p>
+								<td colspan="22">
+									<p class="empty">{{ i18n.t('product.empty') }}</p>
 								</td>
 							</tr>
 						</ng-template>
@@ -191,7 +194,7 @@
 								</ng-template>
 								<ng-template #body let-row>
 									<tr class="row" [class.row--selected]="selectedBom()?.id === row.id"
-										(click)="selectBom(row)" (dblclick)="openEdit()">
+										(click)="selectBom(row)" (dblclick)="openEdit('bom')">
 										<!-- <td>{{ productLabel(row.productId) || '—' }}</td> -->
 										<td class="col-bomCode">{{ row.bomCode || '—' }}</td>
 										<td class="col-bomName">{{ row.bomName || '—' }}</td>
@@ -242,7 +245,7 @@
 								</ng-template>
 								<ng-template #body let-row>
 									<tr class="row" [class.row--selected]="selectedRouting()?.id === row.id"
-										(click)="selectRouting(row)" (dblclick)="openEdit()">
+										(click)="selectRouting(row)" (dblclick)="openEdit('routing')">
 										<!-- <td>{{ productLabel(row.productId) || '—' }}</td> -->
 										<td class="col-version">{{ row.version || '—' }}</td>
 										<td class="col-isActive">{{ row.isActive || '—' }}</td>
@@ -272,14 +275,14 @@
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
 		  [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
-	<p-tabs value="0" [ngStyle]="{height:'76vh'}">
+	<p-tabs [(value)]="activeTab" [ngStyle]="{height:'76vh'}">
 		<p-tablist>
-			<p-tab value="0">{{i18n.t('product.title')}}</p-tab>
-			<p-tab value="1">{{i18n.t('bom.title')}}</p-tab>
-			<p-tab value="2">{{i18n.t('routing.title')}}</p-tab>
+			<p-tab value="product">{{i18n.t('product.title')}}</p-tab>
+			<p-tab value="bom">{{i18n.t('bom.title')}}</p-tab>
+			<p-tab value="routing">{{i18n.t('routing.title')}}</p-tab>
 		</p-tablist>
 		<p-tabpanels>
-			<p-tabpanel value="0">
+			<p-tabpanel value="product">
 				<div class="form">
 					@if (formError()) {
 					<div class="form__error">{{ formError() }}</div>
@@ -515,7 +518,7 @@
 				</div>
 			</p-tabpanel>
 
-			<p-tabpanel value="1">
+			<p-tabpanel value="bom">
 				<section class="panel" [ngStyle]="{border:'none'}">
 					<div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
 						<button type="button" class="lines__add" (click)="addBomRow()">
@@ -770,7 +773,7 @@
 				</section>
 			</p-tabpanel>
 
-			<p-tabpanel value="2">
+			<p-tabpanel value="routing">
 				<section class="panel" [ngStyle]="{border:'none'}">
 					<div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
 						<button type="button" class="lines__add" (click)="addRoutingRow()">

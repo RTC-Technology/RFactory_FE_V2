@@ -275,6 +275,8 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 			products: this.productApi.load(),
 			types: this.typeApi.load(),
 			units: this.unitApi.load(),
+			groups: this.groupApi.load(),
+			warehouses: this.warehouseApi.load(),
 			boms: this.bomApi.load(),
 			bomDetails: this.bomDetailApi.load(),
 			routings: this.routingApi.load(),
@@ -373,17 +375,16 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	form = this._emptyForm();
 
 	readonly bomRows = signal<BomDto[]>([]);
-	// readonly bomDetailRows = signal<BomDetailDto[]>([]);
 	readonly routingRows = signal<RoutingDto[]>([]);
-	// readonly routingOpRows = signal<RoutingOperationDto[]>([]);
 
+	readonly activeTab = signal<string>('product');
 	private _tempDetailId = 0;
 	readonly dialogTitle = computed(() =>
 		this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
 			entity: this.i18n.t('product.lower'),
 		}));
 
-	openCreate(kind: EntityKind): void {
+	openCreate(): void {
 
 		this.editingId.set(null);
 		this.formError.set('');
@@ -395,7 +396,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		this.dialogOpen.set(true);
 	}
 
-	openEdit(): void {
+	openEdit(kind: EntityKind): void {
 
 		const row = this.selectedProduct();
 		if (!row) return;
@@ -483,6 +484,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 				}))
 		);
 
+		this.activeTab.set(kind);
 		this.dialogOpen.set(true);
 	}
 

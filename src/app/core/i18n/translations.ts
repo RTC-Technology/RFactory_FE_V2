@@ -414,7 +414,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 		en: 'Save the product before adding BOMs or work steps.',
 	},
 
-	'product.status': { vi: 'Đang dùng', en: 'In use' },
+	'product.status': { vi: 'Trạng thái', en: 'Status' },
 	'product.productNature': { vi: 'Tính chất', en: 'Product Nature' },
 	'product.productGroup': { vi: 'Nhóm vật tư', en: 'Product Group' },
 	'product.productionColor': { vi: 'Màu sản xuất', en: 'Production Color' },
