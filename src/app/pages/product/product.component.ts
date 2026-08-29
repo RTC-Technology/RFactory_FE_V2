@@ -758,7 +758,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		if (this.bomRows().length > 0) {
 			for (let i = 0; i < this.bomRows().length; i++) {
 				const row = this.bomRows()[i];
-				const line = i + 1;
+				const line = `#${i + 1}`;
 
 				if (!row.bomCode) return this.i18n.t('bom.err.codeRequired', { line });
 				if (!row.bomName) return this.i18n.t('bom.err.nameRequired', { line });
@@ -771,11 +771,11 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 				for (let j = 0; j < row.bomDetails.length; j++) {
 					const detail = row.bomDetails[j];
-					const detailLine = j + 1;
+					const line = j + 1;
 
-					if (!detail.productId) return this.i18n.t('bomDetail.err.productRequired', { line, detailLine });
-					if (!detail.quantity) return this.i18n.t('bomDetail.err.quantityRequired', { line, detailLine });
-					if (detail.quantity <= 0) return this.i18n.t('bomDetail.err.quantityInvalid', { line, detailLine });
+					if (!detail.productId) return this.i18n.t('bomDetail.err.productRequired', { line });
+					if (!detail.quantity) return this.i18n.t('bomDetail.err.quantityRequired', { line });
+					if (detail.quantity <= 0) return this.i18n.t('bomDetail.err.quantityInvalid', { line });
 				}
 			}
 		}
@@ -787,7 +787,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		if (this.routingRows().length > 0) {
 			for (let i = 0; i < this.routingRows().length; i++) {
 				const row = this.routingRows()[i];
-				const line = i + 1;
+				const line = `#${i + 1}`;
 
 				if (!row.version) return this.i18n.t('routing.err.versionRequired', { line });
 
@@ -798,11 +798,11 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 				for (let j = 0; j < row.routingOperations.length; j++) {
 					const detail = row.routingOperations[j];
-					const detailLine = j + 1;
+					const line = j + 1;
 
-					if (!detail.sequence) return this.i18n.t('routingOperation.err.sequenceRequired', { line, detailLine });
-					if (!detail.routingOperationCode) return this.i18n.t('routingOperation.err.codeRequired', { line, detailLine });
-					if (!detail.routingOperationName) return this.i18n.t('routingOperation.err.nameRequired', { line, detailLine });
+					if (!detail.sequence) return this.i18n.t('routingOperation.err.sequenceRequired', { line });
+					if (!detail.routingOperationCode) return this.i18n.t('routingOperation.err.codeRequired', { line });
+					if (!detail.routingOperationName) return this.i18n.t('routingOperation.err.nameRequired', { line });
 
 				}
 			}

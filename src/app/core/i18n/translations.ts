@@ -511,7 +511,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'routingOperation.isFinishOperation': { vi: 'Công đoạn cuối', en: 'Finish operation' },
 	'routingOperation.isOutputOperation': { vi: 'Xuất thành phẩm', en: 'Output operation' },
 	'routingOperation.total': { vi: 'Tổng', en: 'Total' },
-	'routing.err.versionRequired': { vi: 'Phiên bản quy trình không được để trống.', en: 'Version routing is required.' },
+	'routing.err.versionRequired': { vi: 'Phiên bản quy trình {line} không được để trống.', en: 'Version routing {line} is required.' },
 
 	'routingOperation.err.linesRequired': {
 		vi: 'Quy trình phải có ít nhất một công đoạn.',
@@ -577,13 +577,15 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 		en: '{count} BOMs have no product assigned, so no panel here can reach them. Assign one in the database.',
 	},
 
+	'bom.err.versionRequired': { vi: 'Phiên bản BOM {line} không được để trống.', en: 'BOM {line} version is required.' },
+
 	'bom.addBom': { vi: 'Thêm BOM', en: 'Add BOM' },
 	'bom.removeBom': { vi: 'Xóa BOM', en: 'Remove BOM' },
-	'bom.err.codeRequired': { vi: 'Mã BOM không được để trống.', en: 'BOM code is required.' },
-	'bom.err.nameRequired': { vi: 'Tên BOM không được để trống.', en: 'BOM name is required.' },
+	'bom.err.codeRequired': { vi: 'Mã BOM {line} không được để trống.', en: 'BOM {line} code is required.' },
+	'bom.err.nameRequired': { vi: 'Tên BOM {line} không được để trống.', en: 'BOM {line} name is required.' },
 	'bom.err.codeTaken': { vi: 'Mã BOM "{code}" đã tồn tại.', en: 'BOM code "{code}" already exists.' },
 
-	'bomDetail.err.linesRequired': { vi: 'Mỗi BOM phải có ít nhất 1 dòng.', en: 'Each BOM must have at least 1 line.' },
+	'bomDetail.err.linesRequired': { vi: 'BOM {line} phải có ít nhất 1 dòng.', en: 'BOM {line} must have at least 1 line.' },
 	'bomDetail.addLine': { vi: 'Thêm dòng', en: 'Add line' },
 	'bomDetail.removeLine': { vi: 'Xóa dòng', en: 'Remove line' },
 	'bomDetail.lineCount': { vi: '{count} dòng', en: '{count} line(s)' },

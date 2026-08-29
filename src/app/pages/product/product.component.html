@@ -89,13 +89,13 @@
 								<th class="col-standardProductionTime">{{ i18n.t('product.standardProductionTime') }}</th>
 								<th class="col-isOutsourced">{{ i18n.t('product.isOutsourced') }}</th>
 								<th class="col-description">{{ i18n.t('product.description') }}</th>
-								<th class="col-productionColor">{{ i18n.t('product.productionColor') }}</th>
+								<!-- <th class="col-productionColor">{{ i18n.t('product.productionColor') }}</th> -->
 							</tr>
 						</ng-template>
 
 						<ng-template #groupheader let-row>
 							<tr pRowGroupHeader [ngStyle]="{ 'background-color':'#dee2e6'}">
-								<td colspan="22">
+								<td colspan="21">
 									<div class="flex items-center gap-2">
 										<span class="font-bold">
 											{{ productGroupLabel(row.productGroupId ) || '—' }}
@@ -120,7 +120,7 @@
 								(click)="selectProduct(row)" (dblclick)="openEdit('product')">
 								<td class="col-productCode">
 									<!-- <span [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'.5em'}"></span> -->
-									<p-tag severity="success" value="" />
+									<p-colorpicker [(ngModel)]="row.productionColor" disabled="" defaultColor="#dee2e6" />
 									{{ row.productCode || '—' }}
 								</td>
 								<td class="col-productName">{{ row.productName || '—' }}</td>
@@ -176,16 +176,16 @@
 									}
 								</td>
 								<td class="col-description">{{ row.description || '—' }}</td>
-								<td class="col-productionColor">
+								<!-- <td class="col-productionColor">
 									<p>
 										{{row.productionColor}}
 									</p>
-								</td>
+								</td> -->
 							</tr>
 						</ng-template>
 						<ng-template #emptymessage>
 							<tr>
-								<td colspan="22">
+								<td colspan="21">
 									<p class="empty">{{ i18n.t('product.empty') }}</p>
 								</td>
 							</tr>
@@ -588,7 +588,7 @@
 
 							<p-inputgroup>
 								<p-inputgroup-addon>
-									<p-colorpicker [(ngModel)]="form.productionColor" appendTo="body" />
+									<p-colorpicker [(ngModel)]="form.productionColor" appendTo="body" defaultColor="#dee2e6" />
 								</p-inputgroup-addon>
 								<input pInputText id="p-productionColor" name="productionColor" [(ngModel)]="form.productionColor"
 									   autocomplete="off" />
