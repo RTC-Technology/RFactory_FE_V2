@@ -21,6 +21,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import {
 	BomApiService, BomDetailApiService, ProductApiService, ProductGroupApiService, ProductTypeApiService, RoutingApiService,
 	RoutingOperationApiService, UnitApiService,
+	UnitConversionApiService,
 } from '../../core/services/product-api.service';
 import {
 	BomDetailDto, BomDto, ProductDto, PRODUCT_STATUSES, RoutingDto, RoutingOperationDto, productStatusOf,
@@ -28,6 +29,7 @@ import {
 	PRODUCT_WARRANTY_PERIOD_UNITS,
 	ProductRequest,
 	BomRequest,
+	UnitConversionDto,
 } from '../../domain/models/product.model';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { Textarea } from "primeng/textarea";
@@ -39,13 +41,14 @@ import { PanelModule } from 'primeng/panel';
 import { SplitterModule } from 'primeng/splitter';
 import { SplitStateService } from '../../core/services/split-state.service';
 
-type EntityKind = 'product' | 'bom' | 'bomDetail' | 'routing' | 'routingOp';
+type EntityKind = 'product' | 'bom' | 'bomDetail' | 'routing' | 'routingOp' | 'conversion';
 const LABEL_KEYS: Record<EntityKind, string> = {
 	product: 'product.lower',
 	bom: 'bom.lower',
 	bomDetail: 'bomDetail.lower',
 	routing: 'routing.lower',
 	routingOp: 'routing.op.lower',
+	conversion: 'conversion.lower',
 };
 
 
@@ -78,6 +81,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	private readonly productApi = inject(ProductApiService);
 	private readonly typeApi = inject(ProductTypeApiService);
 	private readonly unitApi = inject(UnitApiService);
+	private readonly conversionApi = inject(UnitConversionApiService);
 	private readonly warehouseApi = inject(WarehouseApiService);
 	private readonly groupApi = inject(ProductGroupApiService);
 
@@ -180,6 +184,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	readonly selectedBomDetail = signal<BomDetailDto | null>(null);
 	readonly selectedRouting = signal<RoutingDto | null>(null);
 	readonly selectedRoutingOp = signal<RoutingOperationDto | null>(null);
+	readonly selectedConversion = signal<UnitConversionDto | null>(null);
 
 	/** Type filter above the product list — the first thing an operator reaches for. */
 	readonly typeFilter = signal<number | null>(null);
@@ -213,6 +218,12 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 				statusSeverity: status?.severity,
 			};
 		});
+	});
+
+	readonly conversions = computed(() => {
+		const unitId = this.selectedProduct()?.defaultUnitId;
+		if (unitId == null) return [];
+		return this.conversionApi.items().filter(c => c.fromUnitId === unitId);
 	});
 
 
@@ -294,6 +305,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 			bomDetails: this.bomDetailApi.load(),
 			routings: this.routingApi.load(),
 			routingOps: this.routingOpApi.load(),
+			conversions: this.conversionApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('product.err.load'), err),
 		});
@@ -320,6 +332,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 	private readonly bomDetailTable = viewChild<Table>('bomDetailTable');
 	private readonly routingTable = viewChild<Table>('routingTable');
 	private readonly routingOpTable = viewChild<Table>('routingOpTable');
+	private readonly conversionTable = viewChild<Table>('conversionTable');
 
 	readonly filterFields: Record<EntityKind, string[]> = {
 		product: ['productCode', 'productName', 'drawingNo'],
@@ -327,12 +340,14 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		bomDetail: [],
 		routing: ['version'],
 		routingOp: ['routingOperationCode', 'routingOperationName', 'description'],
+		conversion: [],
 	};
 
 	applyFilter(kind: EntityKind, value: string): void {
 		const table = {
 			product: this.productTable(), bom: this.bomTable(), bomDetail: this.bomDetailTable(),
 			routing: this.routingTable(), routingOp: this.routingOpTable(),
+			conversion: this.conversionTable(),
 		}[kind];
 		table?.filterGlobal(value, 'contains');
 	}
@@ -372,6 +387,10 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 
 	selectRoutingOp(op: RoutingOperationDto): void {
 		this.selectedRoutingOp.set(op);
+	}
+
+	selectConversion(row: UnitConversionDto): void {
+		this.selectedConversion.set(row);
 	}
 
 	// ─── Detail modal ───────────────────────────────────────────────────────────
@@ -551,6 +570,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		const row = {
 			product: this.selectedProduct(), bom: this.selectedBom(), bomDetail: this.selectedBomDetail(),
 			routing: this.selectedRouting(), routingOp: this.selectedRoutingOp(),
+			conversion: this.selectedConversion(),
 		}[kind];
 		if (!row) return;
 
@@ -643,6 +663,7 @@ export class ProductComponent extends PermissionAwarePage implements OnInit {
 		return {
 			product: this.productApi, bom: this.bomApi, bomDetail: this.bomDetailApi,
 			routing: this.routingApi, routingOp: this.routingOpApi,
+			conversion: this.conversionApi,
 		}[kind];
 	}
 

@@ -114,6 +114,7 @@ export interface UnitConversionDto {
 	divideValue?: number | null;
 	formulaType: number;
 	isActive: boolean;
+	factor?: number | null;
 }
 
 export type UnitCategoryRequest = Omit<UnitCategoryDto, 'id'>;
@@ -149,7 +150,9 @@ export type BomRequest = Omit<BomDto, 'id'> & {
 	bomDetails?: BomDetailRequest[]
 };
 export type BomDetailRequest = Omit<BomDetailDto, 'id'>;
-export type UnitRequest = Omit<UnitDto, 'id'>;
+export type UnitRequest = Omit<UnitDto, 'id'> & {
+	unitConversions?: UnitConversionRequest[]
+};
 
 /**
  * `Product.Status` and `Bom.Status` are nullable ints with no enum or lookup table behind
