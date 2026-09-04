@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
+import { Checkbox, CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -71,7 +71,7 @@ interface ProductOption {
 		TableModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
 		InputTextModule, InputNumberModule, SelectModule, TagModule, ToggleSwitchModule, CheckboxModule, TabsModule,
 		HasPermissionDirective, SplitterModule,
-		Textarea, InputGroupModule, InputGroupAddonModule, ColorPickerModule, PanelModule
+		Textarea, InputGroupModule, InputGroupAddonModule, ColorPickerModule, PanelModule, Checkbox
 	],
 	providers: [MessageService, ConfirmationService],
 	templateUrl: './product.component.html',

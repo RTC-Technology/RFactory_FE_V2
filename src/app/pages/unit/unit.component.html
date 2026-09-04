@@ -289,8 +289,14 @@
 			</div>
 			<div class="field">
 				<label for="u-dec">{{ i18n.t('unit.decimals') }}</label>
-				<input pInputText type="number" min="0" max="6" id="u-dec" name="decimalPlaces"
-					   [(ngModel)]="form.decimalPlaces" />
+				<!-- <input pInputText type="number" min="0" max="6" id="u-dec" name="decimalPlaces"
+					   [(ngModel)]="form.decimalPlaces" /> -->
+
+				<p-inputnumber inputStyleClass="cell-input cell-input--num w-full"
+							   [(ngModel)]="form.decimalPlaces"
+							   mode="decimal"
+							   [showButtons]="true"
+							   [min]="0" [max]="6" [locale]="'en-US'" />
 			</div>
 		</div>
 
@@ -368,8 +374,8 @@
 											   [(ngModel)]="row.factor"
 											   mode="decimal"
 											   [showButtons]="true"
-											   inputId="minmax-buttons"
-											   [min]="0" />
+											   [minFractionDigits]="2" [maxFractionDigits]="2"
+											   [min]="0" [locale]="'en-US'" />
 								<!-- <input pInputText class="w-full" type="number" min="0" max="6" id="u-dec" name="factor"
 									   [(ngModel)]="row.factor" /> -->
 							</td>

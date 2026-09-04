@@ -558,9 +558,7 @@
 											   showButtons="true" class="w-full"
 											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
 
-								<p-inputgroup-addon>
-									%
-								</p-inputgroup-addon>
+								<p-inputgroup-addon>%</p-inputgroup-addon>
 							</p-inputgroup>
 						</div>
 					</div>
@@ -597,9 +595,7 @@
 											   class="w-full" showButtons="true"
 											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
 
-								<p-inputgroup-addon>
-									%
-								</p-inputgroup-addon>
+								<p-inputgroup-addon>%</p-inputgroup-addon>
 							</p-inputgroup>
 						</div>
 					</div>
@@ -980,8 +976,8 @@
 														<span class="req">*</span>
 													</th>
 													<th class="col-description">{{ i18n.t('routingOperation.description') }}</th>
-													<th class="col-isFinishOperation">{{ i18n.t('routingOperation.isFinishOperation') }}</th>
-													<th class="col-isOutputOperation">{{ i18n.t('routingOperation.isOutputOperation') }}</th>
+													<th class="col-isFinishOperation"></th>
+													<!-- <th class="col-isOutputOperation">{{ i18n.t('routingOperation.isOutputOperation') }}</th> -->
 													<th class="col-act">{{ i18n.t('common.actions') }}</th>
 												</tr>
 											</ng-template>
@@ -1017,12 +1013,31 @@
 													</td>
 
 													<td class="col-isFinishOperation">
-														<p-toggleswitch inputId="r-isFinishOperation" [(ngModel)]="row.isFinishOperation" />
+														<!-- <p-toggleswitch inputId="r-isFinishOperation" [(ngModel)]="row.isFinishOperation" /> -->
+
+														<div class="flex items-center">
+															<p-checkbox [inputId]="'r-isFinishOperation-' + i" name="r-isFinishOperation" binary="true" [(ngModel)]="row.isFinishOperation" />
+															<label [for]="'r-isFinishOperation-' + i" class="ml-2"
+																   [ngStyle]="{'text-wrap':'nowrap'}">
+																{{ i18n.t('routingOperation.isFinishOperation') }}
+															</label>
+														</div>
+														<div class="flex items-center" [ngStyle]="{'margin-top':'10px'}">
+															<p-checkbox [inputId]="'r-isOutputOperation-' + i" name="r-isOutputOperation" binary="true" [(ngModel)]="row.isOutputOperation" />
+															<label [for]="'r-isOutputOperation-' + i" class="ml-2"
+																   [ngStyle]="{'text-wrap':'nowrap'}">
+																{{ i18n.t('routingOperation.isOutputOperation') }}
+															</label>
+														</div>
 													</td>
 
-													<td class="col-isOutputOperation">
+													<!-- <td class="col-isOutputOperation">
 														<p-toggleswitch inputId="r-isOutputOperation" [(ngModel)]="row.isOutputOperation" />
-													</td>
+														<div class="flex items-center">
+															<p-checkbox inputId="r-isOutputOperation" name="group" [(ngModel)]="row.isOutputOperation" />
+															<label for="r-isOutputOperation" class="ml-2"> {{ i18n.t('routingOperation.isOutputOperation') }} </label>
+														</div>
+													</td> -->
 
 													<td class="col-act">
 														<button type="button"

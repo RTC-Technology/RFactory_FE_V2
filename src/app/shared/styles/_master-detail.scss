@@ -394,6 +394,11 @@
 			background: color-mix(in srgb, var(--accent) 22%, transparent);
 		}
 	}
+
+
+	.p-select-label {
+		font-size: 14px !important;
+	}
 }
 
 @keyframes fadeUp {
@@ -647,10 +652,9 @@
 			flex: 1 1 auto;
 			width: auto;
 			min-width: 0;
-			max-width: 10rem;
 			padding: 4px 7px 4px 7px;
 			padding-right: 3rem;
-			// font-size: 12.5px;
+			// font-size: 12.5px !important;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
