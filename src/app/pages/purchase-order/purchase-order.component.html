@@ -406,48 +406,81 @@
 							<label for="po-subTotal">
 								{{ i18n.t('purchaseOrder.subTotal') }}
 							</label>
-							<input pInputText id="po-subTotal" name="subTotal"
-								   type="number" [(ngModel)]="form.subTotal" />
+							<!-- <input pInputText id="po-subTotal" name="subTotal"
+								   type="text" [ngModel]="form.subTotal | number:'1.0-2'" /> -->
+
+							<p-inputnumber inputId="po-subTotal" inputStyleClass="w-full" disabled=""
+										   [(ngModel)]="form.subTotal"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 
 						<div class="field">
 							<label for="po-discountAmount">
 								{{ i18n.t('purchaseOrder.discountAmount') }}
 							</label>
-							<input pInputText id="po-discountAmount" name="discountAmount"
-								   type="number" [(ngModel)]="form.discountAmount" />
+							<!-- <input pInputText id="po-discountAmount" name="discountAmount"
+								   type="text" [(ngModel)]="form.discountAmount" /> -->
+
+							<p-inputnumber inputId="po-discountAmount" inputStyleClass="w-full" disabled=""
+										   [(ngModel)]="form.discountAmount"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 
 						<div class="field">
 							<label for="po-taxAmount">
 								{{ i18n.t('purchaseOrder.taxAmount') }}
 							</label>
-							<input pInputText id="po-taxAmount" name="taxAmount"
-								   type="number" [(ngModel)]="form.taxAmount" />
+							<!-- <input pInputText id="po-taxAmount" name="taxAmount"
+								   type="number" [(ngModel)]="form.taxAmount" /> -->
+
+							<p-inputnumber inputId="po-taxAmount" inputStyleClass="w-full" disabled=""
+										   [(ngModel)]="form.taxAmount"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 
 						<div class="field">
 							<label for="po-shippingAmount">
 								{{ i18n.t('purchaseOrder.shippingAmount') }}
 							</label>
-							<input pInputText id="po-shippingAmount" name="shippingAmount"
-								   type="number" [(ngModel)]="form.shippingAmount" />
+							<!-- <input pInputText id="po-shippingAmount" name="shippingAmount"
+								   type="number" [(ngModel)]="form.shippingAmount" /> -->
+							<p-inputnumber inputId="po-shippingAmount" inputStyleClass="w-full" disabled=""
+										   [(ngModel)]="form.shippingAmount"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 
 						<div class="field">
 							<label for="po-otherAmount">
 								{{ i18n.t('purchaseOrder.otherAmount') }}
 							</label>
-							<input pInputText id="po-otherAmount" name="otherAmount"
-								   type="number" [(ngModel)]="form.otherAmount" />
+							<!-- <input pInputText id="po-otherAmount" name="otherAmount"
+								   type="number" [(ngModel)]="form.otherAmount" /> -->
+							<p-inputnumber inputId="po-otherAmount" inputStyleClass="w-full" disabled="true"
+										   [(ngModel)]="form.otherAmount"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 
 						<div class="field">
 							<label for="po-totalAmount">
 								{{ i18n.t('purchaseOrder.totalAmount') }}
 							</label>
-							<input pInputText id="po-totalAmount" name="totalAmount"
-								   type="number" [(ngModel)]="form.totalAmount" />
+							<!-- <input pInputText id="po-totalAmount" name="totalAmount"
+								   type="number" [(ngModel)]="form.totalAmount" /> -->
+							<p-inputnumber inputId="po-totalAmount" inputStyleClass="w-full" disabled=""
+										   [(ngModel)]="form.totalAmount"
+										   mode="decimal"
+										   [showButtons]="true"
+										   [min]="0" />
 						</div>
 					</div>
 
@@ -855,7 +888,6 @@
 						</div>
 					</section>
 				</div>
-
 
 			</p-tabpanel>
 		</p-tabpanels>

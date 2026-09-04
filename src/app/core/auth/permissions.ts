@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   unit: crud('unit'),
   unitConversion: crud('unit-conversion'),
   productType: crud('product-type'),
+  productGroup: crud('product-group'),
   product: crud('product'),
   bom: crud('bom'),
   bomDetail: crud('bom-detail'),

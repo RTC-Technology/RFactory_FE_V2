@@ -1,0 +1,179 @@
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection" let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t("common.add") }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection" (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t("common.edit") }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection" (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 7h16" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                <path d="M9 7V4h6v3" />
+            </svg>
+            <span>{{ i18n.t("common.delete") }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t("common.reload") }}</span>
+        </button>
+        }
+
+        <input class="tool-search"
+               type="search"
+               [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')"
+               (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <section class="panel">
+        <div class="panel__head">
+            <h2 class="panel__title">{{ i18n.t('productGroup.title') }}</h2>
+            <span class="panel__count">{{ groups().length }}</span>
+        </div>
+        <ng-container *ngTemplateOutlet="toolbar; 
+                            context: { kind: 'productGroup', perms: perms.purchaseOrder, canAdd: true, hasSelection: !!selectedGroup(), showReload: true }" />
+
+        <div class="table-scroll">
+            <!-- <p-table #groupTable
+                     [value]="groups()"
+                     [showGridlines]="true"
+                     class="grid"
+                     [globalFilterFields]="filterFields.productGroup"
+                     (onFilter)="onFiltered('productGroup', $event.filteredValue)">
+                <ng-template #header>
+                    <tr>
+                        <th class="col-groupNo">{{ i18n.t('productGroup.groupNo') }}</th>
+                        <th class="col-groupName">{{ i18n.t('productGroup.groupName') }}</th>
+                        <th class="col-parent">{{ i18n.t('productGroup.parent') }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row"
+                        [class.row--selected]="selectedGroup()?.id === row.id"
+                        (click)="selectGroup(row)"
+                        (dblclick)="openEdit()">
+                        <td class="col-groupNo">{{ row.groupNo || '—' }}</td>
+                        <td class="col-groupName">{{ row.groupName || '—' }}</td>
+                        <td class="col-parent">{{ row.parentId || '—' }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="3">
+                            <p class="empty">{{ i18n.t('productGroup.empty') }}</p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table> -->
+
+            <p-treeTable
+                         #groupTable
+                         [value]="treeData()"
+                         [showGridlines]="true"
+                         class="grid"
+                         [globalFilterFields]="filterFields.productGroup"
+                         (onFilter)="onFiltered('productGroup', $event.filteredValue)">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="col-groupNo">{{ i18n.t('productGroup.groupNo') }}</th>
+                        <th class="col-groupName">{{ i18n.t('productGroup.groupName') }}</th>
+                        <th class="col-parent">{{ i18n.t('productGroup.parent') }}</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+                    <tr [ttRow]="rowNode">
+                        <td>
+                            <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                            {{ rowData.id }}
+                        </td>
+
+                        <td class="col-groupNo">{{ rowData.groupNo || '—' }}</td>
+                        <td class="col-groupName">{{ rowData.groupName || '—' }}</td>
+                        <td class="col-parent">{{ rowData.parentId || '—' }}</td>
+                    </tr>
+                </ng-template>
+            </p-treeTable>
+        </div>
+    </section>
+</div>
+
+<p-dialog [header]="dialogTitle()"
+          [visible]="dialogOpen()"
+          (visibleChange)="dialogOpen.set($event)"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field">
+            <label for="group-groupNo">
+                {{ i18n.t('productGroup.groupNo') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="group-groupNo" name="groupNo" [(ngModel)]="form.groupNo" autocomplete="off" />
+        </div>
+
+        <div class="field">
+            <label for="group-groupName">
+                {{ i18n.t('productGroup.groupName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="group-groupName" name="groupName" [(ngModel)]="form.groupName" autocomplete="off" />
+        </div>
+
+        <div class="field">
+            <label for="group-parentId">
+                {{ i18n.t('productGroup.parentId') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <p-select inputId="group-parentId"
+                      [options]="parentOptions()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [(ngModel)]="form.parentId"
+                      [placeholder]="i18n.t('productGroup.parent.unset')"
+                      appendTo="body"
+                      class="w-full" />
+        </div>
+    </div>
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
