@@ -1,0 +1,833 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <section class="panel">
+        <div class="panel__head">
+            <h2 class="panel__title">{{ i18n.t('pickingPlan.title') }}</h2>
+            <span class="panel__count">{{ 0 }}</span>
+        </div>
+        <ng-container *ngTemplateOutlet="toolbar; 
+                            context: { kind: 'pickingPlan', perms: perms.pickingPlan, canAdd: true, hasSelection: !!selectedPickingPlan(), showReload: true }" />
+
+        <div class="table-scroll">
+            <!-- <p-table #groupTable
+                     [value]="groups()"
+                     [showGridlines]="true"
+                     class="grid"
+                     [globalFilterFields]="filterFields.productGroup"
+                     (onFilter)="onFiltered('productGroup', $event.filteredValue)">
+                <ng-template #header>
+                    <tr>
+                        <th class="col-groupNo">{{ i18n.t('productGroup.groupNo') }}</th>
+                        <th class="col-groupName">{{ i18n.t('productGroup.groupName') }}</th>
+                        <th class="col-parent">{{ i18n.t('productGroup.parent') }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row"
+                        [class.row--selected]="selectedGroup()?.id === row.id"
+                        (click)="selectGroup(row)"
+                        (dblclick)="openEdit()">
+                        <td class="col-groupNo">{{ row.groupNo || '—' }}</td>
+                        <td class="col-groupName">{{ row.groupName || '—' }}</td>
+                        <td class="col-parent">{{ row.parentId || '—' }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="3">
+                            <p class="empty">{{ i18n.t('productGroup.empty') }}</p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table> -->
+
+
+        </div>
+    </section>
+</div>
+
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw',height:'100vh' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="p-code">
+                    {{ i18n.t('pickingPlan.code') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="p-code" name="planNo" [(ngModel)]="form.planNo" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="p-warehouseId">
+                    {{ i18n.t('pickingPlan.warehouse') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="warehouseOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.warehouseId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                          [placeholder]="i18n.t('pickingPlan.warehouse.unset')" />
+            </div>
+
+            <div class="field">
+                <label for="p-status">{{ i18n.t('pickingPlan.status') }} <span class="req">*</span></label>
+                <p-select inputId="p-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                          [placeholder]="i18n.t('pickingPlan.status.unset')" />
+            </div>
+
+        </div>
+        <div class="field">
+            <label for="p-remark">{{ i18n.t('pickingPlan.remark') }}</label>
+            <textarea pInputTextarea id="p-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off"
+                      [rows]="2">
+                </textarea>
+        </div>
+        <p-tabs [(value)]="activeTab">
+            <p-tablist>
+                <p-tab value="sources">{{i18n.t('pickingPlanSource.title')}}</p-tab>
+                <p-tab value="items">{{i18n.t('pickingPlanItem.title')}}</p-tab>
+                <p-tab value="tickets">{{i18n.t('pickingTicket.title')}}</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel value="sources">
+                    <div class="tab-content">
+                        <div class="form">
+                            @if (formError()) {
+                            <div class="form__error">{{ formError() }}</div>
+                            }
+
+                            <section class="panel lines">
+                                <div class="panel__head">
+                                    <h2 class="panel__title">{{ i18n.t('pickingPlanSource.title') }}</h2>
+                                    <span class="panel__scope">
+                                        {{ i18n.t('pickingPlanSource.lineCount', { count: pickingPlanSources().length }) }}
+                                    </span>
+                                    <button type="button" class="lines__add" (click)="addPickingPlanSource()">
+                                        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="1.8">
+                                            <line x1="12" y1="5" x2="12" y2="19" />
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                        </svg>
+                                        <span>{{ i18n.t('pickingPlanSource.addLine') }}</span>
+                                    </button>
+                                </div>
+
+                                <div class="lines__scroll">
+                                    <p-table [value]="pickingPlanSources()"
+                                             dataKey="id"
+                                             [showGridlines]="true"
+                                             class="grid grid--edit"
+                                             scrollable="true"
+                                             scrollHeight="flex"
+                                             [ngStyle]="{maxHeight:'45vh'}">
+                                        <ng-template #header>
+                                            <tr>
+                                                <th class="col-idx">#</th>
+                                                <th class="col-sourceType">
+                                                    {{ i18n.t('pickingPlanSource.sourceType') }}
+                                                    <span class="req">*</span>
+                                                </th>
+                                                <th class="col-sourceId">
+                                                    {{ i18n.t('pickingPlanSource.sourceId') }}
+                                                    <span class="req">*</span>
+                                                </th>
+                                                <th class="col-sourceNo">
+                                                    {{ i18n.t('routingOperation.sourceNo') }}
+                                                    <span class="req">*</span>
+                                                </th>
+                                                <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                            </tr>
+                                        </ng-template>
+
+                                        <ng-template #body let-row let-i="rowIndex">
+                                            <tr class="row row--edit">
+                                                <td class="col-idx">{{ i + 1 }}</td>
+                                                <td class="col-sourceType">
+                                                    <p-select inputId="s-sourceType" [options]="sourceTypeOptions()"
+                                                              optionLabel="label" optionValue="value"
+                                                              [(ngModel)]="row.sourceType"
+                                                              [filter]="true"
+                                                              filterBy="label"
+                                                              appendTo="body"
+                                                              class="w-full"
+                                                              [placeholder]="i18n.t('pickingPlanSource.type.unset')" />
+                                                </td>
+
+                                                <td class="col-sourceId">
+                                                    <p-select inputId="s-sourceId" [options]="sourceOptions()"
+                                                              optionLabel="label" optionValue="value"
+                                                              [(ngModel)]="row.sourceId"
+                                                              [filter]="true"
+                                                              filterBy="label"
+                                                              appendTo="body"
+                                                              class="w-full"
+                                                              [placeholder]="i18n.t('pickingPlanSource.source.unset')" />
+                                                </td>
+
+                                                <td class="col-sourceNo">
+                                                    <input pInputText id="s-sourceNo" name="sourceNo" class="w-full"
+                                                           [(ngModel)]="row.sourceNo" autocomplete="off" />
+                                                </td>
+
+                                                <td class="col-act">
+                                                    <button type="button"
+                                                            class="row-del"
+                                                            [title]="i18n.t('pickingPlanSource.removeLine')"
+                                                            [attr.aria-label]="i18n.t('pickingPlanSource.removeLine')"
+                                                            (click)="removePickingPlanSourceRow(row)">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <line x1="6" y1="6" x2="18" y2="18" />
+                                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+
+                                        <ng-template #emptymessage>
+                                            <tr>
+                                                <td colspan="14">
+                                                    <p class="empty">{{ i18n.t('pickingPlanSource.emptyLine') }}</p>
+                                                </td>
+                                            </tr>
+                                        </ng-template>
+                                    </p-table>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </p-tabpanel>
+
+                <p-tabpanel value="items">
+                    <section class="panel" [ngStyle]="{border:'none'}">
+                        <div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
+                            <button type="button" class="lines__add" (click)="addPickingPlanItem()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('pickingPlanItem.addLine') }}</span>
+                            </button>
+                        </div>
+                        <div class="tab-content" [ngStyle]="{height:'50vh',overflowY:'auto'}">
+                            @for (item of pickingPlanItems(); track $index) {
+                            <p-panel [toggleable]="true"
+                                     [ngStyle]="{'margin-top': '1em'}">
+                                <div class="form">
+                                    @if (formError()) {
+                                    <div class="form__error">{{ formError() }}</div>
+                                    }
+
+                                    <div class="field-row">
+                                        <div class="field">
+                                            <label for="item-productId">
+                                                {{ i18n.t('pickingPlanItem.product') }}
+                                                <span class="req">*</span>
+                                            </label>
+                                            <p-select [options]="productOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="item.productId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('pickingPlanItem.product.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="item-unitId">
+                                                {{ i18n.t('pickingPlanItem.unit') }}
+                                                <span class="req">*</span>
+                                            </label>
+                                            <p-select [options]="unitOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="item.unitId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('pickingPlanItem.unit.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="item-status">{{ i18n.t('pickingPlanItem.status') }} <span class="req">*</span></label>
+                                            <p-select [options]="itemStatusOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="item.status"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('pickingPlanItem.status.unset')" />
+                                        </div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field">
+                                            <label for="item-quantity">{{ i18n.t('pickingPlanItem.requiredQuantity') }} <span class="req">*</span></label>
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="item.requiredQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="item-allocatedQty">{{ i18n.t('pickingPlanItem.allocatedQty') }} <span class="req">*</span></label>
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="item.allocatedQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="item-pickedQty">{{ i18n.t('pickingPlanItem.pickedQty') }} <span class="req">*</span></label>
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="item.pickedQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="item-remainingQty">{{ i18n.t('pickingPlanItem.remainingQty') }} <span class="req">*</span></label>
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="item.remainingQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label for="item-remark">{{ i18n.t('pickingPlanItem.remark') }} <span class="req">*</span></label>
+                                        <textarea pInputTextarea id="item-remark" name="remark" [(ngModel)]="item.remark" autocomplete="off"
+                                                  [rows]="2">
+                                            </textarea>
+                                    </div>
+                                    <section class="panel lines">
+                                        <div class="panel__head">
+                                            <h2 class="panel__title">{{ i18n.t('pickingPlanItemSource.title') }}</h2>
+                                            <span class="panel__scope">
+                                                {{ i18n.t('pickingPlanItemSource.lineCount', { count: item.pickingPlanItemSources.length }) }}
+                                            </span>
+                                            <button type="button" class="lines__add" (click)="addPickingPlanItemSource(item)">
+                                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                     stroke-width="1.8">
+                                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                                </svg>
+                                                <span>{{ i18n.t('pickingPlanItemSource.addLine') }}</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="lines__scroll">
+                                            <p-table [value]="item.pickingPlanItemSources"
+                                                     dataKey="id"
+                                                     [showGridlines]="true"
+                                                     class="grid grid--edit"
+                                                     scrollable="true"
+                                                     scrollHeight="flex"
+                                                     [ngStyle]="{maxHeight:'20vh'}">
+                                                <ng-template #header>
+                                                    <tr>
+                                                        <th class="col-idx">#</th>
+                                                        <th class="col-source">
+                                                            {{ i18n.t('pickingPlanItemSource.source') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-sourcedetail">
+                                                            {{ i18n.t('pickingPlanItemSource.sourceDetail') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-quantity">
+                                                            {{ i18n.t('pickingPlanItemSource.requiredQty') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-pickedQty">{{ i18n.t('pickingPlanItemSource.pickedQty') }}</th>
+                                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                                    </tr>
+                                                </ng-template>
+
+                                                <ng-template #body let-row let-i="rowIndex">
+                                                    <tr class="row row--edit">
+                                                        <td class="col-idx">{{ i + 1 }}</td>
+                                                        <td class="col-product">
+                                                            <p-select [options]="sourceOptions()"
+                                                                      optionLabel="label" optionValue="value"
+                                                                      [(ngModel)]="row.sourceId"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      appendTo="body"
+                                                                      class="w-full"
+                                                                      [placeholder]="i18n.t('pickingPlanItemSource.source.unset')" />
+                                                        </td>
+
+                                                        <td class="col-sourcedetail">
+                                                            <p-select [options]="sourceDetailOptions()"
+                                                                      optionLabel="label"
+                                                                      optionValue="value"
+                                                                      [ngModel]="row.sourceDetailId || null"
+                                                                      (ngModelChange)="row.sourceDetailId = $event ?? 0"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      [placeholder]="i18n.t('pickingPlanItemSource.sourceDetail.unset')"
+                                                                      appendTo="body"
+                                                                      class="w-full" />
+                                                        </td>
+
+                                                        <td class="col-requiredQty">
+                                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                           [(ngModel)]="row.requiredQty"
+                                                                           mode="decimal"
+                                                                           [showButtons]="true"
+                                                                           [min]="0"
+                                                                           [minFractionDigits]="2"
+                                                                           [maxFractionDigits]="2"
+                                                                           locale="en-US" />
+                                                        </td>
+
+                                                        <td class="col-pickedQty">
+                                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                           [(ngModel)]="row.pickedQty"
+                                                                           mode="decimal"
+                                                                           [showButtons]="true"
+                                                                           [min]="0"
+                                                                           [minFractionDigits]="2"
+                                                                           [maxFractionDigits]="2"
+                                                                           locale="en-US" />
+                                                        </td>
+
+                                                        <td class="col-act">
+                                                            <button type="button"
+                                                                    class="row-del"
+                                                                    [title]="i18n.t('pickingPlanItemSource.removeLine')"
+                                                                    [attr.aria-label]="i18n.t('pickingPlanItemSource.removeLine')"
+                                                                    (click)="removePickingPlanItemSource(item,row)">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                                </svg>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+
+                                                <!-- <ng-template #footer>
+                                                    <tr class="lines__total">
+                                                        <td colspan="5">{{ i18n.t('bomDetail.total') }}</td>
+                                                        <td class="col-total">{{ bomDetailTotal(bom) | number: '1.0-2' }}</td>
+                                                        <td colspan="8"></td>
+                                                    </tr>
+                                                </ng-template> -->
+
+                                                <ng-template #emptymessage>
+                                                    <tr>
+                                                        <td colspan="14">
+                                                            <p class="empty">{{ i18n.t('pickingPlanItemSource.emptyLine') }}</p>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <ng-template #header>
+                                    <span class="font-bold">{{ i18n.t('pickingPlanItem.title') }} #{{ $index + 1 }}:{{ item.productId }}</span>
+                                </ng-template>
+                                <!-- <ng-template #icons [ngStyle]="{display:'flex','align-items':'center','justify-content':'center'}">
+                                    <div class="field field--inline">
+                                        <p-toggleswitch inputId="b-isActive" [(ngModel)]="item.isActive" [trueValue]="true" [falseValue]="false" />
+                                        <label for="b-isActive">{{ i18n.t('bom.isActive') }}</label>
+                                    </div>
+                                    <span [ngStyle]="{marginLeft:'8px'}">|</span>
+                                </ng-template> -->
+
+                                <ng-template #footer>
+                                    <button type="button" class="lines__remove" (click)="removePickingPlanItem(item)">
+                                        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path d="M4 7h16" />
+                                            <path d="M10 11v6" />
+                                            <path d="M14 11v6" />
+                                            <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                                            <path d="M9 7V4h6v3" />
+                                        </svg>
+                                        <span>{{ i18n.t('pickingPlanItem.remove') }}</span>
+                                    </button>
+                                </ng-template>
+                            </p-panel>
+                            }
+                        </div>
+                    </section>
+                </p-tabpanel>
+
+                <p-tabpanel value="tickets">
+                    <section class="panel" [ngStyle]="{border:'none'}">
+                        <div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
+                            <button type="button" class="lines__add" (click)="addPickingTicket()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('pickingTicket.addLine') }}</span>
+                            </button>
+                        </div>
+                        <div class="tab-content" [ngStyle]="{height:'50vh',overflowY:'auto'}">
+                            @for (ticket of pickingTickets(); track $index) {
+                            <p-panel [toggleable]="true"
+                                     [ngStyle]="{'margin-top': '1em'}">
+                                <div class="form">
+                                    @if (formError()) {
+                                    <div class="form__error">{{ formError() }}</div>
+                                    }
+
+                                    <div class="field-row">
+                                        <div class="field">
+                                            <label for="ticket-ticketNo">
+                                                {{ i18n.t('pickingTicket.ticketNo') }}
+                                                <span class="req">*</span>
+                                            </label>
+                                            <input pInputText id="ticket-ticketNo" name="ticketNo" [(ngModel)]="ticket.ticketNo" autocomplete="off" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="ticket-warehouseId">
+                                                {{ i18n.t('pickingTicket.warehouse') }}
+                                                <span class="req">*</span>
+                                            </label>
+                                            <p-select [options]="warehouseOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="ticket.warehouseId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('pickingTicket.warehouse.unset')" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="ticket-status">{{ i18n.t('pickingTicket.status') }} <span class="req">*</span></label>
+                                            <p-select [options]="ticketStatusOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="ticket.status"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('pickingTicket.status.unset')" />
+                                        </div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field">
+                                            <label for="ticket-assignedTo">{{ i18n.t('pickingTicket.assignedTo') }} <span class="req">*</span></label>
+                                            <p-select [options]="userOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="ticket.assignedTo"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('pickingTicket.assignedTo.unset')" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="ticket-startedAt">{{ i18n.t('pickingTicket.startedAt') }} <span class="req">*</span></label>
+                                            <input pInputText id="ticket-startedAt" type="datetime-local" name="startedAt" [(ngModel)]="ticket.startedAt" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="ticket-completedAt">{{ i18n.t('pickingTicket.completedAt') }} <span class="req">*</span></label>
+                                            <input pInputText id="ticket-completedAt" type="datetime-local" name="completedAt" [(ngModel)]="ticket.completedAt" />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label for="ticket-remark">{{ i18n.t('pickingTicket.remark') }} <span class="req">*</span></label>
+                                        <textarea pInputTextarea id="item-remark" name="remark" [(ngModel)]="ticket.remark" autocomplete="off"
+                                                  [rows]="2">
+                                            </textarea>
+                                    </div>
+                                    <section class="panel lines">
+                                        <div class="panel__head">
+                                            <h2 class="panel__title">{{ i18n.t('pickingPlanItemSource.title') }}</h2>
+                                            <span class="panel__scope">
+                                                {{ i18n.t('pickingPlanItemSource.lineCount', { count: ticket.pickingTicketItems.length }) }}
+                                            </span>
+                                            <button type="button" class="lines__add" (click)="addPickingTicketItem(ticket)">
+                                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                     stroke-width="1.8">
+                                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                                </svg>
+                                                <span>{{ i18n.t('pickingTicketItem.addLine') }}</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="lines__scroll">
+                                            <p-table [value]="ticket.pickingTicketItems"
+                                                     dataKey="id"
+                                                     [showGridlines]="true"
+                                                     class="grid grid--edit"
+                                                     scrollable="true"
+                                                     scrollHeight="flex"
+                                                     [ngStyle]="{maxHeight:'20vh'}">
+                                                <ng-template #header>
+                                                    <tr>
+                                                        <th class="col-idx">#</th>
+                                                        <th class="col-pickingPlanItem">
+                                                            {{ i18n.t('pickingTicketItem.pickingPlanItem') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-product">
+                                                            {{ i18n.t('pickingTicketItem.product') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-location">
+                                                            {{ i18n.t('pickingTicketItem.location') }}
+                                                            <span class="req">*</span>
+                                                        </th>
+                                                        <th class="col-lot">{{ i18n.t('pickingTicketItem.lot') }}</th>
+                                                        <th class="col-serialNo">{{ i18n.t('pickingTicketItem.serialNo') }}</th>
+                                                        <th class="col-requestedQty">{{ i18n.t('pickingTicketItem.requestedQty') }}</th>
+                                                        <th class="col-pickedQty">{{ i18n.t('pickingTicketItem.pickedQty') }}</th>
+                                                        <th class="col-status">{{ i18n.t('pickingTicketItem.status') }}</th>
+                                                        <th class="col-remark">{{ i18n.t('pickingTicketItem.remark') }}</th>
+                                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                                    </tr>
+                                                </ng-template>
+
+                                                <ng-template #body let-row let-i="rowIndex">
+                                                    <tr class="row row--edit">
+                                                        <td class="col-idx">{{ i + 1 }}</td>
+                                                        <td class="col-pickingPlanItem">
+                                                            <p-select [options]="planItemOptions()"
+                                                                      optionLabel="label" optionValue="value"
+                                                                      [(ngModel)]="row.pickingPlanItemId"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      appendTo="body"
+                                                                      class="w-full"
+                                                                      [placeholder]="i18n.t('pickingTicketItem.pickingPlanItem.unset')" />
+                                                        </td>
+
+                                                        <td class="col-product">
+                                                            <p-select [options]="productOptions()"
+                                                                      optionLabel="label"
+                                                                      optionValue="value"
+                                                                      [ngModel]="row.productId || null"
+                                                                      (ngModelChange)="row.productId = $event ?? 0"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      [placeholder]="i18n.t('pickingTicketItem.product.unset')"
+                                                                      appendTo="body"
+                                                                      class="w-full" />
+                                                        </td>
+
+                                                        <td class="col-location">
+                                                            <p-select [options]="locationOptions()"
+                                                                      optionLabel="label"
+                                                                      optionValue="value"
+                                                                      [(ngModel)]="row.locationId"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      [placeholder]="i18n.t('pickingTicketItem.location.unset')"
+                                                                      appendTo="body"
+                                                                      class="w-full" />
+                                                        </td>
+
+                                                        <td class="col-lot">
+                                                            <p-select [options]="lotOptions()"
+                                                                      optionLabel="label"
+                                                                      optionValue="value"
+                                                                      [(ngModel)]="row.lotId"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      [placeholder]="i18n.t('pickingTicketItem.lot.unset')"
+                                                                      appendTo="body"
+                                                                      class="w-full" />
+                                                        </td>
+
+                                                        <td class="col-serialNo">
+                                                            <input pInputText name="serialNo" [(ngModel)]="row.serialNo" autocomplete="off" />
+                                                        </td>
+
+                                                        <td class="col-requestedQty">
+                                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                           [(ngModel)]="row.requestedQty"
+                                                                           mode="decimal"
+                                                                           [showButtons]="true"
+                                                                           [min]="0"
+                                                                           [minFractionDigits]="2"
+                                                                           [maxFractionDigits]="2"
+                                                                           locale="en-US" />
+                                                        </td>
+
+                                                        <td class="col-pickedQty">
+                                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                           [(ngModel)]="row.pickedQty"
+                                                                           mode="decimal"
+                                                                           [showButtons]="true"
+                                                                           [min]="0"
+                                                                           [minFractionDigits]="2"
+                                                                           [maxFractionDigits]="2"
+                                                                           locale="en-US" />
+                                                        </td>
+
+                                                        <td class="col-status">
+                                                            <p-select [options]="ticketItemStatusOptions()"
+                                                                      optionLabel="label"
+                                                                      optionValue="value"
+                                                                      [(ngModel)]="row.status"
+                                                                      [filter]="true"
+                                                                      filterBy="label"
+                                                                      [placeholder]="i18n.t('pickingTicketItem.status.unset')"
+                                                                      appendTo="body"
+                                                                      class="w-full" />
+                                                        </td>
+
+                                                        <td class="col-remark">
+                                                            <textarea pInputTextarea name="remark" [(ngModel)]="row.remark" autocomplete="off"
+                                                                      [rows]="2">
+                                                            </textarea>
+                                                        </td>
+
+                                                        <td class="col-act">
+                                                            <button type="button"
+                                                                    class="row-del"
+                                                                    [title]="i18n.t('pickingTicketItem.removeLine')"
+                                                                    [attr.aria-label]="i18n.t('pickingTicketItem.removeLine')"
+                                                                    (click)="removePickingTicketItem(ticket,row)">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                                </svg>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+
+                                                <!-- <ng-template #footer>
+                                                    <tr class="lines__total">
+                                                        <td colspan="5">{{ i18n.t('bomDetail.total') }}</td>
+                                                        <td class="col-total">{{ bomDetailTotal(bom) | number: '1.0-2' }}</td>
+                                                        <td colspan="8"></td>
+                                                    </tr>
+                                                </ng-template> -->
+
+                                                <ng-template #emptymessage>
+                                                    <tr>
+                                                        <td colspan="14">
+                                                            <p class="empty">{{ i18n.t('pickingTicketItem.emptyLine') }}</p>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <ng-template #header>
+                                    <span class="font-bold">{{ i18n.t('pickingTicket.title') }} #{{ $index + 1 }}:{{ ticket.ticketNo }}</span>
+                                </ng-template>
+                                <!-- <ng-template #icons [ngStyle]="{display:'flex','align-items':'center','justify-content':'center'}">
+                                    <div class="field field--inline">
+                                        <p-toggleswitch inputId="b-isActive" [(ngModel)]="item.isActive" [trueValue]="true" [falseValue]="false" />
+                                        <label for="b-isActive">{{ i18n.t('bom.isActive') }}</label>
+                                    </div>
+                                    <span [ngStyle]="{marginLeft:'8px'}">|</span>
+                                </ng-template> -->
+
+                                <ng-template #footer>
+                                    <button type="button" class="lines__remove" (click)="removePickingTicket(ticket)">
+                                        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path d="M4 7h16" />
+                                            <path d="M10 11v6" />
+                                            <path d="M14 11v6" />
+                                            <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                                            <path d="M9 7V4h6v3" />
+                                        </svg>
+                                        <span>{{ i18n.t('pickingTicket.remove') }}</span>
+                                    </button>
+                                </ng-template>
+                            </p-panel>
+                            }
+                        </div>
+                    </section>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    </div>
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

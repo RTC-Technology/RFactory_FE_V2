@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   unit: crud('unit'),
   unitConversion: crud('unit-conversion'),
   productType: crud('product-type'),
+  productGroup: crud('product-group'),
   product: crud('product'),
   bom: crud('bom'),
   bomDetail: crud('bom-detail'),
@@ -49,6 +50,10 @@ export const PERMISSIONS = {
   purchaseOrder: crud('purchase-order'),
   purchaseOrderDetail: crud('purchase-order-detail'),
   purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
+  pickingPlan: crud('picking-plan'),
+  pickingPlanSource: crud('picking-plan-source'),
+  pickingPlanItem: crud('picking-plan-item'),
+  pickingTicket: crud('picking-ticket'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

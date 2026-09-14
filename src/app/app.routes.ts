@@ -79,6 +79,13 @@ export const routes: Routes = [
 				data: { permissions: [PERMISSIONS.productType.view] },
 			},
 			{
+				path: 'product-groups',
+				loadComponent: () =>
+					import('./pages/product-group/product-group.component').then(m => m.ProductGroupComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.productGroup.view] },
+			},
+			{
 				// Reads types and units to label and pick, plus BOMs, routings and their operations.
 				path: 'products',
 				loadComponent: () =>
@@ -258,6 +265,24 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+
+			//picking-plan
+			{
+				path: 'picking-plan',
+				loadComponent: () =>
+					import('./pages/picking-plan/picking-plan.component').then(m => m.PickingPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.pickingPlan.view,
+						PERMISSIONS.pickingPlanSource.view,
+						PERMISSIONS.pickingPlanItem.view,
+						PERMISSIONS.pickingTicket.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
 
 
 			{

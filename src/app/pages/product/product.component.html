@@ -1,9 +1,9 @@
-﻿<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
 <ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
-	let-showReload="showReload">
+			 let-showReload="showReload">
 	<div class="toolbar">
 		<button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
-			(click)="openCreate(kind)">
+				(click)="openCreate()">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<rect x="3" y="3" width="12" height="14" rx="1.5" />
 				<line x1="19" y1="9" x2="19" y2="17" />
@@ -12,7 +12,7 @@
 			<span>{{ i18n.t('common.add') }}</span>
 		</button>
 		<button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
-			(click)="openEdit(kind)">
+				(click)="openEdit(kind)">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 				<path d="M4 3h9l4 4v3" />
 				<path d="M4 3v18h13v-6" />
@@ -21,7 +21,7 @@
 			<span>{{ i18n.t('common.edit') }}</span>
 		</button>
 		<button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-			(click)="askDelete(kind)">
+				(click)="askDelete(kind)">
 			<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
 				<line x1="6" y1="6" x2="18" y2="18" />
 				<line x1="18" y1="6" x2="6" y2="18" />
@@ -42,88 +42,383 @@
 		}
 
 		<input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
-			[attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+			   [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
 	</div>
 </ng-template>
 
 <div class="page">
-	<section class="panel">
-		<div class="panel__head">
-			<h2 class="panel__title">{{ i18n.t('product.title') }}</h2>
-			<!-- Type filter scopes the whole list rather than acting on a row, so it lives in the header. -->
-			<p-select class="type-filter" [options]="typeFilterOptions()" optionLabel="label" optionValue="value"
-				[ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)" [filter]="true" filterBy="label"
-				appendTo="body" />
-			<span class="panel__count">{{ products().length }}</span>
-		</div>
-		<ng-container
-			*ngTemplateOutlet="toolbar; context: { kind: 'product', perms: perms.product, canAdd: true, hasSelection: !!selectedProduct(), showReload: true }" />
+	<p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+				[minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
 
-		<div class="table-scroll">
-			<p-table #productTable [value]="products()" [showGridlines]="true" class="grid"
-				[globalFilterFields]="filterFields.product">
-				<ng-template #header>
-					<tr>
-						<th class="col-code">{{ i18n.t('product.code') }}</th>
-						<th>{{ i18n.t('product.name') }}</th>
-						<th class="col-type">{{ i18n.t('product.type') }}</th>
-						<th class="col-unit">{{ i18n.t('product.unit') }}</th>
-						<th class="col-state">{{ i18n.t('common.status') }}</th>
-					</tr>
+		<ng-template #panel>
+			<p-splitter class="workspace__right" layout="horizontal"
+						[panelSizes]="split.sizes('product:split-y', [80,20])" [minSizes]="[20, 20]" [gutterSize]="6"
+						(onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+				<ng-template #panel>
+					<section class="panel">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('product.title') }}</h2>
+							<span class="panel__count">{{ products().length }}</span>
+						</div>
+						<ng-container
+									  *ngTemplateOutlet="toolbar; context: { kind: 'product', perms: perms.product, canAdd: true, hasSelection: !!selectedProduct(), showReload: true }" />
+
+						<div class="table-scroll">
+							<p-table #productTable [value]="products()" [showGridlines]="true" class="grid"
+									 [globalFilterFields]="filterFields.product"
+									 (onFilter)="onFiltered('product', $event.filteredValue)"
+									 [scrollable]="true" scrollHeight="flex"
+									 rowGroupMode="subheader" groupRowsBy="productGroupId">
+								<ng-template #header>
+									<tr>
+										<th class="col-productCode">{{ i18n.t('product.code') }}</th>
+										<th class="col-productName">{{ i18n.t('product.name') }}</th>
+										<th class="col-productType">{{ i18n.t('product.type') }}</th>
+										<th class="col-defaultUnit">{{ i18n.t('product.unit') }}</th>
+										<th class="col-drawingNo">{{ i18n.t('product.drawingNo') }}</th>
+										<th class="col-drawingPath">{{ i18n.t('product.drawingPath') }}</th>
+										<th class="col-status">{{ i18n.t('product.status') }}</th>
+										<th class="col-productNature">{{ i18n.t('product.productNature') }}</th>
+										<!-- <th class="col-productGroup">{{ i18n.t('product.productGroup') }}</th> -->
+										<th class="col-productionUnit">{{ i18n.t('product.productionUnit') }}</th>
+										<th class="col-defaultWarehouse">{{ i18n.t('product.defaultWarehouse') }}</th>
+										<th class="col-minStock">{{ i18n.t('product.minStock') }}</th>
+										<th class="col-maxStock">{{ i18n.t('product.maxStock') }}</th>
+										<th class="col-fixedPurchasePrice">{{ i18n.t('product.fixedPurchasePrice') }}</th>
+										<th class="col-wastageRate">{{ i18n.t('product.wastageRate') }}</th>
+										<th class="col-preparationTime">{{ i18n.t('product.preparationTime') }}</th>
+										<th class="col-warrantyPeriod">{{ i18n.t('product.warrantyPeriod') }}</th>
+										<!-- <th class="col-warrantyPeriodUnit">{{ i18n.t('product.warrantyPeriodUnit') }}</th> -->
+										<th class="col-vatRate">{{ i18n.t('product.vatRate') }}</th>
+										<th class="col-standardProductionTime">{{ i18n.t('product.standardProductionTime') }}</th>
+										<th class="col-isOutsourced">{{ i18n.t('product.isOutsourced') }}</th>
+										<th class="col-description">{{ i18n.t('product.description') }}</th>
+										<!-- <th class="col-productionColor">{{ i18n.t('product.productionColor') }}</th> -->
+									</tr>
+								</ng-template>
+
+								<ng-template #groupheader let-row>
+									<tr pRowGroupHeader [ngStyle]="{ 'background-color':'#dee2e6'}">
+										<td colspan="21">
+											<div class="flex items-center gap-2">
+												<span class="font-bold">
+													{{ productGroupLabel(row.productGroupId ) || '—' }}
+													({{calculateProductTotal(row.productGroupId) | number:'1.0-2' }})
+												</span>
+											</div>
+										</td>
+									</tr>
+								</ng-template>
+								<!-- <ng-template #groupfooter let-row>
+												<tr>
+													<td colspan="22">
+														<div class="text-right font-bold pe-12">{{i18n.t('inventory.totalProduct')}}:
+															{{calculateProductTotal(row.productGroupId) }}
+														</div>
+													</td>
+												</tr>
+											</ng-template> -->
+
+								<ng-template #body let-row>
+									<tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
+										(click)="selectProduct(row)" (dblclick)="openEdit('product')">
+										<td class="col-productCode">
+											<!-- <span [ngStyle]="{ 'background-color':row.productionColor || 'transparent','padding':'.5em'}"></span> -->
+											<p-colorpicker [(ngModel)]="row.productionColor" disabled="" defaultColor="#dee2e6" />
+											{{ row.productCode || '—' }}
+										</td>
+										<td class="col-productName">{{ row.productName || '—' }}</td>
+										<td class="col-productType">{{ productTypeLabel(row.productTypeId) || '—' }}</td>
+										<td class="col-defaultUnit">{{ unitLabel(row.defaultUnitId) || '—' }}</td>
+										<td class="col-drawingNo">{{ row.drawingNo || '—' }}</td>
+										<td class="col-drawingPath">{{ row.drawingPath || '—' }}</td>
+										<td class="col-status">
+											@if (statusOf(row.status); as status) {
+											<p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+											} @else {
+											<span class="muted">—</span>
+											}
+										</td>
+										<td class="col-productNature">{{ productNatureLabel(row.productNature) || '—' }}</td>
+										<!-- <td class="col-productGroup">{{ productGroupLabel(row.productGroupId) || '—' }}</td> -->
+										<td class="col-productionUnit">{{ unitLabel(row.productionUnitId) || '—' }}</td>
+										<td class="col-defaultWarehouse">{{ warehouseLabel(row.defaultWarehouseId) || '—'}}</td>
+										<td class="col-minStock text-right">
+											{{ row.minStock != null ? (row.minStock | number:'1.0-2') : 0 }}
+										</td>
+										<td class="col-maxStock text-right">
+											{{ row.maxStock != null ? (row.maxStock | number:'1.0-2') : 0 }}
+										</td>
+										<td class="col-fixedPurchasePrice text-right">
+											{{ row.fixedPurchasePrice != null ? (row.fixedPurchasePrice | number:'1.0-2') : 0 }}
+											{{i18n.t('product.fixedPurchasePrice.unit')}}
+										</td>
+										<td class="col-wastageRate text-right">
+											{{ row.wastageRate != null ? (row.wastageRate | number:'1.0-2') : 0 }}
+										</td>
+										<td class="col-preparationTime text-right">
+											{{ row.preparationTime != null ? (row.preparationTime | number:'1.0-2') : 0 }}
+											{{i18n.t('product.preparationTime.unit')}}
+										</td>
+										<td class="col-warrantyPeriod text-right">
+											{{ row.warrantyPeriod != null ? (row.warrantyPeriod | number:'1.0-2') : 0 }}
+											{{ warrantyPeriodUnitLabel(row.warrantyPeriodUnit || '—') }}
+										</td>
+										<td class="col-vatRate text-right">
+											{{ row.vatRate != null ? (row.vatRate | number:'1.0-2') : 0 }}
+										</td>
+										<td class="col-standardProductionTime text-right">
+											{{ row.standardProductionTime != null ? (row.standardProductionTime | number:'1.0-2') : 0 }}
+											{{i18n.t('product.standardProductionTime.unit')}}
+										</td>
+										<td class="col-isOutsourced">
+											@if (row.isOutsourced) {
+											<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+												 stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+											}
+										</td>
+										<td class="col-description">{{ row.description || '—' }}</td>
+									</tr>
+								</ng-template>
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="21">
+											<p class="empty">{{ i18n.t('product.empty') }}</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
 				</ng-template>
-				<ng-template #body let-row>
-					<tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
-						(click)="selectProduct(row)">
-						<td class="col-code">{{ row.productCode }}</td>
-						<td>
-							{{ row.productName }}
-							@if (row.drawingNo) {
-							<span class="muted"> · {{ row.drawingNo }}</span>
+
+				<ng-template #panel>
+					<section class="panel">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('unit.conversion') }}</h2>
+							@if (selectedProduct(); as product) {
+							<span class="panel__scope">{{ i18n.t('unit.scopeOf', { name: unitLabel(product.defaultUnitId) }) }}</span>
+							<span class="panel__count">{{ conversions().length }}</span>
 							}
-						</td>
-						<td class="col-type">
-							@if (typeName(row.productTypeId); as name) {
-							{{ name }}
-							} @else {
-							<span class="muted">{{ i18n.t('product.noType') }}</span>
-							}
-						</td>
-						<td class="col-unit">{{ unitLabel(row.defaultUnitId) || '—' }}</td>
-						<td class="col-state">
-							@if (statusOf(row.status); as status) {
-							<p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
-							} @else {
-							<span class="muted">—</span>
-							}
-						</td>
-					</tr>
+						</div>
+						<div class="table-scroll">
+							<p-table [value]="conversions()" [showGridlines]="true" class="grid"
+									 [globalFilterFields]="filterFields.conversion"
+									 (onFilter)="onFiltered('conversion', $event.filteredValue)"
+									 [scrollable]="true" scrollHeight="flex">
+								<ng-template #header>
+									<tr>
+										<th class="col-unitref">{{ i18n.t('unit.to') }}</th>
+										<th>{{ i18n.t('unit.factor') }}</th>
+										<th>{{ i18n.t('unit.formula') }}</th>
+									</tr>
+								</ng-template>
+								<ng-template #body let-row>
+									<tr class="row" [class.row--selected]="selectedConversion()?.id === row.id"
+										(click)="selectConversion(row)">
+										<td class="col-unitref">{{ unitLabel(row.toUnitId) || '—' }}</td>
+										<td class="col-factor text-right">
+											{{row.multiplyValue > 0 ? (row.multiplyValue | number:'1.0-2') : ''}}
+											{{row.divideValue > 0 ? (row.divideValue | number:'1.0-2') : ''}}
+										</td>
+										<td>
+											{{ (row.formulaType == 1 ? i18n.t('unit.multiply') : i18n.t('unit.divide')) || '—' }}
+										</td>
+									</tr>
+								</ng-template>
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="5">
+											<p class="empty">
+												{{ selectedProduct() ? i18n.t('unit.empty.conversion') : i18n.t('unit.empty.conversionHint') }}
+											</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
 				</ng-template>
-				<ng-template #emptymessage>
-					<tr>
-						<td colspan="5">
-							<p class="empty">{{ i18n.t('product.empty') }}</p>
-						</td>
-					</tr>
+			</p-splitter>
+
+
+		</ng-template>
+
+		<ng-template #panel>
+			<p-splitter class="workspace__right" layout="horizontal"
+						[panelSizes]="split.sizes('product:split-y', [50,50])" [minSizes]="[20, 20]" [gutterSize]="6"
+						(onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+				<ng-template #panel>
+					<section class="panel">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('bom.title') }}</h2>
+							@if (selectedProduct(); as p) {
+							<span class="panel__scope">
+								{{ i18n.t('bom.scopeOf', { name: productLabel(p.id) || '—' })}}
+							</span>
+							<span class="panel__count">{{ boms().length }}</span>
+							}
+						</div>
+
+						<div class="table-scroll">
+							<p-table #bomTable [value]="boms()" dataKey="id" [showGridlines]="true" class="grid"
+									 [globalFilterFields]="filterFields.bom"
+									 (onFilter)="onFiltered('bom', $event.filteredValue)"
+									 [scrollable]="true" scrollHeight="flex">
+								<ng-template #header>
+									<tr>
+										<th style="width: 3rem"></th>
+										<th class="col-bomCode">{{ i18n.t('bom.code') }}</th>
+										<th class="col-bomName">{{ i18n.t('bom.name') }}</th>
+										<th class="col-version">{{ i18n.t('bom.version') }}</th>
+										<th class="col-isActive">{{ i18n.t('bom.isActive') }}</th>
+									</tr>
+								</ng-template>
+
+								<ng-template #body let-row let-expanded="expanded">
+									<tr class="row" [class.row--selected]="selectedBom()?.id === row.id"
+										(click)="selectBom(row)" (dblclick)="openEdit('bom')">
+										<td>
+											<p-button type="button" pRipple [pRowToggler]="row" [text]="true"
+													  severity="secondary"
+													  [rounded]="true"
+													  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+										</td>
+										<td class="col-bomCode">{{ row.bomCode || '—' }}</td>
+										<td class="col-bomName">{{ row.bomName || '—' }}</td>
+										<td class="col-version">{{ row.version || '—' }}</td>
+										<td class="col-isActive">
+											@if (row.isActive) {
+											<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+												 stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+											} @else {
+											<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+												<line x1="6" y1="6" x2="18" y2="18" />
+												<line x1="18" y1="6" x2="6" y2="18" />
+											</svg>
+											}
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #expandedrow let-row>
+									<tr>
+										<td colspan="5">
+											<ng-container *ngTemplateOutlet="tableBomDetail; context: { row: row }"></ng-container>
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="10">
+											<p class="empty">
+												{{ selectedProduct() ? i18n.t('bom.empty') :
+												i18n.t('bom.emptyHint') }}
+											</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
 				</ng-template>
-			</p-table>
-		</div>
-	</section>
+
+				<ng-template #panel>
+					<section class="panel">
+						<div class="panel__head">
+							<h2 class="panel__title">{{ i18n.t('routing.title') }}</h2>
+							@if (selectedProduct(); as p) {
+							<span class="panel__scope">
+								{{ i18n.t('routing.scopeOf', { name: productLabel(p.id) || '—' }) }}
+							</span>
+							<span class="panel__count">{{ routings().length }}</span>
+							}
+						</div>
+
+						<div class="table-scroll">
+							<p-table #routingTable [value]="routings()" dataKey="id" [showGridlines]="true" class="grid"
+									 [globalFilterFields]="filterFields.routing"
+									 (onFilter)="onFiltered('routing', $event.filteredValue)"
+									 [scrollable]="true" scrollHeight="flex">
+								<ng-template #header>
+									<tr>
+										<th style="width: 3rem"></th>
+										<th class="col-version">{{ i18n.t('routing.version') }}</th>
+										<th class="col-isActive">{{ i18n.t('routing.isActive') }}</th>
+									</tr>
+								</ng-template>
+								<ng-template #body let-row let-expanded="expanded">
+									<tr class="row" [class.row--selected]="selectedRouting()?.id === row.id"
+										(click)="selectRouting(row)" (dblclick)="openEdit('routing')">
+										<td>
+											<p-button type="button" pRipple [pRowToggler]="row" [text]="true"
+													  severity="secondary"
+													  [rounded]="true"
+													  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+										</td>
+										<td class="col-version">{{ row.version || '—' }}</td>
+										<td class="col-isActive">
+											@if (row.isActive) {
+											<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+												 stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+											} @else {
+											<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+												<line x1="6" y1="6" x2="18" y2="18" />
+												<line x1="18" y1="6" x2="6" y2="18" />
+											</svg>
+											}
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #expandedrow let-row>
+									<tr>
+										<td colspan="3">
+											<ng-container *ngTemplateOutlet="tableRoutingOp; context: { row: row }"></ng-container>
+										</td>
+									</tr>
+								</ng-template>
+
+								<ng-template #emptymessage>
+									<tr>
+										<td colspan="3">
+											<p class="empty">
+												{{ selectedProduct() ? i18n.t('routing.emptyLine') :
+												i18n.t('routing.emptyHint') }}
+											</p>
+										</td>
+									</tr>
+								</ng-template>
+							</p-table>
+						</div>
+					</section>
+				</ng-template>
+			</p-splitter>
+		</ng-template>
+
+	</p-splitter>
 </div>
 
-<!-- ─── Detail modal: product form / BOM List / Công đoạn ────────────────── -->
-<p-dialog [header]="detailTitle()" [visible]="detailOpen()" (visibleChange)="detailOpen.set($event)" [modal]="true"
-	[draggable]="false" [resizable]="false" [style]="{ width: 'min(1500px, 97vw)', height: 'min(820px, 90vh)' }"
-	styleClass="detail-dialog">
-	<p-tabs [(value)]="detailTab" styleClass="detail-tabs">
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+		  [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
+
+	<p-tabs [(value)]="activeTab" [ngStyle]="{height:'76vh'}">
 		<p-tablist>
-			<p-tab value="info">{{ i18n.t('product.info') }}</p-tab>
-			<p-tab value="bom">{{ i18n.t('bom.title') }}</p-tab>
-			<p-tab value="routing">{{ i18n.t('product.workSteps') }}</p-tab>
+			<p-tab value="product">{{i18n.t('product.title')}}</p-tab>
+			<p-tab value="bom">{{i18n.t('bom.title')}}</p-tab>
+			<p-tab value="routing">{{i18n.t('routing.title')}}</p-tab>
 		</p-tablist>
 		<p-tabpanels>
-
-			<!-- Thông tin: the product's own fields, edited right in this modal. -->
-			<p-tabpanel value="info">
+			<p-tabpanel value="product">
 				<div class="form">
 					@if (formError()) {
 					<div class="form__error">{{ formError() }}</div>
@@ -131,407 +426,685 @@
 
 					<div class="field-row">
 						<div class="field">
-							<label for="p-code">{{ i18n.t('product.code') }} <span class="req">*</span></label>
-							<input pInputText id="p-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+							<label for="p-code">
+								{{ i18n.t('product.code') }}
+								<span class="req">*</span>
+							</label>
+							<input pInputText id="p-code" name="code" [(ngModel)]="form.productCode" autocomplete="off" />
+						</div>
+
+						<div class="field">
+							<label for="p-name">
+								{{ i18n.t('product.name') }}
+								<span class="req">*</span>
+							</label>
+							<input pInputText id="p-name" name="name" [(ngModel)]="form.productName" autocomplete="off" />
+						</div>
+
+						<div class="field">
+							<label for="p-productNature">{{ i18n.t('product.productNature') }} <span class="req">*</span></label>
+							<p-select inputId="p-productNature" [options]="productNatureOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.productNature" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.productNature.unset')" />
+						</div>
+
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-productGroup">
+								{{ i18n.t('product.productGroup') }}
+								<span class="req">*</span>
+							</label>
+							<p-select inputId="p-productGroup" [options]="productGroupOptions()" optionLabel="label"
+									  optionValue="value" [(ngModel)]="form.productGroupId" [filter]="true" filterBy="label"
+									  appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.productGroup.unset')" />
 						</div>
 						<div class="field">
-							<label for="p-type">{{ i18n.t('product.type') }}</label>
-							<p-select inputId="p-type" [options]="typeOptions()" optionLabel="label" optionValue="value"
-								[(ngModel)]="form.typeId" [filter]="true" filterBy="label" appendTo="body"
-								class="w-full" />
+							<label for="p-productType">
+								{{ i18n.t('product.type') }}
+								<span class="req">*</span>
+							</label>
+							<p-select inputId="p-productType" [options]="typeOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.productTypeId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.noType')" />
+						</div>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-unit">
+								{{ i18n.t('product.unit') }}
+								<!-- <span class="req">*</span> -->
+							</label>
+							<p-select inputId="p-unit" [options]="unitOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.defaultUnitId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.unit.unset')" />
+						</div>
+						<div class="field">
+							<label for="p-productionUnit">
+								{{ i18n.t('product.productionUnit') }}
+								<span class="req">*</span>
+							</label>
+							<p-select inputId="p-productionUnit" [options]="unitOptions()" optionLabel="label" optionValue="value"
+									  [(ngModel)]="form.productionUnitId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.productionUnit.unset')" />
+						</div>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-drawingNo">
+								{{ i18n.t('product.drawingNo') }}
+								<!-- <span class="req">*</span> -->
+							</label>
+							<input pInputText id="p-drawingNo" name="drawingNo" [(ngModel)]="form.drawingNo" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="p-drawingPath">
+								{{ i18n.t('product.drawingPath') }}
+							</label>
+							<input pInputText id="p-drawingPath" name="drawingPath" [(ngModel)]="form.drawingPath" autocomplete="off" />
+						</div>
+					</div>
+
+					<div class="field field--inline">
+						<p-toggleswitch inputId="p-status" [(ngModel)]="form.status" [trueValue]="1" [falseValue]="0" />
+						<label for="p-status">{{ i18n.t('product.status') }}</label>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-defaultWarehouse">
+								{{ i18n.t('product.defaultWarehouse') }}
+								<!-- <span class="req">*</span> -->
+							</label>
+							<p-select inputId="p-defaultWarehouse" [options]="warehouseOptions()" optionLabel="label"
+									  optionValue="value" [(ngModel)]="form.defaultWarehouseId" [filter]="true" filterBy="label"
+									  appendTo="body" class="w-full"
+									  [placeholder]="i18n.t('product.defaultWarehouse.unset')" />
+						</div>
+						<div class="field">
+							<label for="p-minStock">{{ i18n.t('product.minStock') }} <span class="req">*</span></label>
+							<p-inputNumber inputId="p-minStock" [(ngModel)]="form.minStock" mode="decimal" [min]="0" class="w-full"
+										   showButtons="true"
+										   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+						</div>
+						<div class="field">
+							<label for="p-maxStock">{{ i18n.t('product.maxStock') }} <span class="req">*</span></label>
+							<p-inputNumber inputId="p-maxStock" [(ngModel)]="form.maxStock" mode="decimal" [min]="0" class="w-full"
+										   showButtons="true"
+										   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+						</div>
+						<div class="field">
+							<label for="p-fixedPurchasePrice">{{ i18n.t('product.fixedPurchasePrice') }} <span
+									  class="req">*</span></label>
+
+							<p-inputgroup>
+								<p-inputNumber inputId="p-fixedPurchasePrice" [(ngModel)]="form.fixedPurchasePrice" mode="decimal"
+											   [min]="0" class="w-full" showButtons="true"
+											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+
+								<p-inputgroup-addon>
+									{{ i18n.t('product.fixedPurchasePrice.unit') }}
+								</p-inputgroup-addon>
+							</p-inputgroup>
+						</div>
+						<div class="field">
+							<label for="p-vatRate">{{ i18n.t('product.vatRate') }} <span class="req">*</span></label>
+							<p-inputgroup>
+								<p-inputNumber inputId="p-vatRate" [(ngModel)]="form.vatRate" mode="decimal" [min]="0" [max]="100"
+											   showButtons="true" class="w-full"
+											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+
+								<p-inputgroup-addon>%</p-inputgroup-addon>
+							</p-inputgroup>
+						</div>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-preparationTime">{{ i18n.t('product.preparationTime') }} <span class="req">*</span></label>
+							<p-inputgroup>
+								<p-inputNumber inputId="p-preparationTime" [(ngModel)]="form.preparationTime" mode="decimal" [min]="0"
+											   class="w-full" showButtons="true" locale="en-US" />
+
+								<p-inputgroup-addon>
+									{{ i18n.t('product.preparationTime.unit') }}
+								</p-inputgroup-addon>
+							</p-inputgroup>
+						</div>
+						<div class="field">
+							<label for="p-standardProductionTime">{{ i18n.t('product.standardProductionTime') }} </label>
+							<p-inputgroup>
+								<p-inputNumber inputId="p-standardProductionTime" [(ngModel)]="form.standardProductionTime"
+											   mode="decimal" [min]="0" showButtons="true" class="w-full"
+											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+
+								<p-inputgroup-addon>
+									{{ i18n.t('product.standardProductionTime.unit') }}
+								</p-inputgroup-addon>
+							</p-inputgroup>
+						</div>
+
+						<div class="field">
+							<label for="p-wastageRate">{{ i18n.t('product.wastageRate') }} <span class="req">*</span></label>
+							<p-inputgroup>
+								<p-inputNumber inputId="p-wastageRate" [(ngModel)]="form.wastageRate" mode="decimal" [min]="0" [max]="100"
+											   class="w-full" showButtons="true"
+											   [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+
+								<p-inputgroup-addon>%</p-inputgroup-addon>
+							</p-inputgroup>
+						</div>
+					</div>
+
+					<div class="field field--inline">
+						<p-toggleswitch inputId="p-isOutsourced" [(ngModel)]="form.isOutsourced" />
+						<label for="p-isOutsourced">{{ i18n.t('product.isOutsourced') }}</label>
+					</div>
+
+					<div class="field-row">
+						<div class="field">
+							<label for="p-warrantyPeriod">{{ i18n.t('product.warrantyPeriod') }} <span class="req">*</span></label>
+							<!-- <p-inputNumber inputId="p-warrantyPeriod" [(ngModel)]="form.warrantyPeriod" mode="decimal" [min]="0"
+											   class="w-full" showButtons="true" /> -->
+
+							<p-inputgroup>
+								<p-inputNumber inputId="p-warrantyPeriod" [(ngModel)]="form.warrantyPeriod" mode="decimal" [min]="0"
+											   class="w-full" showButtons="true" locale="en-US" />
+
+								<p-inputgroup-addon [ngStyle]="{padding: '0'}">
+									<p-select inputId="p-warrantyPeriodUnit" [options]="warrantyPeriodUnitOptions()" optionLabel="label" optionValue="value"
+											  [(ngModel)]="form.warrantyPeriodUnit" [filter]="false" filterBy="label" appendTo="body" class="w-full"
+											  [ngStyle]="{border:'none'}" />
+								</p-inputgroup-addon>
+
+							</p-inputgroup>
+						</div>
+						<!-- <div class="field">
+								<label for="p-warrantyPeriodUnit">{{ i18n.t('product.warrantyPeriodUnit') }} <span class="req">*</span></label>
+								<p-select inputId="p-warrantyPeriodUnit" [options]="warrantyPeriodUnitOptions()" optionLabel="label" optionValue="value"
+										  [(ngModel)]="form.warrantyPeriodUnit" [filter]="true" filterBy="label" appendTo="body" class="w-full" />
+							</div> -->
+
+						<div class="field">
+							<label for="p-productionColor">{{ i18n.t('product.productionColor') }} </label>
+
+							<p-inputgroup>
+								<p-inputgroup-addon>
+									<p-colorpicker [(ngModel)]="form.productionColor" appendTo="body" defaultColor="#dee2e6" />
+								</p-inputgroup-addon>
+								<input pInputText id="p-productionColor" name="productionColor" [(ngModel)]="form.productionColor"
+									   autocomplete="off" />
+							</p-inputgroup>
+
 						</div>
 					</div>
 
 					<div class="field">
-						<label for="p-name">{{ i18n.t('product.name') }} <span class="req">*</span></label>
-						<input pInputText id="p-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
-					</div>
-
-					<div class="field-row">
-						<div class="field">
-							<label for="p-unit">{{ i18n.t('product.unitField') }}</label>
-							<p-select inputId="p-unit" [options]="unitOptions()" optionLabel="label" optionValue="value"
-								[(ngModel)]="form.unitId" [filter]="true" filterBy="label" appendTo="body"
-								class="w-full" />
-						</div>
-						<div class="field">
-							<label for="p-status">{{ i18n.t('common.status') }}</label>
-							<p-select inputId="p-status" [options]="statusOptions()" optionLabel="label"
-								optionValue="value" [(ngModel)]="form.status" [showClear]="true"
-								[placeholder]="i18n.t('product.status.unset')" appendTo="body" class="w-full" />
-						</div>
-					</div>
-
-					<div class="field-row">
-						<div class="field">
-							<label for="p-drawing">{{ i18n.t('product.drawingNo') }}</label>
-							<input pInputText id="p-drawing" name="drawingNo" [(ngModel)]="form.drawingNo"
-								autocomplete="off" />
-						</div>
-						<div class="field">
-							<label for="p-drawing-path">{{ i18n.t('product.drawingPath') }}</label>
-							<input pInputText id="p-drawing-path" name="drawingPath" [(ngModel)]="form.drawingPath"
-								autocomplete="off" />
-						</div>
+						<label for="p-description">{{ i18n.t('product.description') }} </label>
+						<textarea pInputTextarea id="p-description" name="description" rows="2" [(ngModel)]="form.description"></textarea>
 					</div>
 				</div>
 			</p-tabpanel>
 
-			<!-- BOM List + its lines -->
 			<p-tabpanel value="bom">
-				<section class="tab-panel tab-panel--stack">
-					@if (creatingProduct()) {
-					<p class="notice">{{ i18n.t('product.saveFirst') }}</p>
-					}
-
-					<div class="tab-section">
-						<div class="tab-section__head">
-							<h3 class="tab-section__title">{{ i18n.t('bom.title') }}</h3>
-							<span class="panel__count">{{ boms().length }}</span>
-						</div>
-						<ng-container
-							*ngTemplateOutlet="toolbar; context: { kind: 'bom', perms: perms.bom, canAdd: !!selectedProduct(), hasSelection: !!selectedBom() }" />
-
-						@if (unassignedBoms() > 0) {
-						<p class="notice">{{ i18n.t('bom.unassignedNotice', { count: unassignedBoms() }) }}</p>
-						}
-
-						<div class="table-scroll">
-							<p-table #bomTable [value]="boms()" [showGridlines]="true" class="grid"
-								[globalFilterFields]="filterFields.bom">
-								<ng-template #header>
-									<tr>
-										<th class="col-code">{{ i18n.t('bom.code') }}</th>
-										<th>{{ i18n.t('bom.name') }}</th>
-										<th class="col-version">{{ i18n.t('bom.version') }}</th>
-										<th class="col-state">{{ i18n.t('bom.active') }}</th>
-									</tr>
-								</ng-template>
-								<ng-template #body let-row>
-									<tr class="row" [class.row--selected]="selectedBom()?.id === row.id"
-										(click)="selectBom(row)" (dblclick)="openEdit('bom')">
-										<td class="col-code">{{ row.bomCode }}</td>
-										<td>{{ row.bomName }}</td>
-										<td class="col-version">{{ row.version || '—' }}</td>
-										<td class="col-state">
-											@if (row.isActive) {
-											<p-tag severity="success" [value]="i18n.t('bom.active')" [rounded]="true" />
-											} @else {
-											<span class="muted">—</span>
-											}
-										</td>
-									</tr>
-								</ng-template>
-								<ng-template #emptymessage>
-									<tr>
-										<td colspan="4">
-											<p class="empty">{{ i18n.t('bom.empty') }}</p>
-										</td>
-									</tr>
-								</ng-template>
-							</p-table>
-						</div>
+				<section class="panel" [ngStyle]="{border:'none'}">
+					<div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
+						<button type="button" class="lines__add" (click)="addBomRow()">
+							<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+								 stroke-width="1.8">
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</svg>
+							<span>{{ i18n.t('bom.addBom') }}</span>
+						</button>
 					</div>
+					<div class="tab-content" [ngStyle]="{height:'64vh',overflowY:'auto'}">
+						@for (bom of bomRows(); track $index) {
+						<p-panel [toggleable]="true"
+								 [ngStyle]="{'margin-top': '1em'}">
+							<div class="form">
+								@if (formError()) {
+								<div class="form__error">{{ formError() }}</div>
+								}
 
-					<div class="tab-section">
-						<div class="tab-section__head">
-							<h3 class="tab-section__title">{{ i18n.t('bomDetail.title') }}</h3>
-							@if (selectedBom(); as b) {
-							<span class="panel__scope">{{ b.bomCode || b.bomName }}</span>
-							}
-							<span class="panel__count">{{ bomDetails().length }}</span>
-						</div>
-						<ng-container
-							*ngTemplateOutlet="toolbar; context: { kind: 'bomDetail', perms: perms.bomDetail, canAdd: !!selectedBom(), hasSelection: !!selectedBomDetail() }" />
-						<div class="table-scroll">
-							<p-table #bomDetailTable [value]="bomDetails()" [showGridlines]="true" class="grid"
-								[globalFilterFields]="filterFields.bomDetail">
-								<ng-template #header>
-									<tr>
-										<th>{{ i18n.t('bomDetail.product') }}</th>
-										<th class="col-qty">{{ i18n.t('bomDetail.quantity') }}</th>
-										<th class="col-unit">{{ i18n.t('product.unit') }}</th>
-										<th class="col-rate">{{ i18n.t('bomDetail.scrapRate') }}</th>
-										<th class="col-fixed">{{ i18n.t('bomDetail.fixedScrap') }}</th>
-									</tr>
-								</ng-template>
-								<ng-template #body let-row>
-									<tr class="row" [class.row--selected]="selectedBomDetail()?.id === row.id"
-										(click)="selectBomDetail(row)" (dblclick)="openEdit('bomDetail')">
-										<td>{{ productLabel(row.productId) || '—' }}</td>
-										<td class="col-qty">{{ row.quantity ?? '—' }}</td>
-										<td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
-										<td class="col-rate">{{ row.scrapRate != null ? row.scrapRate + '%' : '—' }}
-										</td>
-										<td class="col-fixed">{{ row.fixedScrapQty ?? '—' }}</td>
-									</tr>
-								</ng-template>
-								<ng-template #emptymessage>
-									<tr>
-										<td colspan="5">
-											<p class="empty">{{ i18n.t('bomDetail.empty') }}</p>
-										</td>
-									</tr>
-								</ng-template>
-							</p-table>
-						</div>
+								<div class="field-row">
+									<div class="field">
+										<label for="b-bomCode">
+											{{ i18n.t('bom.code') }}
+											<span class="req">*</span>
+										</label>
+										<input pInputText id="b-bomCode" name="bomCode" [(ngModel)]="bom.bomCode" autocomplete="off" />
+									</div>
+
+									<div class="field">
+										<label for="b-bomName">
+											{{ i18n.t('bom.name') }}
+											<span class="req">*</span>
+										</label>
+										<input pInputText id="b-bomName" name="bomName" [(ngModel)]="bom.bomName" autocomplete="off" />
+									</div>
+
+									<div class="field">
+										<label for="b-version">{{ i18n.t('bom.version') }} <span class="req">*</span></label>
+										<input pInputText id="b-version" name="version" [(ngModel)]="bom.version" autocomplete="off" />
+									</div>
+									<!-- <div class="field">
+										<label for="b-status">{{ i18n.t('bom.status') }} <span class="req">*</span></label>
+										<input pInputText id="b-status" name="status" [(ngModel)]="bom.status" autocomplete="off" />
+									</div> -->
+
+
+								</div>
+
+								<section class="panel lines">
+									<div class="panel__head">
+										<h2 class="panel__title">{{ i18n.t('bomDetail.title') }}</h2>
+										<span class="panel__scope">
+											{{ i18n.t('bomDetail.lineCount', { count: bom.bomDetails.length }) }}
+										</span>
+										<button type="button" class="lines__add" (click)="addBomDetailRow(bom)">
+											<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+												 stroke-width="1.8">
+												<line x1="12" y1="5" x2="12" y2="19" />
+												<line x1="5" y1="12" x2="19" y2="12" />
+											</svg>
+											<span>{{ i18n.t('bomDetail.addLine') }}</span>
+										</button>
+									</div>
+
+									<div class="lines__scroll">
+										<p-table [value]="bom.bomDetails"
+												 dataKey="id"
+												 [showGridlines]="true"
+												 class="grid grid--edit"
+												 scrollable="true"
+												 scrollHeight="flex"
+												 [ngStyle]="{maxHeight:'20vh'}">
+											<ng-template #header>
+												<tr>
+													<th class="col-idx">#</th>
+													<th class="col-product">
+														{{ i18n.t('bomDetail.product') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-unit">
+														{{ i18n.t('bomDetail.unit') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-quantity">
+														{{ i18n.t('bomDetail.quantity') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-scrapRate">{{ i18n.t('bomDetail.scrapRate') }}</th>
+													<th class="col-fixedScrapQty">{{ i18n.t('bomDetail.fixedScrapQty') }}</th>
+													<th class="col-act">{{ i18n.t('common.actions') }}</th>
+												</tr>
+											</ng-template>
+
+											<ng-template #body let-row let-i="rowIndex">
+												<tr class="row row--edit">
+													<td class="col-idx">{{ i + 1 }}</td>
+													<td class="col-product">
+														<p-select [options]="productOptions()"
+																  optionLabel="label"
+																  optionValue="value"
+																  [ngModel]="row.productId || null"
+																  (ngModelChange)="onDetailProductChange(row, $event)"
+																  [filter]="true"
+																  filterBy="label"
+																  [resetFilterOnHide]="true"
+																  [filterPlaceholder]="i18n.t('common.search')"
+																  [placeholder]="i18n.t('bomDetail.selectProduct')"
+																  [emptyFilterMessage]="i18n.t('bomDetail.noProduct')"
+																  appendTo="body"
+																  class="w-full"
+																  panelStyleClass="grid-picker"
+																  scrollHeight="18rem">
+
+															<ng-template #header>
+																<div class="picker-row picker-row--head">
+																	<span class="picker-cell">{{ i18n.t('product.code') }}</span>
+																	<span class="picker-cell">{{ i18n.t('product.name') }}</span>
+																	<span class="picker-cell picker-cell--center">{{i18n.t('product.unit')}}</span>
+																	<span class="picker-cell">{{i18n.t('product.drawingNo')}}</span>
+																	<span class="picker-cell picker-cell--center">{{i18n.t('common.status')}}</span>
+																</div>
+															</ng-template>
+
+															<ng-template #item let-opt>
+																<div class="picker-row">
+																	<span class="picker-cell picker-cell--code">{{ opt.code}}</span>
+																	<span class="picker-cell" [title]="opt.name">{{ opt.name}}</span>
+																	<span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+																	<span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+																		{{ opt.drawingNo || '—' }}
+																	</span>
+																	<span class="picker-cell picker-cell--center">
+																		@if (opt.statusLabel) {
+																		<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel" [rounded]="true" />
+																		} @else {
+																		<span class="picker-cell--muted">—</span>
+																		}
+																	</span>
+																</div>
+															</ng-template>
+														</p-select>
+													</td>
+
+													<td class="col-unit">
+														<p-select [options]="unitOptions()"
+																  optionLabel="label"
+																  optionValue="value"
+																  [ngModel]="row.unitId || null"
+																  (ngModelChange)="row.unitId = $event ?? 0"
+																  [filter]="true"
+																  filterBy="label"
+																  [placeholder]="i18n.t('purchaseOrderDetail.selectUnit')"
+																  appendTo="body"
+																  class="w-full" />
+													</td>
+
+													<td class="col-quantity">
+														<p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+																	   [(ngModel)]="row.quantity"
+																	   mode="decimal"
+																	   [showButtons]="true"
+																	   [min]="0"
+																	   [minFractionDigits]="2"
+																	   [maxFractionDigits]="2"
+																	   locale="en-US" />
+													</td>
+
+													<td class="col-scrapRate">
+														<p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+																	   [(ngModel)]="row.scrapRate"
+																	   mode="decimal"
+																	   [showButtons]="true"
+																	   [min]="0" [max]="100"
+																	   [minFractionDigits]="2"
+																	   [maxFractionDigits]="2"
+																	   locale="en-US" />
+													</td>
+
+													<td class="col-fixedScrapQty">
+														<p-inputnumber inputStyleClass="cell-input cell-input--num"
+																	   [(ngModel)]="row.fixedScrapQty"
+																	   mode="decimal"
+																	   [showButtons]="true"
+																	   [min]="0"
+																	   [minFractionDigits]="2"
+																	   [maxFractionDigits]="2"
+																	   locale="en-US" />
+													</td>
+
+													<td class="col-act">
+														<button type="button"
+																class="row-del"
+																[title]="i18n.t('bomDetail.removeLine')"
+																[attr.aria-label]="i18n.t('bomDetail.removeLine')"
+																(click)="removeBomDetailRow(bom,row)">
+															<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+																<line x1="6" y1="6" x2="18" y2="18" />
+																<line x1="18" y1="6" x2="6" y2="18" />
+															</svg>
+														</button>
+													</td>
+												</tr>
+											</ng-template>
+
+											<ng-template #footer>
+												<tr class="lines__total">
+													<td colspan="5">{{ i18n.t('bomDetail.total') }}</td>
+													<td class="col-total">{{ bomDetailTotal(bom) | number: '1.0-2' }}</td>
+													<td colspan="8"></td>
+												</tr>
+											</ng-template>
+
+											<ng-template #emptymessage>
+												<tr>
+													<td colspan="14">
+														<p class="empty">{{ i18n.t('bomDetail.emptyLine') }}</p>
+													</td>
+												</tr>
+											</ng-template>
+										</p-table>
+									</div>
+								</section>
+							</div>
+
+							<ng-template #header>
+								<span class="font-bold">{{ i18n.t('bom.title') }} #{{ $index + 1 }}:{{ bom.bomCode }}</span>
+							</ng-template>
+							<ng-template #icons [ngStyle]="{display:'flex','align-items':'center','justify-content':'center'}">
+								<div class="field field--inline">
+									<p-toggleswitch inputId="b-isActive" [(ngModel)]="bom.isActive" [trueValue]="true" [falseValue]="false" />
+									<label for="b-isActive">{{ i18n.t('bom.isActive') }}</label>
+								</div>
+								<span [ngStyle]="{marginLeft:'8px'}">|</span>
+							</ng-template>
+
+							<ng-template #footer>
+								<button type="button" class="lines__remove" (click)="removeBomRow(bom)">
+									<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+										<path d="M4 7h16" />
+										<path d="M10 11v6" />
+										<path d="M14 11v6" />
+										<path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+										<path d="M9 7V4h6v3" />
+									</svg>
+									<span>{{ i18n.t('bom.removeBom') }}</span>
+								</button>
+							</ng-template>
+						</p-panel>
+						}
 					</div>
 				</section>
 			</p-tabpanel>
 
-			<!-- Công đoạn -->
 			<p-tabpanel value="routing">
-				<section class="tab-panel tab-panel--stack">
-					@if (creatingProduct()) {
-					<p class="notice">{{ i18n.t('product.saveFirst') }}</p>
-					}
-					<div class="tab-section">
-						<div class="tab-section__head">
-							<h3 class="tab-section__title">{{ i18n.t('routing.title') }}</h3>
-							<span class="panel__count">{{ routings().length }}</span>
-						</div>
-						<ng-container
-							*ngTemplateOutlet="toolbar; context: { kind: 'routing', perms: perms.routing, canAdd: !!selectedProduct(), hasSelection: !!selectedRouting() }" />
-						<div class="table-scroll">
-							<p-table #routingTable [value]="routings()" [showGridlines]="true" class="grid"
-								[globalFilterFields]="filterFields.routing">
-								<ng-template #header>
-									<tr>
-										<th>{{ i18n.t('routing.version') }}</th>
-										<th class="col-state">{{ i18n.t('routing.active') }}</th>
-									</tr>
-								</ng-template>
-								<ng-template #body let-row>
-									<tr class="row" [class.row--selected]="selectedRouting()?.id === row.id"
-										(click)="selectRouting(row)" (dblclick)="openEdit('routing')">
-										<td>{{ row.version || '—' }}</td>
-										<td class="col-state">
-											@if (row.isActive) {
-											<p-tag severity="success" [value]="i18n.t('routing.active')"
-												[rounded]="true" />
-											} @else {
-											<span class="muted">—</span>
-											}
-										</td>
-									</tr>
-								</ng-template>
-								<ng-template #emptymessage>
-									<tr>
-										<td colspan="2">
-											<p class="empty">{{ i18n.t('routing.empty') }}</p>
-										</td>
-									</tr>
-								</ng-template>
-							</p-table>
-						</div>
+				<section class="panel" [ngStyle]="{border:'none'}">
+					<div class="panel__head" [ngStyle]="{border:'none',paddingTop:'0',paddingBottom:'0'}">
+						<button type="button" class="lines__add" (click)="addRoutingRow()">
+							<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+								 stroke-width="1.8">
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</svg>
+							<span>{{ i18n.t('routing.addRouting') }}</span>
+						</button>
 					</div>
+					<div class="tab-content" [ngStyle]="{height:'64vh',overflowY:'auto'}">
+						@for (r of routingRows(); track $index) {
+						<p-panel [toggleable]="true"
+								 [ngStyle]="{'margin-top': '1em'}">
+							<div class="form">
+								@if (formError()) {
+								<div class="form__error">{{ formError() }}</div>
+								}
 
-					<div class="tab-section">
-						<div class="tab-section__head">
-							<h3 class="tab-section__title">{{ i18n.t('routing.op') }}</h3>
-							@if (selectedRouting(); as r) {
-							<span class="panel__scope">{{ r.version || r.id }}</span>
-							}
-							<span class="panel__count">{{ routingOps().length }}</span>
-						</div>
-						<ng-container
-							*ngTemplateOutlet="toolbar; context: { kind: 'routingOp', perms: perms.routingOperation, canAdd: !!selectedRouting(), hasSelection: !!selectedRoutingOp() }" />
-						<div class="table-scroll">
-							<p-table #routingOpTable [value]="routingOps()" [showGridlines]="true" class="grid"
-								[globalFilterFields]="filterFields.routingOp">
-								<ng-template #header>
-									<tr>
-										<th class="col-seq">{{ i18n.t('routing.sequence') }}</th>
-										<th>{{ i18n.t('routing.operationCode') }}</th>
-										<th>{{ i18n.t('routing.operationName') }}</th>
-										<th>{{ i18n.t('routing.description') }}</th>
-										<th class="col-state">{{ i18n.t('routing.isFinish') }}</th>
-										<th class="col-state">{{ i18n.t('routing.isOutput') }}</th>
-									</tr>
-								</ng-template>
-								<ng-template #body let-row>
-									<tr class="row" [class.row--selected]="selectedRoutingOp()?.id === row.id"
-										(click)="selectRoutingOp(row)" (dblclick)="openEdit('routingOp')">
-										<td class="col-seq">{{ row.sequence ?? '—' }}</td>
-										<td>{{ row.routingOperationCode }}</td>
-										<td>{{ row.routingOperationName }}</td>
-										<td>{{ row.description || '—' }}</td>
-										<td class="col-state">
-											@if (row.isFinishOperation) {
-											<p-tag severity="warn" [value]="i18n.t('routing.isFinish')"
-												[rounded]="true" />
-											} @else {
-											<span class="muted">—</span>
-											}
-										</td>
-										<td class="col-state">
-											@if (row.isOutputOperation) {
-											<p-tag severity="info" [value]="i18n.t('routing.isOutput')"
-												[rounded]="true" />
-											} @else {
-											<span class="muted">—</span>
-											}
-										</td>
-									</tr>
-								</ng-template>
-								<ng-template #emptymessage>
-									<tr>
-										<td colspan="6">
-											<p class="empty">{{ i18n.t('routing.emptyOp') }}</p>
-										</td>
-									</tr>
-								</ng-template>
-							</p-table>
-						</div>
+								<div class="field-row">
+									<div class="field">
+										<label for="r-version">
+											{{ i18n.t('routing.version') }}
+											<span class="req">*</span>
+										</label>
+										<input pInputText id="r-version" name="version" [(ngModel)]="r.version" autocomplete="off" />
+									</div>
+								</div>
+
+								<section class="panel lines">
+									<div class="panel__head">
+										<h2 class="panel__title">{{ i18n.t('routingOperation.title') }}</h2>
+										<span class="panel__scope">
+											{{ i18n.t('routingOperation.lineCount', { count: r.routingOperations.length }) }}
+										</span>
+										<button type="button" class="lines__add" (click)="addRoutingOperationRow(r)">
+											<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+												 stroke-width="1.8">
+												<line x1="12" y1="5" x2="12" y2="19" />
+												<line x1="5" y1="12" x2="19" y2="12" />
+											</svg>
+											<span>{{ i18n.t('routingOperation.addLine') }}</span>
+										</button>
+									</div>
+
+									<div class="lines__scroll">
+										<p-table [value]="r.routingOperations"
+												 dataKey="id"
+												 [showGridlines]="true"
+												 class="grid grid--edit"
+												 scrollable="true"
+												 scrollHeight="flex"
+												 [ngStyle]="{maxHeight:'20vh'}">
+											<ng-template #header>
+												<tr>
+													<th class="col-idx">#</th>
+													<th class="col-sequence">
+														{{ i18n.t('routingOperation.sequence') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-operationCode">
+														{{ i18n.t('routingOperation.operationCode') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-operationName">
+														{{ i18n.t('routingOperation.operationName') }}
+														<span class="req">*</span>
+													</th>
+													<th class="col-description">{{ i18n.t('routingOperation.description') }}</th>
+													<th class="col-isFinishOperation"></th>
+													<!-- <th class="col-isOutputOperation">{{ i18n.t('routingOperation.isOutputOperation') }}</th> -->
+													<th class="col-act">{{ i18n.t('common.actions') }}</th>
+												</tr>
+											</ng-template>
+
+											<ng-template #body let-row let-i="rowIndex">
+												<tr class="row row--edit">
+													<td class="col-idx">{{ i + 1 }}</td>
+													<td class="col-sequence">
+														<p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+																	   [(ngModel)]="row.sequence"
+																	   mode="decimal"
+																	   [showButtons]="true"
+																	   [min]="0"
+																	   locale="en-US" />
+													</td>
+
+													<td class="col-routingOperationCode">
+														<input pInputText id="r-routingOperationCode" name="routingOperationCode"
+															   [(ngModel)]="row.routingOperationCode" autocomplete="off" />
+													</td>
+
+													<td class="col-routingOperationName">
+														<input pInputText id="r-routingOperationName" name="routingOperationName"
+															   [(ngModel)]="row.routingOperationName" autocomplete="off" />
+													</td>
+
+													<td class="col-description">
+														<textarea pTextarea
+																  class="cell-input"
+																  autocomplete="off"
+																  rows="2"
+																  [(ngModel)]="row.description"></textarea>
+													</td>
+
+													<td class="col-isFinishOperation">
+														<!-- <p-toggleswitch inputId="r-isFinishOperation" [(ngModel)]="row.isFinishOperation" /> -->
+
+														<div class="flex items-center">
+															<p-checkbox [inputId]="'r-isFinishOperation-' + i" name="r-isFinishOperation" binary="true" [(ngModel)]="row.isFinishOperation" />
+															<label [for]="'r-isFinishOperation-' + i" class="ml-2"
+																   [ngStyle]="{'text-wrap':'nowrap'}">
+																{{ i18n.t('routingOperation.isFinishOperation') }}
+															</label>
+														</div>
+														<div class="flex items-center" [ngStyle]="{'margin-top':'10px'}">
+															<p-checkbox [inputId]="'r-isOutputOperation-' + i" name="r-isOutputOperation" binary="true" [(ngModel)]="row.isOutputOperation" />
+															<label [for]="'r-isOutputOperation-' + i" class="ml-2"
+																   [ngStyle]="{'text-wrap':'nowrap'}">
+																{{ i18n.t('routingOperation.isOutputOperation') }}
+															</label>
+														</div>
+													</td>
+
+													<!-- <td class="col-isOutputOperation">
+														<p-toggleswitch inputId="r-isOutputOperation" [(ngModel)]="row.isOutputOperation" />
+														<div class="flex items-center">
+															<p-checkbox inputId="r-isOutputOperation" name="group" [(ngModel)]="row.isOutputOperation" />
+															<label for="r-isOutputOperation" class="ml-2"> {{ i18n.t('routingOperation.isOutputOperation') }} </label>
+														</div>
+													</td> -->
+
+													<td class="col-act">
+														<button type="button"
+																class="row-del"
+																[title]="i18n.t('routingOperation.removeLine')"
+																[attr.aria-label]="i18n.t('routingOperation.removeLine')"
+																(click)="removeRoutingOperationRow(r,row)">
+															<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+																<line x1="6" y1="6" x2="18" y2="18" />
+																<line x1="18" y1="6" x2="6" y2="18" />
+															</svg>
+														</button>
+													</td>
+												</tr>
+											</ng-template>
+
+											<ng-template #footer>
+												<tr class="lines__total">
+													<td colspan="5">{{ i18n.t('routingOperation.total') }}</td>
+													<!-- <td class="col-total">{{ bomDetailTotal(bom) | number: '1.0-2' }}</td> -->
+													<td colspan="8"></td>
+												</tr>
+											</ng-template>
+
+											<ng-template #emptymessage>
+												<tr>
+													<td colspan="14">
+														<p class="empty">{{ i18n.t('routingOperation.emptyLine') }}</p>
+													</td>
+												</tr>
+											</ng-template>
+										</p-table>
+									</div>
+								</section>
+							</div>
+							<ng-template #header>
+								<span class="font-bold">{{ i18n.t('routing.title') }} #{{ $index + 1 }}:{{ r.version }}</span>
+							</ng-template>
+							<ng-template #icons [ngStyle]="{display:'flex','align-items':'center','justify-content':'center'}">
+								<div class="field field--inline">
+									<p-toggleswitch inputId="r-isActive" [(ngModel)]="r.isActive" />
+									<label for="r-isActive">{{ i18n.t('routing.isActive') }}</label>
+								</div>
+								<span [ngStyle]="{marginLeft:'8px'}">|</span>
+							</ng-template>
+							<ng-template #footer>
+								<button type="button" class="lines__remove" (click)="removeRoutingRow(r)">
+									<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+										<path d="M4 7h16" />
+										<path d="M10 11v6" />
+										<path d="M14 11v6" />
+										<path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+										<path d="M9 7V4h6v3" />
+									</svg>
+									<span>{{ i18n.t('routing.removeRouting') }}</span>
+								</button>
+							</ng-template>
+						</p-panel>
+						}
 					</div>
 				</section>
 			</p-tabpanel>
 		</p-tabpanels>
 	</p-tabs>
 
-	<ng-template #footer>
-		<button pButton type="button" severity="secondary" text (click)="detailOpen.set(false)">
-			<span pButtonLabel>{{ i18n.t('common.close') }}</span>
-		</button>
-		<button pButton type="button" *appHasPermission="creatingProduct() ? perms.product.add : perms.product.edit"
-			[disabled]="saving()" (click)="saveProduct()">
-			<span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
-		</button>
-	</ng-template>
-</p-dialog>
 
-<!-- ─── Create / Edit dialog (bom, routing, công đoạn — products edit in the detail modal) ── -->
-<p-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [header]="dialogTitle()" [modal]="true"
-	[draggable]="false" [resizable]="false" [style]="{ width: 'min(520px, 92vw)' }">
-	<div class="form">
-		@if (formError()) {
-		<div class="form__error">{{ formError() }}</div>
-		}
 
-		@if (dialogKind() === 'bom') {
-		<div class="field-row">
-			<div class="field">
-				<label for="b-code">{{ i18n.t('bom.code') }} <span class="req">*</span></label>
-				<input pInputText id="b-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
-			</div>
-			<div class="field">
-				<label for="b-version">{{ i18n.t('bom.version') }}</label>
-				<input pInputText id="b-version" name="version" [(ngModel)]="form.version" autocomplete="off" />
-			</div>
-		</div>
-
-		<div class="field">
-			<label for="b-name">{{ i18n.t('bom.name') }} <span class="req">*</span></label>
-			<input pInputText id="b-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
-		</div>
-
-		<div class="field">
-			<label for="b-status">{{ i18n.t('common.status') }}</label>
-			<p-select inputId="b-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
-				[(ngModel)]="form.status" [showClear]="true" [placeholder]="i18n.t('product.status.unset')"
-				appendTo="body" class="w-full" />
-		</div>
-
-		<div class="field field--inline">
-			<p-toggleswitch inputId="b-active" [(ngModel)]="form.isActive" />
-			<label for="b-active">{{ i18n.t('bom.activeField') }}</label>
-		</div>
-
-		@if (selectedProduct(); as product) {
-		<p class="form__scope">{{ i18n.t('bom.scopeOf', { name: product.productName }) }}</p>
-		}
-		}
-
-		@if (dialogKind() === 'routing') {
-		<div class="field">
-			<label for="r-version">{{ i18n.t('routing.version') }} <span class="req">*</span></label>
-			<input pInputText id="r-version" name="version" [(ngModel)]="form.version" autocomplete="off" />
-		</div>
-
-		<div class="field field--inline">
-			<p-toggleswitch inputId="r-active" [(ngModel)]="form.isActive" />
-			<label for="r-active">{{ i18n.t('routing.activeField') }}</label>
-		</div>
-
-		@if (selectedProduct(); as product) {
-		<p class="form__scope">{{ i18n.t('bom.scopeOf', { name: product.productName }) }}</p>
-		}
-		}
-
-		@if (dialogKind() === 'routingOp') {
-		<div class="field-row">
-			<div class="field">
-				<label for="ro-code">{{ i18n.t('routing.operationCode') }} <span class="req">*</span></label>
-				<input pInputText id="ro-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
-			</div>
-			<div class="field">
-				<label for="ro-seq">{{ i18n.t('routing.sequence') }}</label>
-				<input pInputText type="number" min="0" id="ro-seq" name="sequence" [(ngModel)]="form.sequence" />
-			</div>
-		</div>
-
-		<div class="field">
-			<label for="ro-name">{{ i18n.t('routing.operationName') }} <span class="req">*</span></label>
-			<input pInputText id="ro-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
-		</div>
-
-		<div class="field">
-			<label for="ro-desc">{{ i18n.t('routing.description') }}</label>
-			<input pInputText id="ro-desc" name="description" [(ngModel)]="form.description" autocomplete="off" />
-		</div>
-
-		<div class="field field--inline">
-			<p-checkbox inputId="ro-finish" [binary]="true" [(ngModel)]="form.isFinishOperation" />
-			<label for="ro-finish">{{ i18n.t('routing.isFinish') }}</label>
-		</div>
-
-		<div class="field field--inline">
-			<p-checkbox inputId="ro-output" [binary]="true" [(ngModel)]="form.isOutputOperation" />
-			<label for="ro-output">{{ i18n.t('routing.isOutput') }}</label>
-		</div>
-
-		@if (selectedRouting(); as r) {
-		<p class="form__scope">{{ i18n.t('routing.scope.op', { name: r.version || r.id }) }}</p>
-		}
-		}
-
-		@if (dialogKind() === 'bomDetail') {
-		<div class="field">
-			<label for="bd-product">{{ i18n.t('bomDetail.product') }} <span class="req">*</span></label>
-			<p-select inputId="bd-product" [options]="bomComponentOptions()" optionLabel="label" optionValue="value"
-				[(ngModel)]="form.productId" [disabled]="true" class="w-full" />
-			<small class="hint">{{ i18n.t('bomDetail.lockedHint') }}</small>
-		</div>
-
-		<div class="field-row">
-			<div class="field">
-				<label for="bd-qty">{{ i18n.t('bomDetail.quantity') }} <span class="req">*</span></label>
-				<p-inputnumber inputId="bd-qty" [(ngModel)]="form.quantity" mode="decimal" [min]="0" class="w-full" />
-			</div>
-			<div class="field">
-				<label for="bd-unit">{{ i18n.t('product.unit') }}</label>
-				<p-select inputId="bd-unit" [options]="unitOptions()" optionLabel="label" optionValue="value"
-					[(ngModel)]="form.unitId" [filter]="true" filterBy="label" appendTo="body" class="w-full" />
-			</div>
-		</div>
-
-		<div class="field-row">
-			<div class="field">
-				<label for="bd-scrap">{{ i18n.t('bomDetail.scrapRate') }}</label>
-				<p-inputnumber inputId="bd-scrap" [(ngModel)]="form.scrapRate" mode="decimal" [min]="0" [suffix]="' %'"
-					class="w-full" />
-			</div>
-			<div class="field">
-				<label for="bd-fixed">{{ i18n.t('bomDetail.fixedScrap') }}</label>
-				<p-inputnumber inputId="bd-fixed" [(ngModel)]="form.fixedScrapQty" [min]="0" class="w-full" />
-			</div>
-		</div>
-
-		@if (selectedBom(); as b) {
-		<p class="form__scope">{{ i18n.t('bomDetail.scopeOf', { name: b.bomCode || b.bomName }) }}</p>
-		}
-		}
-	</div>
 
 	<ng-template #footer>
 		<button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
@@ -545,3 +1118,106 @@
 
 <p-confirmDialog />
 <p-toast position="top-right" />
+
+<ng-template #tableBomDetail let-row="row">
+	<div>
+		<p-table #routingTable [value]="bomDetails(row)" [showGridlines]="true"
+				 [globalFilterFields]="filterFields.routing"
+				 [scrollable]="true" scrollHeight="flex"
+				 [ngStyle]="{maxHeight:'150px'}">
+			<ng-template #header>
+				<tr>
+					<th class="col-product">{{ i18n.t('bomDetail.product') }}</th>
+					<th class="col-quantity">{{ i18n.t('bomDetail.quantity') }}</th>
+					<th class="col-unit">{{ i18n.t('bomDetail.unit') }}</th>
+					<th class="col-scrapRate">{{ i18n.t('bomDetail.scrapRate') }}</th>
+					<th class="col-fixedScrapQty">{{ i18n.t('bomDetail.fixedScrapQty') }}</th>
+				</tr>
+			</ng-template>
+			<ng-template #body let-row>
+				<tr class="row" [class.row--selected]="selectedBomDetail()?.id === row.id"
+					(click)="selectBomDetail(row)" (dblclick)="openEdit('bom')">
+					<td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+					<td class="col-quantity text-right">{{ row.quantity ?? 0 | number: '1.0-2' }}</td>
+					<td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+					<td class="col-scrapRate text-right">{{ (row.scrapRate ?? 0) | number: '1.0-2' }} %</td>
+					<td class="col-fixedScrapQty text-right">{{ (row.fixedScrapQty ?? 0) | number: '1.0-2' }}</td>
+				</tr>
+			</ng-template>
+			<ng-template #emptymessage>
+				<tr>
+					<td colspan="5">
+						<p class="empty">
+							{{ selectedBom() ? i18n.t('bomDetail.emptyLine') :
+							i18n.t('bomDetail.emptyHint') }}
+						</p>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</div>
+</ng-template>
+
+<ng-template #tableRoutingOp let-row="row">
+	<div>
+		<p-table #routingTable [value]="routingOps(row)" [showGridlines]="true"
+				 [scrollable]="true" scrollHeight="flex"
+				 [ngStyle]="{maxHeight:'150px'}">
+			<ng-template #header>
+				<tr>
+					<th class="col-sequence">{{ i18n.t('routingOperation.sequence') }}</th>
+					<th class="col-routingOperationCode">{{ i18n.t('routingOperation.operationCode') }}</th>
+					<th class="col-routingOperationName">{{ i18n.t('routingOperation.operationName') }}</th>
+					<th class="col-description">{{ i18n.t('routingOperation.description') }}</th>
+					<th class="col-isFinishOperation">{{ i18n.t('routingOperation.isFinishOperation') }}</th>
+					<th class="col-isOutputOperation">{{ i18n.t('routingOperation.isOutputOperation') }}</th>
+				</tr>
+			</ng-template>
+			<ng-template #body let-row>
+				<tr class="row" [class.row--selected]="selectedRoutingOp()?.id === row.id"
+					(click)="selectRoutingOp(row)" (dblclick)="openEdit('routing')">
+					<td class="col-sequence">{{ row.sequence || '—' }}</td>
+					<td class="col-routingOperationCode">{{ row.routingOperationCode || '—' }}</td>
+					<td class="col-routingOperationName">{{ row.routingOperationName || '—' }}</td>
+					<td class="col-description">{{ row.description || '—' }}</td>
+					<td class="col-isFinishOperation">
+						@if (row.isFinishOperation) {
+						<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+							 stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						} @else {
+						<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="6" y1="6" x2="18" y2="18" />
+							<line x1="18" y1="6" x2="6" y2="18" />
+						</svg>
+						}
+					</td>
+					<td class="col-isOutputOperation">
+						@if (row.isOutputOperation) {
+						<svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+							 stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						} @else {
+						<svg class="cancel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="6" y1="6" x2="18" y2="18" />
+							<line x1="18" y1="6" x2="6" y2="18" />
+						</svg>
+						}
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template #emptymessage>
+				<tr>
+					<td colspan="6">
+						<p class="empty">
+							{{ selectedRouting() ? i18n.t('routingOperation.emptyLine') :
+							i18n.t('routingOperation.emptyHint') }}
+						</p>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</div>
+</ng-template>
