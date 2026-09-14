@@ -21,6 +21,8 @@ export interface PickingPlanItemDto {
     status?: number | null;
 
     remark?: string | null;
+
+    pickingPlanItemSources: PickingPlanItemSourceRequest[];
 }
 
 export interface PickingPlanItemSourceDto {
@@ -56,6 +58,8 @@ export interface PickingTicketDto {
     completedAt?: string | null;
 
     remark?: string | null;
+
+    pickingTicketItems: PickingTicketItemRequest[];
 }
 
 export interface PickingTicketItemDto {
@@ -80,14 +84,15 @@ export interface PickingTicketItemDto {
 
 //#region Request
 export type PickingPlanRequest = Omit<PickingPlanDto, 'id'> & {
-    pickingPlanItems?: PickingPlanItemRequest[];
     pickingPlanSources?: PickingPlanSourceRequest[];
+    pickingPlanItems?: PickingPlanItemRequest[];
     pickingTickets?: PickingTicketRequest[];
 };
+
 export type PickingPlanItemRequest = Omit<PickingPlanItemDto, 'id'> & {
     pickingPlanItemSources?: PickingPlanItemSourceRequest[];
-    pickingTicketItems?: PickingTicketItemRequest[];
 };
+
 export type PickingPlanItemSourceRequest = Omit<PickingPlanItemSourceDto, 'id'>;
 export type PickingPlanSourceRequest = Omit<PickingPlanSourceDto, 'id'>;
 export type PickingTicketRequest = Omit<PickingTicketDto, 'id'> & {
@@ -140,3 +145,41 @@ export enum PickingTicketItemStatus {
 }
 
 //#endregion
+
+export const PICKING_PLAN_STATUSES = [
+    { labelKey: 'pickingPlan.status.draft', value: 1, severity: 'info' as const },
+    { labelKey: 'pickingPlan.status.approved', value: 2, severity: 'warning' as const },
+    { labelKey: 'pickingPlan.status.inProgress', value: 3, severity: 'primary' as const },
+    { labelKey: 'pickingPlan.status.partiallyPicked', value: 4, severity: 'secondary' as const },
+    { labelKey: 'pickingPlan.status.fullyPicked', value: 5, severity: 'success' as const },
+    { labelKey: 'pickingPlan.status.cancelled', value: 6, severity: 'danger' as const },
+    { labelKey: 'pickingPlan.status.closed', value: 7, severity: 'help' as const },
+];
+
+export const PICKING_PLAN_ITEM_STATUSES = [
+    { labelKey: 'pickingPlanItem.status.pending', value: 1, severity: 'info' as const },
+    { labelKey: 'pickingPlanItem.status.picking', value: 2, severity: 'warning' as const },
+    { labelKey: 'pickingPlanItem.status.partiallyPicked', value: 3, severity: 'primary' as const },
+    { labelKey: 'pickingPlanItem.status.fullyPicked', value: 4, severity: 'secondary' as const },
+    { labelKey: 'pickingPlanItem.status.cancelled', value: 5, severity: 'success' as const },
+];
+
+export const PICKING_TICKET_STATUSES = [
+    { labelKey: 'pickingTicket.status.draft', value: 1, severity: 'info' as const },
+    { labelKey: 'pickingTicket.status.released', value: 2, severity: 'warning' as const },
+    { labelKey: 'pickingTicket.status.inProgress', value: 3, severity: 'primary' as const },
+    { labelKey: 'pickingTicket.status.partiallyPicked', value: 4, severity: 'secondary' as const },
+    { labelKey: 'pickingTicket.status.completed', value: 5, severity: 'success' as const },
+    { labelKey: 'pickingTicket.status.cancelled', value: 6, severity: 'danger' as const },
+];
+
+export const PICKING_TICKET_ITEM_STATUSES = [
+    { labelKey: 'pickingTicketItem.status.pending', value: 1, severity: 'info' as const },
+    { labelKey: 'pickingTicketItem.status.picking', value: 2, severity: 'warning' as const },
+    { labelKey: 'pickingTicketItem.status.partiallyPicked', value: 3, severity: 'primary' as const },
+    { labelKey: 'pickingTicketItem.status.picked', value: 4, severity: 'secondary' as const },
+    { labelKey: 'pickingTicketItem.status.skipped', value: 5, severity: 'success' as const },
+    { labelKey: 'pickingTicketItem.status.cancelled', value: 6, severity: 'danger' as const },
+];
+
+

@@ -518,7 +518,8 @@
 	overflow: auto;
 }
 
-.lines__add {
+.lines__add,
+.lines__remove {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -543,6 +544,10 @@
 		width: 14px;
 		height: 14px;
 	}
+}
+
+.lines__remove {
+	color: var(--text-danger);
 }
 
 /* Edit-grid columns. Scoped to `.grid--edit` so the read-only grids above keep the

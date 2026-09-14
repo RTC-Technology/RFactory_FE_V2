@@ -266,6 +266,24 @@ export const routes: Routes = [
 				},
 			},
 
+			//picking-plan
+			{
+				path: 'picking-plan',
+				loadComponent: () =>
+					import('./pages/picking-plan/picking-plan.component').then(m => m.PickingPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.pickingPlan.view,
+						PERMISSIONS.pickingPlanSource.view,
+						PERMISSIONS.pickingPlanItem.view,
+						PERMISSIONS.pickingTicket.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
+
 
 			{
 				path: 'forbidden',
