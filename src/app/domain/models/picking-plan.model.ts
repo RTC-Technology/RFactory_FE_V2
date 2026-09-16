@@ -22,7 +22,8 @@ export interface PickingPlanItemDto {
 
     remark?: string | null;
 
-    pickingPlanItemSources: PickingPlanItemSourceRequest[];
+    pickingPlanItemSources: PickingPlanItemSourceDto[];
+    uId: number;
 }
 
 export interface PickingPlanItemSourceDto {
@@ -59,7 +60,7 @@ export interface PickingTicketDto {
 
     remark?: string | null;
 
-    pickingTicketItems: PickingTicketItemRequest[];
+    pickingTicketItems: PickingTicketItemDto[];
 }
 
 export interface PickingTicketItemDto {
@@ -154,6 +155,29 @@ export const PICKING_PLAN_STATUSES = [
     { labelKey: 'pickingPlan.status.fullyPicked', value: 5, severity: 'success' as const },
     { labelKey: 'pickingPlan.status.cancelled', value: 6, severity: 'danger' as const },
     { labelKey: 'pickingPlan.status.closed', value: 7, severity: 'help' as const },
+];
+
+export const PICKING_PLAN_SOURCE_TYPES = [
+    {
+        labelKey: 'pickingPlanSource.sourceType.purchase',
+        value: 1,
+    },
+    {
+        labelKey: 'pickingPlanSource.sourceType.production',
+        value: 2,
+    },
+    {
+        labelKey: 'pickingPlanSource.sourceType.return',
+        value: 3,
+    },
+    {
+        labelKey: 'pickingPlanSource.sourceType.transferIn',
+        value: 4,
+    },
+    {
+        labelKey: 'pickingPlanSource.sourceType.adjustment',
+        value: 5,
+    },
 ];
 
 export const PICKING_PLAN_ITEM_STATUSES = [
