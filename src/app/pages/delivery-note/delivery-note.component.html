@@ -1,0 +1,839 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <p-splitter class="workspace__right" layout="horizontal"
+                        [panelSizes]="split.sizes('product:split-y', [42,58])" [minSizes]="[20, 20]" [gutterSize]="6"
+                        (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('deliveryNote.title') }}</h2>
+                            @if (selectedDelivery(); as d) {
+                            <span class="panel__scope">
+                                <!-- {{ i18n.t('deliveryNote.scopeOf', { name: d.deliveryNo || '—' })}} -->
+                            </span>
+                            <span class="panel__count">{{ deliveries().length }}</span>
+                            }
+                        </div>
+                        <ng-container
+                                      *ngTemplateOutlet="toolbar; context: { kind: 'deliveryNote', perms: perms.deliveryNote, canAdd: true, hasSelection: !!selectedDelivery(), showReload: true }" />
+
+                        <div class="table-scroll">
+                            <p-table #deliveryNoteTable [value]="deliveries()" dataKey="id" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.deliveryNote"
+                                     (onFilter)="onFiltered('deliveryNote', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-deliveryNo">{{ i18n.t('deliveryNote.deliveryNo') }}</th>
+                                        <th class="col-warehouse">{{ i18n.t('deliveryNote.warehouse') }}</th>
+                                        <th class="col-status">{{ i18n.t('deliveryNote.status') }}</th>
+                                        <th class="col-vehicleNo">{{ i18n.t('deliveryNote.vehicleNo') }}</th>
+                                        <th class="col-driverName">{{ i18n.t('deliveryNote.driverName') }}</th>
+                                        <th class="col-driverPhone">{{ i18n.t('deliveryNote.driverPhone') }}</th>
+                                        <th class="col-vehicleType">{{ i18n.t('deliveryNote.vehicleType') }}</th>
+                                        <th class="col-transportMethod">{{ i18n.t('deliveryNote.transportMethod') }}</th>
+                                        <th class="col-weight">{{ i18n.t('deliveryNote.weight') }}</th>
+                                        <th class="col-volume">{{ i18n.t('deliveryNote.volume') }}</th>
+                                        <th class="col-picker">{{ i18n.t('deliveryNote.picker') }}</th>
+                                        <th class="col-startedAt">{{ i18n.t('deliveryNote.startedAt') }}</th>
+                                        <th class="col-completedAt">{{ i18n.t('deliveryNote.completedAt') }}</th>
+                                        <th class="col-remark">{{ i18n.t('deliveryNote.remark') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedDelivery()?.id === row.id"
+                                        (click)="selectDelivery(row)" (dblclick)="openEdit()">
+                                        <td class="col-deliveryNo">{{ row.deliveryNo || '—' }}</td>
+                                        <td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
+                                        <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+                                        <td class="col-vehicleNo">{{ row.vehicleNo || '—' }}</td>
+                                        <td class="col-driverName">{{ row.driverName || '—' }}</td>
+                                        <td class="col-driverPhone">{{ row.driverPhone || '—' }}</td>
+                                        <td class="col-vehicleType">{{ vehicleTypeLabel(row.vehicleType) || '—' }}</td>
+                                        <td class="col-transportMethod">{{ transportMethodLabel(row.transportMethod) || '—' }}</td>
+                                        <td class="col-weight text-right">{{ row.weight != null ? (row.weight | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-volume text-right">{{ row.volume != null ? (row.volume | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-picker">{{ userLabel(row.pickerId) || '—' }}</td>
+                                        <td class="col-startedAt">{{ row.startedAt | date }}</td>
+                                        <td class="col-completedAt">{{ row.completedAt | date }}</td>
+                                        <td class="col-remark">{{ row.remark || '—' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="14">
+                                            <p class="empty">
+                                                {{ selectedDelivery() ? i18n.t('deliveryNote.empty') :
+                                                i18n.t('deliveryNote.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+
+
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('deliveryNoteSource.title') }}</h2>
+                            @if (selectedDelivery(); as d) {
+                            <span class="panel__scope">{{ i18n.t('deliveryNoteSource.scopeOf', { name: d.deliveryNo}) }}</span>
+                            <span class="panel__count">{{ deliverySources().length }}</span>
+                            }
+                        </div>
+                        <div class="table-scroll">
+                            <p-table #deliveryNoteSourcesTable [value]="deliverySources()" [showGridlines]="true" class="grid"
+                                     [globalFilterFields]="filterFields.deliveryNoteSources"
+                                     (onFilter)="onFiltered('deliveryNoteSources', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-sourceNo">{{ i18n.t('deliveryNoteSource.sourceNo') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedDeliverySource()?.id === row.id"
+                                        (click)="selectDeliverySource(row)">
+                                        <td class="col-sourceId">{{row.goodsIssueNo || '—'}}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="1">
+                                            <p class="empty">
+                                                {{ selectedDelivery() ? i18n.t('deliveryNoteSource.empty') : i18n.t('deliveryNoteSource.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+
+
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('deliveryNoteItem.title') }}</h2>
+                    @if (selectedDelivery(); as d) {
+                    <span class="panel__scope">
+                        {{ i18n.t('deliveryNoteItem.scopeOf', { name: d.deliveryNo || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ deliveryItems().length }}</span>
+                    }
+                </div>
+
+                <div class="table-scroll">
+                    <p-table #deliveryNoteItemTable [value]="deliveryItems()" [showGridlines]="true" class="grid"
+                             [globalFilterFields]="filterFields.deliveryNoteItem"
+                             (onFilter)="onFiltered('deliveryNoteItem', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-goodIssue">{{ i18n.t('deliveryNoteItem.goodIssue') }}</th>
+                                <!-- <th class="col-goodIssueDetail">{{ i18n.t('deliveryNoteItem.goodIssueDetail') }}</th> -->
+                                <th class="col-product">{{ i18n.t('deliveryNoteItem.product') }}</th>
+                                <th class="col-unit">{{ i18n.t('deliveryNoteItem.unit') }}</th>
+                                <th class="col-orderedQty">{{ i18n.t('deliveryNoteItem.orderedQty') }}</th>
+                                <th class="col-deliveredQty">{{ i18n.t('deliveryNoteItem.deliveredQty') }}</th>
+                                <th class="col-remark">{{ i18n.t('deliveryNoteItem.remark') }}</th>
+
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedDelivery()?.id === row.id"
+                                (click)="selectDeliveryItem(row)" (dblclick)="openEdit()">
+                                <td class="col-goodIssue">{{ goodsIssueLabel(row.goodsIssueId) || '—' }}</td>
+                                <!-- <td class="col-goodIssueDetail">{{ goodIssueDetailLabel(row.goodIssueDetailId) || '—' }}</td> -->
+                                <td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+                                <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+                                <td class="col-orderedQty text-right">{{ row.orderedQty != null ? (row.orderedQty | number:'1.0-2') : 0 }}</td>
+                                <td class="col-deliveredQty text-right">{{ row.deliveredQty != null ? (row.deliveredQty | number:'1.0-2') : 0 }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">
+                                    <p class="empty">{{ i18n.t('deliveryNoteItem.empty') }}</p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'100vh' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <p-tabs [(value)]="activeTab" class="delivery-tabs">
+            <p-tablist>
+                <p-tab value="delivery">{{i18n.t('deliveryNote.title')}}</p-tab>
+                <p-tab value="sender">{{i18n.t('deliveryNoteSender.title')}}</p-tab>
+                <p-tab value="receiver">{{i18n.t('deliveryNoteReceiver.title')}}</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel value="delivery">
+                    <div class="form">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="d-deliveryNo">
+                                    {{ i18n.t('deliveryNote.deliveryNo') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-deliveryNo" name="deliveryNo" [(ngModel)]="form.deliveryNo" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="d-warehouseId">
+                                    {{ i18n.t('deliveryNote.warehouse') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-select [options]="warehouseOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="form.warehouseId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                          [placeholder]="i18n.t('deliveryNote.warehouse.unset')" />
+                            </div>
+
+                            <div class="field">
+                                <label for="d-status">{{ i18n.t('deliveryNote.status') }} <span class="req">*</span></label>
+                                <p-select inputId="d-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="form.status" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                          [placeholder]="i18n.t('deliveryNote.status.unset')" />
+                            </div>
+
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="d-vehicleNo">
+                                    {{ i18n.t('deliveryNote.vehicleNo') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-vehicleNo" name="vehicleNo" [(ngModel)]="form.vehicleNo" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="d-driverName">
+                                    {{ i18n.t('deliveryNote.driverName') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-driverName" name="driverName" [(ngModel)]="form.driverName" autocomplete="off" />
+                            </div>
+                            <div class="field">
+                                <label for="d-driverPhone">
+                                    {{ i18n.t('deliveryNote.driverPhone') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-driverPhone" name="driverPhone" [(ngModel)]="form.driverPhone" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="d-vehicleType">
+                                    {{ i18n.t('deliveryNote.vehicleType') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-select inputId="d-vehicleType" [options]="vehicleTypeOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="form.vehicleType" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                          [placeholder]="i18n.t('deliveryNote.vehicleType.unset')" />
+                            </div>
+                            <div class="field">
+                                <label for="d-transportMethod">
+                                    {{ i18n.t('deliveryNote.transportMethod') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-select inputId="d-transportMethod" [options]="transportMethodOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="form.transportMethod" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                          [placeholder]="i18n.t('deliveryNote.transportMethod.unset')" />
+                            </div>
+
+                            <div class="field">
+                                <label for="d-weight">
+                                    {{ i18n.t('deliveryNote.weight') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="form.weight"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </div>
+                            <div class="field">
+                                <label for="d-volume">
+                                    {{ i18n.t('deliveryNote.volume') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="form.volume"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </div>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="d-picker">
+                                    {{ i18n.t('deliveryNote.picker') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <p-select inputId="d-picker" [options]="userOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="form.pickerId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                          [placeholder]="i18n.t('deliveryNote.picker.unset')" />
+                            </div>
+                            <div class="field">
+                                <label for="d-startedAt">
+                                    {{ i18n.t('deliveryNote.startedAt') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-startedAt" type="datetime-local" name="startedAt" [(ngModel)]="form.startedAt" autocomplete="off" />
+                            </div>
+                            <div class="field">
+                                <label for="d-completedAt">
+                                    {{ i18n.t('deliveryNote.completedAt') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="d-completedAt" type="datetime-local" name="completedAt" [(ngModel)]="form.completedAt" autocomplete="off" />
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+                            <label for="d-remark">{{ i18n.t('deliveryNote.remark') }}</label>
+                            <textarea pInputTextarea id="d-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+                        </div>
+                    </div>
+                </p-tabpanel>
+
+                <p-tabpanel value="sender">
+                    <div class="form">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="ds-senderName">
+                                    {{ i18n.t('deliveryNoteSender.senderName') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="ds-senderName" name="senderName" [(ngModel)]="form.deliveryNoteSender.senderName" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="ds-email1">
+                                    {{ i18n.t('deliveryNoteSender.email1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="ds-email1" name="email1" [(ngModel)]="form.deliveryNoteSender.email1" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="ds-email2">
+                                    {{ i18n.t('deliveryNoteSender.email2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="ds-email2" name="email2" [(ngModel)]="form.deliveryNoteSender.email2" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="ds-phone1">
+                                    {{ i18n.t('deliveryNoteSender.phone1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="ds-phone1" name="phone1" [(ngModel)]="form.deliveryNoteSender.phone1" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="ds-phone2">
+                                    {{ i18n.t('deliveryNoteSender.phone2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="ds-phone2" name="phone2" [(ngModel)]="form.deliveryNoteSender.phone2" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="ds-address1">
+                                    {{ i18n.t('deliveryNoteSender.address1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <textarea pInputTextarea id="ds-address1" name="address1" [(ngModel)]="form.deliveryNoteSender.address1" autocomplete="off" [rows]="2"></textarea>
+                            </div>
+
+                            <div class="field">
+                                <label for="ds-address2">
+                                    {{ i18n.t('deliveryNoteSender.address2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <textarea pInputTextarea id="ds-address2" name="address2" [(ngModel)]="form.deliveryNoteSender.address2" autocomplete="off" [rows]="2"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </p-tabpanel>
+
+                <p-tabpanel value="receiver">
+                    <div class="form">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="dr-receiverName">
+                                    {{ i18n.t('deliveryNoteReceiver.receiverName') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-receiverName" name="receiverName" [(ngModel)]="form.deliveryNoteReceiver.receiverName" autocomplete="off" />
+                            </div>
+                            <div class="field">
+                                <label for="dr-contactName">
+                                    {{ i18n.t('deliveryNoteReceiver.contactName') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-contactName" name="contactName" [(ngModel)]="form.deliveryNoteReceiver.contactName" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="dr-email1">
+                                    {{ i18n.t('deliveryNoteReceiver.email1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-email1" name="email1" [(ngModel)]="form.deliveryNoteReceiver.email1" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="dr-email2">
+                                    {{ i18n.t('deliveryNoteReceiver.email2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-email2" name="email2" [(ngModel)]="form.deliveryNoteReceiver.email2" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="dr-phone1">
+                                    {{ i18n.t('deliveryNoteReceiver.phone1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-phone1" name="phone1" [(ngModel)]="form.deliveryNoteReceiver.phone1" autocomplete="off" />
+                            </div>
+
+                            <div class="field">
+                                <label for="dr-phone2">
+                                    {{ i18n.t('deliveryNoteReceiver.phone2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <input pInputText id="dr-phone2" name="phone2" [(ngModel)]="form.deliveryNoteReceiver.phone2" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="dr-address1">
+                                    {{ i18n.t('deliveryNoteReceiver.address1') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <textarea pInputTextarea id="dr-address1" name="address1" [(ngModel)]="form.deliveryNoteReceiver.address1" autocomplete="off" [rows]="2"></textarea>
+                            </div>
+
+                            <div class="field">
+                                <label for="dr-address2">
+                                    {{ i18n.t('deliveryNoteReceiver.address2') }}
+                                    <span class="req">*</span>
+                                </label>
+                                <textarea pInputTextarea id="dr-address2" name="address2" [(ngModel)]="form.deliveryNoteReceiver.address2" autocomplete="off" [rows]="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+
+
+        <p-tabs [(value)]="activeLineTab" class="lines-tabs">
+            <p-tablist>
+                <p-tab value="source">{{i18n.t('deliveryNoteSource.title')}}</p-tab>
+                <p-tab value="item">{{i18n.t('deliveryNoteItem.title')}}</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel value="source">
+                    <section class="panel lines">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('deliveryNoteSource.title') }}</h2>
+                            <span class="panel__scope">
+                                {{ i18n.t('deliveryNoteSource.lineCount', { count: formSource().length }) }}
+                            </span>
+                            <button type="button" class="lines__add" (click)="addSource()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('deliveryNoteSource.addLine') }}</span>
+                            </button>
+                        </div>
+
+                        <div class="lines__scroll" [ngStyle]="{maxHeight:'22vh', overflow:'auto'}">
+                            <p-table [value]="formSource()"
+                                     dataKey="id"
+                                     [showGridlines]="true"
+                                     class="grid grid--edit"
+                                     scrollable="true"
+                                     scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-idx" pFrozenColumn>#</th>
+                                        <th class="col-goodIssue">
+                                            {{ i18n.t('deliveryNoteSource.source') }}
+                                            <span class="req">*</span>
+                                        </th>
+                                        <th class="col-date">
+                                            {{ i18n.t('goodsIssue.issueDate') }}
+                                        </th>
+                                        <th class="col-status">
+                                            {{ i18n.t('goodsIssue.status') }}
+                                        </th>
+                                        <th class="col-act" pFrozenColumn alignFrozen="right">{{ i18n.t('common.actions') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row let-i="rowIndex">
+                                    <tr class="row row--edit">
+                                        <td class="col-idx" pFrozenColumn>{{ i + 1 }}</td>
+                                        <td class="col-goodIssue">
+                                            <p-select inputId="s-goodIssue" [options]="goodsIssueOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="row.goodsIssueId"
+                                                      (ngModelChange)="onGoodsIssueChange(row,$event)"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('deliveryNoteSource.goodsIssue.unset')">
+
+                                                <ng-template #header>
+                                                    <div class="picker-row picker-row--head">
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.issueNo') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.issueDate') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.status') }}</span>
+                                                    </div>
+                                                </ng-template>
+
+                                                <ng-template #item let-opt>
+                                                    <div class="picker-row">
+                                                        <span class="picker-cell picker-cell--code">{{ opt.sourceNo }}</span>
+                                                        <span class="picker-cell" [title]="opt.sourceDate">{{ opt.sourceDate | date }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ opt.statusLabel || '—' }}</span>
+
+                                                    </div>
+                                                </ng-template>
+                                            </p-select>
+                                        </td>
+
+                                        <td class="col-date">
+                                            <input pInputText type="datetime-local" class="w-full" name="issueDate" [(ngModel)]="row.issueDate" autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-status">
+                                            <p-select [options]="goodIssueStatusOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.status"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('goodsIssue.status.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </td>
+
+                                        <td class="col-act" pFrozenColumn alignFrozen="right">
+                                            <button type="button"
+                                                    class="row-del"
+                                                    [title]="i18n.t('pickingPlanSource.removeLine')"
+                                                    [attr.aria-label]="i18n.t('pickingPlanSource.removeLine')"
+                                                    (click)="removeSource(row)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="5">
+                                            <p class="empty">{{ i18n.t('deliveryNoteSource.emptyLine') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </p-tabpanel>
+
+                <p-tabpanel value="item">
+                    <section class="panel lines">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('deliveryNoteItem.title') }}</h2>
+                            <span class="panel__scope">
+                                {{ i18n.t('deliveryNoteItem.lineCount', { count: formItem().length }) }}
+                            </span>
+                            <button type="button" class="lines__add" (click)="addItem()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('deliveryNoteItem.addLine') }}</span>
+                            </button>
+                        </div>
+
+                        <div class="lines__scroll" [ngStyle]="{maxHeight:'22vh', overflow:'auto'}">
+                            <p-table [value]="formItem()"
+                                     dataKey="id"
+                                     [showGridlines]="true"
+                                     class="grid grid--edit"
+                                     scrollable="true"
+                                     scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-idx" pFrozenColumn>#</th>
+                                        <th class="col-goodIssue">
+                                            {{ i18n.t('deliveryNoteItem.goodIssue') }}
+                                            <span class="req">*</span>
+                                        </th>
+                                        <th class="col-goodIssueDetail">
+                                            {{ i18n.t('deliveryNoteItem.goodIssueDetail') }}
+                                            <span class="req">*</span>
+                                        </th>
+
+                                        <th class="col-unit">{{ i18n.t('deliveryNoteItem.unit') }}</th>
+                                        <th class="col-orderedQty">{{ i18n.t('deliveryNoteItem.orderedQty') }}</th>
+                                        <th class="col-deliveredQty">{{ i18n.t('deliveryNoteItem.deliveredQty') }}</th>
+                                        <th class="col-remark">{{ i18n.t('deliveryNoteItem.remark') }}</th>
+
+                                        <th class="col-act" pFrozenColumn alignFrozen="right">{{ i18n.t('common.actions') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row let-i="rowIndex">
+                                    <tr class="row row--edit">
+                                        <td class="col-idx" pFrozenColumn>{{ i + 1 }}</td>
+                                        <td class="col-goodIssue">
+                                            <p-select inputId="s-goodIssueId" [options]="goodsIssueOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="row.goodsIssueId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      class="w-full"
+                                                      [placeholder]="i18n.t('deliveryNoteItem.source.unset')">
+
+                                                <ng-template #header>
+                                                    <div class="picker-row picker-row--head">
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.issueNo') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.issueDate') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssue.status') }}</span>
+                                                    </div>
+                                                </ng-template>
+
+                                                <ng-template #item let-opt>
+                                                    <div class="picker-row">
+                                                        <span class="picker-cell picker-cell--code">{{ opt.sourceNo }}</span>
+                                                        <span class="picker-cell" [title]="opt.sourceDate">{{ opt.sourceDate | date }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ opt.statusLabel || '—' }}</span>
+
+                                                    </div>
+                                                </ng-template>
+                                            </p-select>
+                                        </td>
+
+                                        <td class="col-goodIssueDetail">
+                                            <p-select [options]="goodsIssueDetailOptions(row.goodsIssueId)"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.goodsIssueDetailId"
+                                                      (ngModelChange)="onGoodsIssueDetailChange(row, $event)"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('deliveryNoteItem.goodIssueDetail.unset')"
+                                                      appendTo="body"
+                                                      class="w-full">
+                                                <ng-template #header>
+                                                    <div class="picker-row picker-row--head">
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssueDetail.product') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssueDetail.unit') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssueDetail.location') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('goodsIssueDetail.serialNo') }}</span>
+                                                    </div>
+                                                </ng-template>
+
+                                                <ng-template #item let-opt>
+                                                    <div class="picker-row">
+                                                        <span class="picker-cell picker-cell--code">{{ productLabel(opt.productId) || '—' }}</span>
+                                                        <span class="picker-cell">{{ opt.unit }}</span>
+                                                        <span class="picker-cell picker-cell--right">
+                                                            {{ opt.quantity != null ? (opt.quantity | number:'1.0-2') :'—' }}
+                                                        </span>
+                                                        <span class="picker-cell picker-cell--center">{{ opt.serialNo }}</span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-select>
+                                        </td>
+
+                                        <td class="col-unit">
+                                            <p-select [options]="unitOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.unitId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('deliveryNoteItem.unit.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </td>
+                                        <td class="col-orderedQty">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.orderedQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-deliveredQty">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.deliveredQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+                                        <td class="col-remark">
+                                            <textarea pInputTextarea name="remark" [(ngModel)]="row.remark" autocomplete="off" [rows]="2"></textarea>
+                                        </td>
+
+                                        <td class="col-act" pFrozenColumn alignFrozen="right">
+                                            <button type="button"
+                                                    class="row-del"
+                                                    [title]="i18n.t('deliveryNoteItem.removeLine')"
+                                                    [attr.aria-label]="i18n.t('deliveryNoteItem.removeLine')"
+                                                    (click)="removeItem(row)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="8">
+                                            <p class="empty">{{ i18n.t('deliveryNoteItem.emptyLine') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    </div>
+
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

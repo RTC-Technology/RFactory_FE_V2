@@ -949,7 +949,7 @@
                                                         <th class="col-pickedQty">{{ i18n.t('pickingTicketItem.pickedQty') }}</th>
                                                         <th class="col-status">{{ i18n.t('pickingTicketItem.status') }}</th>
                                                         <th class="col-remark">{{ i18n.t('pickingTicketItem.remark') }}</th>
-                                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                                        <th class="col-act" pFrozenColumn alignFrozen="right">{{ i18n.t('common.actions') }}</th>
                                                     </tr>
                                                 </ng-template>
 
@@ -1080,7 +1080,7 @@
                                                             </textarea>
                                                         </td>
 
-                                                        <td class="col-act">
+                                                        <td class="col-act" pFrozenColumn alignFrozen="right">
                                                             <button type="button"
                                                                     class="row-del"
                                                                     [title]="i18n.t('pickingTicketItem.removeLine')"

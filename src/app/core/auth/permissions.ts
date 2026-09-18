@@ -50,10 +50,18 @@ export const PERMISSIONS = {
   purchaseOrder: crud('purchase-order'),
   purchaseOrderDetail: crud('purchase-order-detail'),
   purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
+
   pickingPlan: crud('picking-plan'),
   pickingPlanSource: crud('picking-plan-source'),
   pickingPlanItem: crud('picking-plan-item'),
   pickingTicket: crud('picking-ticket'),
+
+  deliveryNote: crud('delivery-note'),
+  deliveryNoteItem: crud('delivery-note-item'),
+  deliveryNoteSource: crud('delivery-note-source'),
+  deliveryNoteSender: crud('delivery-note-sender'),
+  deliveryNoteReceiver: crud('delivery-note-receiver'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

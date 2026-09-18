@@ -681,7 +681,20 @@
 		font-weight: 600;
 	}
 
+	.p-datatable-table {
 
+		th.col-idx,
+		th.col-act {
+			background: var(--card-bg);
+			z-index: 9999 !important;
+		}
+
+		td.col-idx,
+		td.col-act {
+			background: var(--card-bg);
+			z-index: 9999 !important;
+		}
+	}
 }
 
 :host ::ng-deep .p-inputnumber {

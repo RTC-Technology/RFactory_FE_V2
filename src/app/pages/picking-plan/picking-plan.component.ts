@@ -35,6 +35,7 @@ import { GOODS_ISSUE_STATUSES } from '../../domain/models/goods-issue.model';
 import { productStatusOf } from '../../domain/models/product.model';
 import { PickingPlanApiService, PickingPlanItemApiService, PickingPlanItemSourceApiService, PickingPlanSourceApiService, PickingTicketApiService, PickingTicketItemApiService } from '../../core/services/picking-plan-api.service';
 import { UserApiService } from '../../core/services/organization-api.service';
+import { PERMISSIONS } from '../../core/auth/permissions';
 
 type EntityKind = 'pickingPlan' | 'planSources' | 'pickingPlanItem' | 'pickingTicket';
 
@@ -69,8 +70,6 @@ interface PickingPlanSourceDetailOption {
 	serialNo: string;
 	quantity: number;
 }
-
-
 
 @Component({
 	selector: 'app-picking-plan',
@@ -384,7 +383,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 	constructor() {
 		// The combinations below each drive one list inside the detail modal, so the selected
 		// row has to stay valid when the underlying set changes (filter, reload, delete).
-		super();
+		super(PERMISSIONS.pickingPlan);
 
 		effect(() => {
 			const pickingPlans = this.plans();

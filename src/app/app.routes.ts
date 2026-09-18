@@ -283,6 +283,24 @@ export const routes: Routes = [
 				},
 			},
 
+			//delivery-note
+			{
+				path: 'delivery-note',
+				loadComponent: () =>
+					import('./pages/delivery-note/delivery-note.component').then(m => m.DeliveryNoteComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.deliveryNote.view,
+						PERMISSIONS.deliveryNoteSource.view,
+						PERMISSIONS.deliveryNoteItem.view,
+						PERMISSIONS.deliveryNoteSender.view,
+						PERMISSIONS.deliveryNoteReceiver.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
 
 
 			{
