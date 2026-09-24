@@ -62,6 +62,12 @@ export const PERMISSIONS = {
   deliveryNoteSender: crud('delivery-note-sender'),
   deliveryNoteReceiver: crud('delivery-note-receiver'),
 
+  packingCheck: crud('packing-check'),
+  packingCheckItem: crud('packing-check-item'),
+  packingPackage: crud('packing-package'),
+  packingPackageItem: crud('packing-package-item'),
+  packingScanLog: crud('packing-scan-log'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

@@ -1,0 +1,1012 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('packingCheck.title') }}</h2>
+                    <span class="panel__count">{{ checks().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'packingCheck', perms: perms.packingCheck, canAdd: true, hasSelection: !!selectedCheck(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #packingCheckTable [value]="checks()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.packingCheck"
+                             (onFilter)="onFiltered('packingCheck', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-checkNo">{{ i18n.t('packingCheck.checkNo') }}</th>
+                                <th class="col-warehouse">{{ i18n.t('packingCheck.warehouse') }}</th>
+                                <th class="col-pickingPlan">{{ i18n.t('packingCheck.pickingPlan') }}</th>
+                                <th class="col-status">{{ i18n.t('packingCheck.status') }}</th>
+                                <th class="col-checkedBy">{{ i18n.t('packingCheck.checkedBy') }}</th>
+                                <th class="col-startedAt">{{ i18n.t('packingCheck.startedAt') }}</th>
+                                <th class="col-completedAt">{{ i18n.t('packingCheck.completedAt') }}</th>
+                                <th class="col-remark">{{ i18n.t('packingCheck.remark') }}</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedCheck()?.id === row.id"
+                                (click)="selectCheck(row)" (dblclick)="openEdit()">
+                                <td class="col-checkNo">{{ row.checkNo || '—' }}</td>
+                                <td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
+                                <td class="col-pickingPlan">{{ pickingPlanLabel(row.pickingPlanId) || '—' }}</td>
+                                <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+                                <td class="col-checkedBy">{{ userLabel(row.checkedBy) || '—' }}</td>
+                                <td class="col-startedAt">{{ row.startedAt ? (row.startedAt | date) : '—' }}</td>
+                                <td class="col-completedAt">{{ row.completedAt ? (row.completedAt | date) : '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="8">
+                                    <p class="empty">
+                                        {{ selectedCheck() ? i18n.t('packingCheck.empty') :
+                                        i18n.t('packingCheck.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <p-splitter class="workspace__right" layout="horizontal"
+                        [panelSizes]="split.sizes('product:split-y', [42,58])" [minSizes]="[20, 20]" [gutterSize]="6"
+                        (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('packingCheckItem.title') }}</h2>
+                            @if (selectedCheck(); as c) {
+                            <span class="panel__scope">
+                                {{ i18n.t('packingCheckItem.scopeOf', { name: c.checkNo || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ checkItems().length }}</span>
+                            }
+                        </div>
+
+                        <div class="table-scroll">
+                            <p-table #packingCheckItemTable [value]="checkItems()" [showGridlines]="true" class="grid"
+                                     [globalFilterFields]="filterFields.packingCheckItem"
+                                     (onFilter)="onFiltered('packingCheckItem', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-product">{{ i18n.t('packingCheckItem.product') }}</th>
+                                        <th class="col-unit">{{ i18n.t('packingCheckItem.unit') }}</th>
+                                        <th class="col-lot">{{ i18n.t('packingCheckItem.lot') }}</th>
+                                        <th class="col-serialNo">{{ i18n.t('packingCheckItem.serialNo') }}</th>
+                                        <th class="col-requiredQty">{{ i18n.t('packingCheckItem.requiredQty') }}</th>
+                                        <th class="col-pickedQty">{{ i18n.t('packingCheckItem.pickedQty') }}</th>
+                                        <th class="col-packedQty">{{ i18n.t('packingCheckItem.packedQty') }}</th>
+                                        <th class="col-remainingQty">{{ i18n.t('packingCheckItem.remainingQty') }}</th>
+                                        <th class="col-discrepancyQty">{{ i18n.t('packingCheckItem.discrepancyQty') }}</th>
+                                        <th class="col-status">{{ i18n.t('packingCheckItem.status') }}</th>
+                                        <th class="col-remark">{{ i18n.t('packingCheckItem.remark') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedCheckItem()?.id === row.id"
+                                        (click)="selectCheckItem(row)" (dblclick)="openEdit()">
+                                        <td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+                                        <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+                                        <td class="col-lot">{{ lotLabel(row.lotId) || '—' }}</td>
+                                        <td class="col-serialNo">{{ row.serialNo || '—' }}</td>
+                                        <td class="col-requiredQty text-right">
+                                            {{ row.requiredQty != null ? (row.requiredQty | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-pickedQty text-right">
+                                            {{ row.pickedQty != null ? (row.pickedQty | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-packedQty text-right">
+                                            {{ row.packedQty != null ? (row.packedQty | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-remainingQty text-right">
+                                            {{ row.remainingQty != null ? (row.remainingQty | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-discrepancyQty text-right">
+                                            {{ row.discrepancyQty != null ? (row.discrepancyQty | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-status">{{ statusItemLabel(row.status) || '—' }}</td>
+                                        <td class="col-remark">{{ row.remark || '—' }}</td>
+
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="11">
+                                            <p class="empty">{{ i18n.t('packingCheckItem.empty') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('packingPackage.title') }}</h2>
+                            @if (selectedCheck(); as c) {
+                            <span class="panel__scope">{{ i18n.t('packingPackage.scopeOf', { name:c.checkNo}) }}</span>
+                            <span class="panel__count">{{ packages().length }}</span>
+                            }
+                        </div>
+                        <div class="table-scroll">
+                            <p-table #packagesTable [value]="packages()" [showGridlines]="true" class="grid"
+                                     [globalFilterFields]="filterFields.packingPackage"
+                                     (onFilter)="onFiltered('packingPackage', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-packageNo">{{ i18n.t('packingPackage.packageNo') }}</th>
+                                        <th class="col-packageType">{{ i18n.t('packingPackage.packageType') }}</th>
+                                        <th class="col-barcode">{{ i18n.t('packingPackage.barcode') }}</th>
+                                        <th class="col-weight">{{ i18n.t('packingPackage.weight') }}</th>
+                                        <th class="col-length">{{ i18n.t('packingPackage.length') }}</th>
+                                        <th class="col-width">{{ i18n.t('packingPackage.width') }}</th>
+                                        <th class="col-height">{{ i18n.t('packingPackage.height') }}</th>
+                                        <th class="col-volume">{{ i18n.t('packingPackage.volume') }}</th>
+                                        <th class="col-status">{{ i18n.t('packingPackage.status') }}</th>
+                                        <th class="col-packedAt">{{ i18n.t('packingPackage.packedAt') }}</th>
+                                        <th class="col-packedBy">{{ i18n.t('packingPackage.packedBy') }}</th>
+                                        <th class="col-remark">{{ i18n.t('packingPackage.remark') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedPackage()?.id === row.id"
+                                        (click)="selectPackage(row)" (dblclick)="openEdit()">
+                                        <td class="col-packageNo">{{row.packageNo || '—'}}</td>
+                                        <td class="col-packageType">{{packageTypeLabel(row.packageType) || '—'}}</td>
+                                        <td class="col-barcode">{{row.barcode || '—'}}</td>
+                                        <td class="col-weight text-right">
+                                            {{ row.weight != null ? (row.weight | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-length text-right">
+                                            {{ row.length != null ? (row.length | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-width text-right">
+                                            {{ row.width != null ? (row.width | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-height text-right">
+                                            {{ row.height != null ? (row.height | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-volume text-right">
+                                            {{ row.volume != null ? (row.volume | number:'1.0-2') : 0 }}
+                                        </td>
+                                        <td class="col-status">{{statusPackageLabel(row.status) || '—'}}</td>
+                                        <td class="col-packedAt">{{row.packedAt ? (row.packedAt | date) : '—'}}</td>
+                                        <td class="col-packedBy">{{userLabel(row.packedBy) || '—'}}</td>
+                                        <td class="col-remark">{{row.remark || '—'}}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="12">
+                                            <p class="empty">
+                                                {{ selectedCheck() ? i18n.t('packingPackage.empty') : i18n.t('packingPackage.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+
+
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'100vh' }">
+    <p-tabs [(value)]="activeTab">
+        <p-tablist>
+            <p-tab value="check">{{i18n.t('packingCheck.title')}}</p-tab>
+            <p-tab value="package">{{i18n.t('packingPackage.title')}}</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+            <p-tabpanel value="check">
+
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="p-checkNo">
+                                {{ i18n.t('packingCheck.checkNo') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="p-checkNo" name="checkNo" [(ngModel)]="form.checkNo" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="p-warehouseId">
+                                {{ i18n.t('packingCheck.warehouse') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="warehouseOptions()"
+                                      optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.warehouseId"
+                                      [filter]="true"
+                                      filterBy="label"
+                                      appendTo="body"
+                                      class="w-full"
+                                      [placeholder]="i18n.t('packingCheck.warehouse.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="p-pickingPlanId">
+                                {{ i18n.t('packingCheck.pickingPlan') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="pickingPlanOptions()"
+                                      optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.pickingPlanId"
+                                      [filter]="true"
+                                      filterBy="label"
+                                      appendTo="body"
+                                      class="w-full"
+                                      [placeholder]="i18n.t('packingCheck.pickingPlan.unset')" />
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="p-status">
+                                {{ i18n.t('packingCheck.status') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="statusOptions()"
+                                      optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.status"
+                                      [filter]="true"
+                                      filterBy="label"
+                                      appendTo="body"
+                                      class="w-full"
+                                      [placeholder]="i18n.t('packingCheck.status.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="p-checkedBy">
+                                {{ i18n.t('packingCheck.checkedBy') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="userOptions()"
+                                      optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.checkedBy"
+                                      [filter]="true"
+                                      filterBy="label"
+                                      appendTo="body"
+                                      class="w-full"
+                                      [placeholder]="i18n.t('packingCheck.checkedBy.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="p-startedAt">
+                                {{ i18n.t('packingCheck.startedAt') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="p-startedAt" type="datetime-local" name="startedAt" [(ngModel)]="form.startedAt" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="p-completedAt">
+                                {{ i18n.t('packingCheck.completedAt') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="p-completedAt" type="datetime-local" name="completedAt" [(ngModel)]="form.completedAt" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="p-remark">{{ i18n.t('packingCheck.remark') }}</label>
+                        <textarea pInputTextarea id="p-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+                    </div>
+
+                    <section class="panel lines">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('packingCheckItem.title') }}</h2>
+                            <span class="panel__scope">
+                                {{ i18n.t('packingCheckItem.lineCount', { count: formItems().length }) }}
+                            </span>
+                            <button type="button" class="lines__add" (click)="addItemLine()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('packingCheckItem.addLine') }}</span>
+                            </button>
+                        </div>
+
+                        <div class="lines__scroll">
+                            <p-table [value]="formItems()"
+                                     dataKey="id"
+                                     [showGridlines]="true"
+                                     class="grid grid--edit"
+                                     scrollable="true"
+                                     scrollHeight="flex"
+                                     [ngStyle]="{height:'40vh'}">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-idx">#</th>
+                                        <th class="col-product">
+                                            {{ i18n.t('packingCheckItem.product') }}
+                                            <span class="req">*</span>
+                                        </th>
+                                        <th class="col-unit">
+                                            {{ i18n.t('packingCheckItem.unit') }}
+                                        </th>
+                                        <th class="col-lot">
+                                            {{ i18n.t('packingCheckItem.lot') }}
+                                        </th>
+                                        <th class="col-serial">
+                                            {{ i18n.t('packingCheckItem.serialNo') }}
+                                        </th>
+                                        <th class="col-quantity">
+                                            {{ i18n.t('packingCheckItem.requiredQty') }}
+                                        </th>
+                                        <th class="col-quantity">
+                                            {{ i18n.t('packingCheckItem.pickedQty') }}
+                                        </th>
+                                        <th class="col-quantity">
+                                            {{ i18n.t('packingCheckItem.packedQty') }}
+                                        </th>
+                                        <th class="col-quantity">
+                                            {{ i18n.t('packingCheckItem.remainingQty') }}
+                                        </th>
+                                        <th class="col-quantity">
+                                            {{ i18n.t('packingCheckItem.discrepancyQty') }}
+                                        </th>
+                                        <th class="col-status">
+                                            {{ i18n.t('packingCheckItem.status') }}
+                                        </th>
+                                        <th class="col-remark">
+                                            {{ i18n.t('packingCheckItem.remark') }}
+                                        </th>
+                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row let-i="rowIndex">
+                                    <tr class="row row--edit">
+                                        <td class="col-idx" pFrozenColumn>{{ i + 1 }}</td>
+                                        <td class="col-product">
+                                            <p-select [options]="productOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [ngModel]="row.productId || null"
+                                                      (ngModelChange)="onDetailProductChange(row, $event)"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('packingCheckItem.product.unset')"
+                                                      appendTo="body"
+                                                      class="w-full">
+                                                <ng-template #header>
+                                                    <div class="picker-row picker-row--head">
+                                                        <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                            }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                            }}</span>
+                                                    </div>
+                                                </ng-template>
+
+                                                <ng-template #item let-opt>
+                                                    <div class="picker-row">
+                                                        <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                                        <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                                        <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                            {{ opt.drawingNo || '—' }}
+                                                        </span>
+                                                        <span class="picker-cell picker-cell--center">
+                                                            @if (opt.statusLabel) {
+                                                            <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                                   [rounded]="true" />
+                                                            } @else {
+                                                            <span class="picker-cell--muted">—</span>
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-select>
+                                        </td>
+
+                                        <td class="col-unit">
+                                            <p-select [options]="unitOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.unitId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('packingCheckItem.unit.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </td>
+
+                                        <td class="col-lot">
+                                            <p-select [options]="lotOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.lotId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('packingCheckItem.lot.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </td>
+
+                                        <td class="col-serial">
+                                            <input pInputText name="serialNo" [(ngModel)]="row.serialNo" autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-requiredQty text-right">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.requiredQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-pickedQty text-right">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.pickedQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-packedQty text-right">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.packedQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-remainingQty">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.remainingQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-discrepancyQty">
+                                            <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                           [(ngModel)]="row.discrepancyQty"
+                                                           mode="decimal"
+                                                           [showButtons]="true"
+                                                           [min]="0"
+                                                           [minFractionDigits]="2"
+                                                           [maxFractionDigits]="2"
+                                                           locale="en-US" />
+                                        </td>
+
+                                        <td class="col-status">
+                                            <p-select [options]="itemStatusOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.status"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('packingCheckItem.status.unset')"
+                                                      appendTo="body"
+                                                      class="w-full" />
+                                        </td>
+
+                                        <td class="col-remark">
+                                            <textarea pInputTextarea rows="2"
+                                                      class="cell-input cell-input--auto"
+                                                      [(ngModel)]="row.remark"
+                                                      [autoResize]="true"></textarea>
+                                        </td>
+
+                                        <td class="col-act">
+                                            <button type="button"
+                                                    class="row-del"
+                                                    [title]="i18n.t('packingCheckItem.removeLine')"
+                                                    [attr.aria-label]="i18n.t('packingCheckItem.removeLine')"
+                                                    (click)="removeItemLine(row)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="13 ">
+                                            <p class="empty">{{ i18n.t('packingCheckItem.emptyLine') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </div>
+            </p-tabpanel>
+
+            <p-tabpanel value="package">
+                <section class="panel" [ngStyle]="{border:'none'}">
+                    <div class="panel__head" [ngStyle]="{borderTop:'0',borderRight:'0',borderLeft:'0',paddingTop:'0'}">
+                        <button type="button" class="lines__add" (click)="addPackage()">
+                            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            <span>{{ i18n.t('packingPackage.addLine') }}</span>
+                        </button>
+                    </div>
+                    <div class="tab-content" [ngStyle]="{height:'65vh',overflowY:'auto'}">
+                        @for (pack of formPackages(); track $index) {
+                        <p-panel [toggleable]="true"
+                                 [ngStyle]="{'margin-top': '1em'}">
+                            <div class="form">
+                                @if (formError()) {
+                                <div class="form__error">{{ formError() }}</div>
+                                }
+
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label for="package-packageNo">
+                                            {{ i18n.t('packingPackage.packageNo') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="package-packageNo" name="packageNo" [(ngModel)]="pack.packageNo" autocomplete="off" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="package-packageType">
+                                            {{ i18n.t('packingPackage.packageType') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-select [options]="packageTypeOptions()"
+                                                  optionLabel="label" optionValue="value"
+                                                  [(ngModel)]="pack.packageType"
+                                                  [filter]="true"
+                                                  filterBy="label"
+                                                  appendTo="body"
+                                                  class="w-full"
+                                                  [placeholder]="i18n.t('packingPackage.packageType.unset')" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="package-barcode">
+                                            {{ i18n.t('packingPackage.barcode') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="package-barcode" name="barcode" [(ngModel)]="pack.barcode" autocomplete="off" />
+                                    </div>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label for="package-weight">
+                                            {{ i18n.t('packingPackage.weight') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                       [(ngModel)]="pack.weight"
+                                                       mode="decimal"
+                                                       [showButtons]="true"
+                                                       [min]="0"
+                                                       [minFractionDigits]="2"
+                                                       [maxFractionDigits]="2"
+                                                       locale="en-US" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="package-length">
+                                            {{ i18n.t('packingPackage.length') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                       [(ngModel)]="pack.length"
+                                                       mode="decimal"
+                                                       [showButtons]="true"
+                                                       [min]="0"
+                                                       [minFractionDigits]="2"
+                                                       [maxFractionDigits]="2"
+                                                       locale="en-US" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="package-width">
+                                            {{ i18n.t('packingPackage.width') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                       [(ngModel)]="pack.width"
+                                                       mode="decimal"
+                                                       [showButtons]="true"
+                                                       [min]="0"
+                                                       [minFractionDigits]="2"
+                                                       [maxFractionDigits]="2"
+                                                       locale="en-US" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="package-height">
+                                            {{ i18n.t('packingPackage.height') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                       [(ngModel)]="pack.height"
+                                                       mode="decimal"
+                                                       [showButtons]="true"
+                                                       [min]="0"
+                                                       [minFractionDigits]="2"
+                                                       [maxFractionDigits]="2"
+                                                       locale="en-US" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="package-volume">
+                                            {{ i18n.t('packingPackage.volume') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                       [(ngModel)]="pack.volume"
+                                                       mode="decimal"
+                                                       [showButtons]="true"
+                                                       [min]="0"
+                                                       [minFractionDigits]="2"
+                                                       [maxFractionDigits]="2"
+                                                       locale="en-US" />
+                                    </div>
+
+
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label for="package-status">
+                                            {{ i18n.t('packingPackage.status') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-select [options]="packageStatusOptions()"
+                                                  optionLabel="label" optionValue="value"
+                                                  [(ngModel)]="pack.status"
+                                                  [filter]="true"
+                                                  filterBy="label"
+                                                  appendTo="body"
+                                                  class="w-full"
+                                                  [placeholder]="i18n.t('packingPackage.status.unset')" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="package-packedAt">
+                                            {{ i18n.t('packingPackage.packedAt') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="package-packedAt" type="datetime-local" name="packedAt" [(ngModel)]="pack.packedAt" autocomplete="off" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="package-quantity">
+                                            {{ i18n.t('packingPackage.quantity') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-select [options]="userOptions()"
+                                                  optionLabel="label" optionValue="value"
+                                                  [(ngModel)]="pack.packedBy"
+                                                  [filter]="true"
+                                                  filterBy="label"
+                                                  appendTo="body"
+                                                  class="w-full"
+                                                  [placeholder]="i18n.t('packingPackage.packedBy.unset')" />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="package-remark">{{ i18n.t('packingPackage.remark') }} <span class="req">*</span></label>
+                                    <textarea pInputTextarea id="package-remark" name="remark" [(ngModel)]="pack.remark" autocomplete="off"
+                                              [rows]="2">
+                                                </textarea>
+                                </div>
+                                <section class="panel lines">
+                                    <div class="panel__head">
+                                        <h2 class="panel__title">{{ i18n.t('packingPackageItem.title') }}</h2>
+                                        <span class="panel__scope">
+                                            {{ i18n.t('packingPackageItem.lineCount', { count: pack.packingPackageItems.length || 0 }) }}
+                                        </span>
+                                        <button type="button" class="lines__add" (click)="addPackageLine(pack)">
+                                            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                 stroke-width="1.8">
+                                                <line x1="12" y1="5" x2="12" y2="19" />
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                            </svg>
+                                            <span>{{ i18n.t('packingPackageItem.addLine') }}</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="lines__scroll">
+                                        <p-table [value]="pack.packingPackageItems"
+                                                 dataKey="id"
+                                                 [showGridlines]="true"
+                                                 class="grid grid--edit"
+                                                 scrollable="true"
+                                                 scrollHeight="flex"
+                                                 [ngStyle]="{maxHeight:'20vh'}">
+                                            <ng-template #header>
+                                                <tr>
+                                                    <th class="col-idx">#</th>
+                                                    <th class="col-packingCheckItem">
+                                                        {{ i18n.t('packingPackageItem.packingCheckItem') }}
+                                                        <span class="req">*</span>
+                                                    </th>
+                                                    <th class="col-product">
+                                                        {{ i18n.t('packingPackageItem.product') }}
+                                                        <span class="req">*</span>
+                                                    </th>
+                                                    <th class="col-unit">{{ i18n.t('packingPackageItem.unit') }}</th>
+                                                    <th class="col-lot">{{ i18n.t('packingPackageItem.lot') }}</th>
+                                                    <th class="col-serialNo">{{ i18n.t('packingPackageItem.serialNo') }}</th>
+                                                    <th class="col-quantity">{{ i18n.t('packingPackageItem.quantity') }}</th>
+                                                    <th class="col-barcode">{{ i18n.t('packingPackageItem.barcode') }}</th>
+                                                    <th class="col-scannedAt">{{ i18n.t('packingPackageItem.scannedAt') }}</th>
+                                                    <th class="col-scannedBy">{{ i18n.t('packingPackageItem.scannedBy') }}</th>
+                                                    <th class="col-remark">{{ i18n.t('packingPackageItem.remark') }}</th>
+                                                    <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template #body let-row let-i="rowIndex">
+                                                <tr class="row row--edit">
+                                                    <td class="col-idx">{{ i + 1 }}</td>
+                                                    <td class="col-packingCheckItem">
+                                                        <p-select [options]="packingCheckItemOptions()"
+                                                                  optionLabel="label" optionValue="value"
+                                                                  [(ngModel)]="row.packingCheckItemId"
+                                                                  (ngModelChange)="onPackingCheckItemChange(row, $event)"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  appendTo="body"
+                                                                  class="w-full"
+                                                                  [placeholder]="i18n.t('packingPackageItem.packingCheckItem.unset')" />
+                                                    </td>
+
+                                                    <td class="col-product">
+                                                        <p-select [options]="productOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [ngModel]="row.productId || null"
+                                                                  (ngModelChange)="onDetailProductChange(row, $event)"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('packingPackageItem.product.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                            <ng-template #header>
+                                                                <div class="picker-row picker-row--head">
+                                                                    <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                                                    <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                                                    <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                                        }}</span>
+                                                                    <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                                                    <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                                        }}</span>
+                                                                </div>
+                                                            </ng-template>
+
+                                                            <ng-template #item let-opt>
+                                                                <div class="picker-row">
+                                                                    <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                                                    <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                                                    <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                                                    <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                                        {{ opt.drawingNo || '—' }}
+                                                                    </span>
+                                                                    <span class="picker-cell picker-cell--center">
+                                                                        @if (opt.statusLabel) {
+                                                                        <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                                               [rounded]="true" />
+                                                                        } @else {
+                                                                        <span class="picker-cell--muted">—</span>
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </ng-template>
+                                                        </p-select>
+                                                    </td>
+
+                                                    <td class="col-unit">
+                                                        <p-select [options]="unitOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.unitId"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('packingPackageItem.unit.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full" />
+                                                    </td>
+
+                                                    <td class="col-lot">
+                                                        <p-select [options]="lotOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.lotId"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('packingPackageItem.lot.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full" />
+                                                    </td>
+
+                                                    <td class="col-serialNo">
+                                                        <input pInputText name="serialNo" [(ngModel)]="row.serialNo" autocomplete="off" />
+                                                    </td>
+
+                                                    <td class="col-quantity">
+                                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                       [(ngModel)]="row.quantity"
+                                                                       mode="decimal"
+                                                                       [showButtons]="true"
+                                                                       [min]="0"
+                                                                       [minFractionDigits]="2"
+                                                                       [maxFractionDigits]="2"
+                                                                       locale="en-US" />
+                                                    </td>
+
+                                                    <td class="col-barcode">
+                                                        <input pInputText name="barcode" [(ngModel)]="row.barcode" autocomplete="off" />
+                                                    </td>
+
+                                                    <td class="col-scannedAt">
+                                                        <input pInputText type="datetime-local" name="scannedAt" [(ngModel)]="row.scannedAt" autocomplete="off" />
+                                                    </td>
+                                                    <td class="col-scannedBy">
+                                                        <p-select [options]="userOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.scannedBy"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('packingPackageItem.scannedBy.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full" />
+                                                    </td>
+
+                                                    <td class="col-remark">
+                                                        <textarea pInputTextarea name="remark" [(ngModel)]="row.remark" autocomplete="off"
+                                                                  [rows]="2">
+                                                                </textarea>
+                                                    </td>
+
+                                                    <td class="col-act">
+                                                        <button type="button"
+                                                                class="row-del"
+                                                                [title]="i18n.t('packingPackageItem.removeLine')"
+                                                                [attr.aria-label]="i18n.t('packingPackageItem.removeLine')"
+                                                                (click)="removePackageLine(pack,row)">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template #emptymessage>
+                                                <tr>
+                                                    <td colspan="12">
+                                                        <p class="empty">{{ i18n.t('packingPackageItem.emptyLine') }}</p>
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+                                        </p-table>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <ng-template #header>
+                                <span class="font-bold">{{ i18n.t('packingPackage.title') }} #{{ $index + 1 }}:{{ pack.packageNo }}</span>
+                            </ng-template>
+
+                            <ng-template #footer>
+                                <button type="button" class="lines__remove" (click)="removePackage(pack)">
+                                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M4 7h16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                        <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                                        <path d="M9 7V4h6v3" />
+                                    </svg>
+                                    <span>{{ i18n.t('packingPackage.remove') }}</span>
+                                </button>
+                            </ng-template>
+                        </p-panel>
+                        }
+                    </div>
+                </section>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

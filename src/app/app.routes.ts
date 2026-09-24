@@ -300,7 +300,23 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
-
+			//packing
+			{
+				path: 'packing',
+				loadComponent: () =>
+					import('./pages/packing/packing.component').then(m => m.PackingComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingCheck.view,
+						PERMISSIONS.packingCheckItem.view,
+						PERMISSIONS.packingPackage.view,
+						PERMISSIONS.packingPackageItem.view,
+						PERMISSIONS.packingScanLog.view
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

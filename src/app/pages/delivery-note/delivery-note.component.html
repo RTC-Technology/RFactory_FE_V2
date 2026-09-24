@@ -673,7 +673,7 @@
                                      scrollHeight="flex">
                                 <ng-template #header>
                                     <tr>
-                                        <th class="col-idx" pFrozenColumn>#</th>
+                                        <th class="col-idx">#</th>
                                         <th class="col-goodIssue">
                                             {{ i18n.t('deliveryNoteItem.goodIssue') }}
                                             <span class="req">*</span>
@@ -688,13 +688,13 @@
                                         <th class="col-deliveredQty">{{ i18n.t('deliveryNoteItem.deliveredQty') }}</th>
                                         <th class="col-remark">{{ i18n.t('deliveryNoteItem.remark') }}</th>
 
-                                        <th class="col-act" pFrozenColumn alignFrozen="right">{{ i18n.t('common.actions') }}</th>
+                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
                                     </tr>
                                 </ng-template>
 
                                 <ng-template #body let-row let-i="rowIndex">
                                     <tr class="row row--edit">
-                                        <td class="col-idx" pFrozenColumn>{{ i + 1 }}</td>
+                                        <td class="col-idx">{{ i + 1 }}</td>
                                         <td class="col-goodIssue">
                                             <p-select inputId="s-goodIssueId" [options]="goodsIssueOptions()"
                                                       optionLabel="label" optionValue="value"
@@ -793,7 +793,7 @@
                                             <textarea pInputTextarea name="remark" [(ngModel)]="row.remark" autocomplete="off" [rows]="2"></textarea>
                                         </td>
 
-                                        <td class="col-act" pFrozenColumn alignFrozen="right">
+                                        <td class="col-act">
                                             <button type="button"
                                                     class="row-del"
                                                     [title]="i18n.t('deliveryNoteItem.removeLine')"
