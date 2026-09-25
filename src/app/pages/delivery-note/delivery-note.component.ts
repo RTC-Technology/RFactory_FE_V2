@@ -321,7 +321,7 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 	constructor() {
 		// The combinations below each drive one list inside the detail modal, so the selected
 		// row has to stay valid when the underlying set changes (filter, reload, delete).
-		super();
+		super(PERMISSIONS.deliveryNote);
 
 		effect(() => {
 			const deliveries = this.deliveries();

@@ -318,6 +318,19 @@ export const routes: Routes = [
 				},
 			},
 
+			{
+				path: 'company',
+				loadComponent: () =>
+					import('./pages/company/company.component').then(m => m.CompanyComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.company.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
 
 			{
 				path: 'forbidden',

@@ -473,6 +473,17 @@
 	}
 }
 
+.field--inline {
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+
+	label {
+		display: block;
+		// margin-bottom: 2px;
+	}
+}
+
 /* Text alignment */
 .text-right {
 	text-align: right !important;

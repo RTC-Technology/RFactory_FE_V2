@@ -68,6 +68,8 @@ export const PERMISSIONS = {
   packingPackageItem: crud('packing-package-item'),
   packingScanLog: crud('packing-scan-log'),
 
+  company: crud('company'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

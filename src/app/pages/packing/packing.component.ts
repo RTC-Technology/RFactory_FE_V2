@@ -148,25 +148,25 @@ export class PackingComponent extends PermissionAwarePage implements OnInit {
 	statusLabel(id?: number | null): string {
 		if (id == null) return '';
 		const status = PACKING_CHECK_STATUSES.find(u => u.value === id);
-		return status ? `${status.labelKey}` : '';
+		return status ? this.i18n.t(status.labelKey) : '';
 	}
 
 	statusItemLabel(id?: number | null): string {
 		if (id == null) return '';
 		const status = PACKING_CHECK_ITEM_STATUSES.find(u => u.value === id);
-		return status ? `${status.labelKey}` : '';
+		return status ? this.i18n.t(status.labelKey) : '';
 	}
 
 	packageTypeLabel(id?: number | null): string {
 		if (id == null) return '';
 		const status = PACKING_PACKAGE_TYPES.find(u => u.value === id);
-		return status ? `${status.labelKey}` : '';
+		return status ? this.i18n.t(status.labelKey) : '';
 	}
 
 	statusPackageLabel(id?: number | null): string {
 		if (id == null) return '';
 		const status = PACKING_PACKAGE_STATUSES.find(u => u.value === id);
-		return status ? `${status.labelKey}` : '';
+		return status ? this.i18n.t(status.labelKey) : '';
 	}
 
 	readonly warehouseOptions = computed(() =>

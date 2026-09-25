@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import {
+  CompanyDto,
+  CompanyRequest,
   OrganizationDto, OrganizationRequest, UserDto, UserRequest,
 } from '../../domain/models/organization.model';
 import { CrudApiService } from './crud-api.service';
@@ -15,3 +17,9 @@ export class OrganizationApiService extends CrudApiService<OrganizationDto, Orga
 export class UserApiService extends CrudApiService<UserDto, UserRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/administration/users`;
 }
+
+@Injectable({ providedIn: 'root' })
+export class CompanyApiService extends CrudApiService<CompanyDto, CompanyRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/organization/company`;
+}
+
