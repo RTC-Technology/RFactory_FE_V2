@@ -134,6 +134,8 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'perm.entity.warehouse-location': { vi: 'vị trí lưu trữ', en: 'storage location' },
 	'perm.entity.goods-receipt': { vi: 'phiếu nhập kho', en: 'goods receipt' },
 	'perm.entity.goods-receipt-detail': { vi: 'chi tiết phiếu nhập', en: 'goods receipt line' },
+	'perm.entity.company': { vi: 'công ty', en: 'company' },
+	'perm.entity.workshop': { vi: 'phân xưởng', en: 'workshop' },
 	'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
 
 	// ─── Dashboard (demo data) ────────────────────────────────────────────────
@@ -2812,4 +2814,33 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'company.ward.hanoi': { vi: 'Cống Vị', en: 'Cong Vi' },
 	'company.ward.haiphong': { vi: 'Minh Khai', en: 'Minh Khai' },
 	'company.ward.hungyen': { vi: 'Bần Yên Nhân', en: 'Ban Yen Nhan' },
+
+	// ─── Workshop ─────────────────────────────────────────────────────────────
+	'workshop.title': { vi: 'Phân xưởng', en: 'Workshops' },
+	'workshop.lower': { vi: 'phân xưởng', en: 'workshop' },
+	'workshop.company': { vi: 'Công ty', en: 'Company' },
+	'workshop.company.unset': { vi: '— Chọn Công ty —', en: '— Select Company —' },
+	'workshop.factory': { vi: 'Nhà máy', en: 'Factory' },
+	'workshop.factory.unset': { vi: '— Chọn Nhà máy —', en: '— Select Factory —' },
+	'workshop.sortOrder': { vi: 'Thứ tự sắp xếp', en: 'Sort Order' },
+	'workshop.code': { vi: 'Mã xưởng', en: 'Workshop Code' },
+	'workshop.workshopCode': { vi: 'Mã xưởng', en: 'Workshop Code' },
+	'workshop.name': { vi: 'Tên xưởng', en: 'Workshop Name' },
+	'workshop.workshopName': { vi: 'Tên xưởng', en: 'Workshop Name' },
+	'workshop.shortName': { vi: 'Tên viết tắt', en: 'Short Name' },
+	'workshop.englishName': { vi: 'Tên tiếng Anh', en: 'English Name' },
+	'workshop.manager': { vi: 'Quản lý', en: 'Manager' },
+	'workshop.manager.unset': { vi: '— Chọn Quản lý —', en: '— Select Manager —' },
+	'workshop.phone': { vi: 'Số điện thoại', en: 'Phone' },
+	'workshop.email': { vi: 'Email', en: 'Email' },
+	'workshop.location': { vi: 'Vị trí', en: 'Location' },
+	'workshop.description': { vi: 'Mô tả', en: 'Description' },
+	'workshop.isActive': { vi: 'Trạng thái', en: 'Status' },
+	'workshop.active': { vi: 'Hoạt động', en: 'Active' },
+	'workshop.inactive': { vi: 'Ngừng hoạt động', en: 'Inactive' },
+	'workshop.remark': { vi: 'Ghi chú', en: 'Remark' },
+
+	'workshop.empty': { vi: 'Chưa có thông tin phân xưởng nào.', en: 'No workshops yet.' },
+	'workshop.emptyHint': { vi: 'Chọn phân xưởng để xem.', en: 'Select a workshop to view.' },
+	'workshop.err.load': { vi: 'Không thể tải danh sách phân xưởng.', en: 'Failed to load workshops.' },
 };

@@ -69,6 +69,7 @@ export const PERMISSIONS = {
   packingScanLog: crud('packing-scan-log'),
 
   company: crud('company'),
+  workshop: crud('workshop'),
 
   settings: {
     view: 'settings.view',

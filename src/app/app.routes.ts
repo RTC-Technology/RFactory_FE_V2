@@ -331,6 +331,20 @@ export const routes: Routes = [
 				},
 			},
 
+			//workshop
+			{
+				path: 'workshop',
+				loadComponent: () =>
+					import('./pages/workshop/workshop.component').then(m => m.WorkshopComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.workshop.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
 
 			{
 				path: 'forbidden',

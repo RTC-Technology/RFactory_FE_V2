@@ -4,6 +4,8 @@ import {
   CompanyDto,
   CompanyRequest,
   OrganizationDto, OrganizationRequest, UserDto, UserRequest,
+  WorkshopDto,
+  WorkshopRequest,
 } from '../../domain/models/organization.model';
 import { CrudApiService } from './crud-api.service';
 
@@ -21,5 +23,10 @@ export class UserApiService extends CrudApiService<UserDto, UserRequest> {
 @Injectable({ providedIn: 'root' })
 export class CompanyApiService extends CrudApiService<CompanyDto, CompanyRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/organization/company`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class WorkshopApiService extends CrudApiService<WorkshopDto, WorkshopRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/organization/workshop`;
 }
 
