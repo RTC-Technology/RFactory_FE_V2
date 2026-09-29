@@ -3,6 +3,8 @@ import { environment } from '../../../environments/environment';
 import {
   CompanyDto,
   CompanyRequest,
+  DepartmentDto,
+  DepartmentRequest,
   OrganizationDto, OrganizationRequest, UserDto, UserRequest,
   WorkshopDto,
   WorkshopRequest,
@@ -28,5 +30,10 @@ export class CompanyApiService extends CrudApiService<CompanyDto, CompanyRequest
 @Injectable({ providedIn: 'root' })
 export class WorkshopApiService extends CrudApiService<WorkshopDto, WorkshopRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/organization/workshop`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DepartmentApiService extends CrudApiService<DepartmentDto, DepartmentRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/organization/department`;
 }
 

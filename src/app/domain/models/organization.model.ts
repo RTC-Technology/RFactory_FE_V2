@@ -114,4 +114,31 @@ export interface WorkshopDto {
 	sortOrder: number;
 }
 export type WorkshopRequest = Omit<WorkshopDto, 'id'>;
-//#endregion 
+//#endregion
+
+//#region Department
+export interface DepartmentDto {
+	id: number;
+	companyId?: number | null;
+	factoryId?: number | null;
+	workshopId?: number | null;
+	parentId?: number | null;
+
+	departmentCode: string;
+	departmentName: string;
+	shortName?: string | null;
+	englishName?: string | null;
+
+	managerId?: number | null;
+
+	phone?: string | null;
+	email?: string | null;
+	location?: string | null;
+	description?: string | null;
+
+	isActive: boolean;
+	sortOrder: number;
+}
+
+export type DepartmentRequest = Omit<DepartmentDto, 'id'>;
+//#endregion

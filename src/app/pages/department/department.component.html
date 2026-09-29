@@ -1,0 +1,316 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <section class="panel">
+        <div class="panel__head">
+            <h2 class="panel__title">{{ i18n.t('department.title') }}</h2>
+            <span class="panel__count">{{ departments().length }}</span>
+        </div>
+        <ng-container
+                      *ngTemplateOutlet="toolbar; context: { kind: 'department', perms: perms.department, canAdd: true, hasSelection: !!selectedDepartment(), showReload: true }" />
+
+        <div class="table-scroll">
+            <p-table #departmentTable [value]="departments()" [showGridlines]="true"
+                     class="grid" [globalFilterFields]="filterFields.department"
+                     (onFilter)="onFiltered('department', $event.filteredValue)"
+                     [scrollable]="true" scrollHeight="flex"
+                     rowGroupMode="subheader" groupRowsBy="companyId">
+                <ng-template #header>
+                    <tr>
+                        <!-- <th class="col-company">{{ i18n.t('department.company') }}</th> -->
+                        <th class="col-factory">{{ i18n.t('department.factory') }}</th>
+                        <th class="col-workshop">{{ i18n.t('department.workshop') }}</th>
+                        <th class="col-sortOrder">{{ i18n.t('department.sortOrder') }}</th>
+                        <th class="col-departmentCode">{{ i18n.t('department.departmentCode') }}</th>
+                        <th class="col-departmentName">{{ i18n.t('department.departmentName') }}</th>
+                        <th class="col-shortName">{{ i18n.t('department.shortName') }}</th>
+                        <th class="col-englishName">{{ i18n.t('department.englishName') }}</th>
+                        <th class="col-manager">{{ i18n.t('department.manager') }}</th>
+                        <th class="col-phone">{{ i18n.t('department.phone') }}</th>
+                        <th class="col-email">{{ i18n.t('department.email') }}</th>
+                        <th class="col-location">{{ i18n.t('department.location') }}</th>
+                        <th class="col-description">{{ i18n.t('department.description') }}</th>
+                        <th class="col-isActive">{{ i18n.t('department.isActive') }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template #groupheader let-row>
+                    <tr pRowGroupHeader>
+                        <td colspan="14">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold">{{ i18n.t('company.title') }}: {{ companyLabel(row.companyId) || '—' }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row" [class.row--selected]="selectedDepartment()?.id === row.id"
+                        (click)="selectDepartment(row)" (dblclick)="openEdit()">
+                        <td class="col-factory">{{ factoryLabel(row.factoryId) || '—' }}</td>
+                        <td class="col-workshop">{{ workshopLabel(row.workshopId) || '—' }}</td>
+                        <td class="col-sortOrder">{{ row.sortOrder || '—' }}</td>
+                        <td class="col-departmentCode">{{ row.departmentCode || '—' }}</td>
+                        <td class="col-departmentName">{{ row.departmentName || '—' }}</td>
+                        <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                        <td class="col-manager">{{ userLabel(row.managerId) || '—' }}</td>
+                        <td class="col-phone">{{ row.phone || '—' }}</td>
+                        <td class="col-email">{{ row.email || '—' }}</td>
+                        <td class="col-location">{{ row.location || '—' }}</td>
+                        <td class="col-description">{{ row.description || '—' }}</td>
+                        <td class="col-isActive">
+                            @if (row.isActive) {
+                            <p-tag severity="success" [value]="i18n.t('department.active')" [rounded]="true" />
+                            } @else {
+                            <span class="muted">{{ i18n.t('department.inactive') }}</span>
+                            }
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="14">
+                            <p class="empty">
+                                {{ selectedDepartment() ? i18n.t('department.empty') :
+                                i18n.t('department.emptyHint') }}
+                            </p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+
+            <!-- <p-treeTable
+                         #groupTable
+                         [value]="departments()"
+                         [showGridlines]="true"
+                         class="grid"
+                         [globalFilterFields]="filterFields.department"
+                         (onFilter)="onFiltered('department', $event.filteredValue)">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="col-company">{{ i18n.t('department.company') }}</th>
+                        <th class="col-factory">{{ i18n.t('department.factory') }}</th>
+                        <th class="col-workshop">{{ i18n.t('department.workshop') }}</th>
+                        <th class="col-sortOrder">{{ i18n.t('department.sortOrder') }}</th>
+                        <th class="col-departmentCode">{{ i18n.t('department.departmentCode') }}</th>
+                        <th class="col-departmentName">{{ i18n.t('department.departmentName') }}</th>
+                        <th class="col-shortName">{{ i18n.t('department.shortName') }}</th>
+                        <th class="col-englishName">{{ i18n.t('department.englishName') }}</th>
+                        <th class="col-manager">{{ i18n.t('department.manager') }}</th>
+                        <th class="col-phone">{{ i18n.t('department.phone') }}</th>
+                        <th class="col-email">{{ i18n.t('department.email') }}</th>
+                        <th class="col-location">{{ i18n.t('department.location') }}</th>
+                        <th class="col-description">{{ i18n.t('department.description') }}</th>
+                        <th class="col-isActive">{{ i18n.t('department.isActive') }}</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+                    <tr [ttRow]="rowNode">
+                        <td>
+                            <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                            {{ companyLabel(rowData.companyId) || '—' }}
+                        </td>
+
+                        <td class="col-factory">{{ factoryLabel(rowData.factoryId) || '—' }}</td>
+                        <td class="col-workshop">{{ workshopLabel(rowData.workshopId) || '—' }}</td>
+                        <td class="col-sortOrder">{{ rowData.sortOrder || '—' }}</td>
+                        <td class="col-departmentCode">{{ rowData.departmentCode || '—' }}</td>
+                        <td class="col-departmentName">{{ rowData.departmentName || '—' }}</td>
+                        <td class="col-shortName">{{ rowData.shortName || '—' }}</td>
+                        <td class="col-englishName">{{ rowData.englishName || '—' }}</td>
+                        <td class="col-manager">{{ userLabel(rowData.managerId) || '—' }}</td>
+                        <td class="col-phone">{{ rowData.phone || '—' }}</td>
+                        <td class="col-email">{{ rowData.email || '—' }}</td>
+                        <td class="col-location">{{ rowData.location || '—' }}</td>
+                        <td class="col-description">{{ rowData.description || '—' }}</td>
+                        <td class="col-isActive">
+                            @if (rowData.isActive) {
+                            <p-tag severity="success" [value]="i18n.t('department.active')" [rounded]="true" />
+                            } @else {
+                            <span class="muted">{{ i18n.t('department.inactive') }}</span>
+                            }
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-treeTable> -->
+        </div>
+    </section>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'auto' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="d-companyId">
+                    {{ i18n.t('department.company') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="companyOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.companyId" [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                          [placeholder]="i18n.t('department.company.unset')" />
+            </div>
+            <div class="field">
+                <label for="d-factoryId">
+                    {{ i18n.t('department.factory') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="factoryOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.factoryId" [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                          [placeholder]="i18n.t('department.factory.unset')" />
+            </div>
+            <div class="field">
+                <label for="d-workshopId">
+                    {{ i18n.t('department.workshop') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="workshopOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.workshopId" [filter]="true" filterBy="label" [showClear]="true"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('department.workshop.unset')" />
+            </div>
+            <div class="field">
+                <label for="d-parentId">
+                    {{ i18n.t('department.parent') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-treeSelect [options]="departmentTree()" optionLabel="label"
+                              [(ngModel)]="selectedNodes" [filter]="true" filterBy="label" [showClear]="true"
+                              appendTo="body" class="w-full" [placeholder]="i18n.t('department.parent.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="d-code">
+                    {{ i18n.t('department.departmentCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="d-code" name="code" [(ngModel)]="form.departmentCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="d-name">
+                    {{ i18n.t('department.departmentName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="d-name" name="name" [(ngModel)]="form.departmentName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="d-shortName">
+                    {{ i18n.t('department.shortName') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="d-englishName">
+                    {{ i18n.t('department.englishName') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="d-managerId">
+                    {{ i18n.t('department.manager') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.managerId" [filter]="true" filterBy="label" [showClear]="true" appendTo="body"
+                          class="w-full" [placeholder]="i18n.t('department.manager.unset')" />
+            </div>
+            <div class="field">
+                <label for="d-phone">
+                    {{ i18n.t('department.phone') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-phone" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="d-email">
+                    {{ i18n.t('department.email') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-email" name="email" [(ngModel)]="form.email" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="d-location">
+                    {{ i18n.t('department.location') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-location" name="location" [(ngModel)]="form.location" autocomplete="off" />
+            </div>
+        </div>
+        <div class="field field--inline">
+            <p-toggleswitch inputId="d-active" [(ngModel)]="form.isActive" />
+            <label for="d-active">{{ i18n.t('department.active') }}</label>
+        </div>
+        <div class="field">
+            <label for="d-description">{{ i18n.t('department.description') }}</label>
+            <textarea pInputTextarea id="d-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

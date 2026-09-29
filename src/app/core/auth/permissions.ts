@@ -70,6 +70,7 @@ export const PERMISSIONS = {
 
   company: crud('company'),
   workshop: crud('workshop'),
+  department: crud('department'),
 
   settings: {
     view: 'settings.view',

@@ -313,7 +313,9 @@
 
 		/* .table-scroll is the only scrollport, so the sticky header anchors to it. */
 		.p-datatable-table-container,
-		.p-datatable-wrapper {
+		.p-datatable-wrapper,
+		.p-treetable-table-container,
+		.p-treetable-wrapper {
 			overflow: visible;
 		}
 
@@ -321,7 +323,8 @@
 			font-size: 13px;
 		}
 
-		.p-datatable-thead>tr>th {
+		.p-datatable-thead>tr>th,
+		.p-treetable-thead>tr>th {
 			position: sticky;
 			top: 0;
 			z-index: 1;
@@ -344,7 +347,8 @@
 			}
 		}
 
-		.p-datatable-tbody>tr {
+		.p-datatable-tbody>tr,
+		.p-treetable-tbody>tr {
 			background: transparent;
 			color: var(--text-primary);
 			cursor: pointer;
@@ -761,5 +765,9 @@
 }
 
 :host ::ng-deep .lines__scroll .p-datatable {
+	height: 100%;
+}
+
+:host ::ng-deep .lines__scroll .p-treetable {
 	height: 100%;
 }

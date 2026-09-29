@@ -344,6 +344,19 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//department
+			{
+				path: 'department',
+				loadComponent: () =>
+					import('./pages/department/department.component').then(m => m.DepartmentComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.department.view
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{
