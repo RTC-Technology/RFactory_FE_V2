@@ -42,6 +42,7 @@ export const PERMISSIONS = {
   goodsReceipt: crud('goods-receipt'),
   goodsReceiptDetail: crud('goods-receipt-detail'),
   supplier: crud('supplier'),
+  employee: crud('employee'),
   goodsIssue: crud('goods-issue'),
   goodsIssueDetail: crud('goods-issue-detail'),
   inventory: crud('inventory'),

@@ -901,6 +901,49 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'supplier.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
 
 
+	// employee (HumanResources) — mirrors RFactory.Application.Modules.HumanResources.DTOs
+	'employee.title': { vi: 'Nhân viên', en: 'Employee' },
+	'employee.lower': { vi: 'nhân viên', en: 'employee' },
+	'employee.employeeCode': { vi: 'Mã nhân viên', en: 'Employee Code' },
+	'employee.fullName': { vi: 'Họ và tên', en: 'Full Name' },
+	'employee.nickName': { vi: 'Tên gọi khác', en: 'Nick Name' },
+	'employee.position': { vi: 'Chức vụ', en: 'Position' },
+	'employee.phone': { vi: 'Điện thoại', en: 'Phone' },
+	'employee.email': { vi: 'Email', en: 'Email' },
+	'employee.gender': { vi: 'Giới tính', en: 'Gender' },
+	'employee.birthDate': { vi: 'Ngày sinh', en: 'Birth Date' },
+	'employee.hireDate': { vi: 'Ngày vào làm', en: 'Hire Date' },
+	'employee.terminationDate': { vi: 'Ngày nghỉ việc', en: 'Termination Date' },
+	'employee.status': { vi: 'Trạng thái', en: 'Status' },
+	'employee.remark': { vi: 'Ghi chú', en: 'Remark' },
+
+	'employee.dialog.add': { vi: 'Thêm nhân viên', en: 'Add Employee' },
+	'employee.dialog.edit': { vi: 'Sửa nhân viên', en: 'Edit Employee' },
+	'employee.empty': { vi: 'Không có nhân viên nào.', en: 'No employees found.' },
+	'employee.err.load': { vi: 'Không tải được dữ liệu nhân viên.', en: 'Could not load the employee data.' },
+	'employee.err.codeRequired': { vi: 'Mã nhân viên không được để trống.', en: 'Employee code is required.' },
+	'employee.err.nameRequired': { vi: 'Họ và tên không được để trống.', en: 'Full name is required.' },
+	'employee.err.codeTaken': { vi: 'Mã nhân viên "{code}" đã tồn tại.', en: 'Employee code "{code}" already exists.' },
+
+	'employee.ok.created': { vi: 'Đã tạo nhân viên.', en: 'Employee created.' },
+	'employee.ok.updated': { vi: 'Đã cập nhật nhân viên.', en: 'Employee updated.' },
+	'employee.ok.deleted': { vi: 'Đã xoá nhân viên "{label}".', en: 'Employee deleted "{label}".' },
+	'employee.err.saveFailed': { vi: 'Lưu nhân viên thất bại.', en: 'Failed to save employee.' },
+	'employee.err.deleteFailed': { vi: 'Xoá nhân viên thất bại.', en: 'Failed to delete employee.' },
+
+	'employee.status.active': { vi: 'Đang làm việc', en: 'Active' },
+	'employee.status.inactive': { vi: 'Đã nghỉ việc', en: 'Inactive' },
+	'employee.status.pending': { vi: 'Đang chờ', en: 'Pending' },
+
+	'employee.gender.male': { vi: 'Nam', en: 'Male' },
+	'employee.gender.female': { vi: 'Nữ', en: 'Female' },
+	'employee.gender.other': { vi: 'Khác', en: 'Other' },
+	'employee.gender.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+
+	'employee.confirm.message': { vi: 'Bạn có chắc chắn muốn xoá nhân viên "{label}"?', en: 'Are you sure you want to delete the employee "{label}"?' },
+	'employee.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
+
+
 	// goods-issue
 	'goodsIssue.title': { vi: 'Phiếu xuất', en: 'Goods Issue' },
 	'goodsIssue.lower': { vi: 'phiếu xuất', en: 'goods issue' },
