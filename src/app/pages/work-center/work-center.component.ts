@@ -15,20 +15,20 @@ import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { CompanyApiService, UserApiService, WorkshopApiService } from '../../core/services/organization-api.service';
+import { FactoryApiService } from '../../core/services/master-data-api.service';
+import { UserApiService, WorkCenterApiService, WorkshopApiService } from '../../core/services/organization-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { FactoryApiService } from '../../core/services/master-data-api.service';
-import { WorkshopDto, WorkshopRequest } from '../../domain/models/organization.model';
-import { PERMISSIONS } from '../../core/auth/permissions';
+import { WORK_CENTER_STATUSES, WORK_CENTER_TYPES, WorkCenterDto, WorkCenterRequest, workCenterStatusOf } from '../../domain/models/organization.model';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
+import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 
-type EntityKind = 'workshop';
+type EntityKind = 'workcenter';
 
 @Component({
-	selector: 'app-workshop',
+	selector: 'app-work-center',
 	imports: [
 		CommonModule,
 		FormsModule,
@@ -44,31 +44,33 @@ type EntityKind = 'workshop';
 		ToggleSwitchModule,
 		HasPermissionDirective,
 		SplitterModule,
-		Textarea
+		Textarea,
+		TagModule
 	],
 	providers: [MessageService, ConfirmationService],
 	standalone: true,
-	templateUrl: './workshop.component.html',
-	styleUrl: './workshop.component.scss',
+	templateUrl: './work-center.component.html',
+	styleUrl: './work-center.component.scss',
 })
-export class WorkshopComponent extends PermissionAwarePage implements OnInit {
-	private readonly workshopApi = inject(WorkshopApiService);
-
-	private readonly companyApi = inject(CompanyApiService);
+export class WorkCenterComponent extends PermissionAwarePage implements OnInit {
 	private readonly factoryApi = inject(FactoryApiService);
+	private readonly workshopApi = inject(WorkshopApiService);
 	private readonly userApi = inject(UserApiService);
+
+	private readonly workCenterApi = inject(WorkCenterApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
 	readonly i18n = inject(I18nService);
 	readonly split = inject(SplitStateService);
 	readonly loading = computed(() => false);
+	readonly statusOf = workCenterStatusOf;
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
-	companyLabel(id?: number | null): string {
+	userLabel(id?: number | null): string {
 		if (id == null) return '';
-		const company = this.companyApi.items().find(u => u.id === id);
-		return company ? `${company.companyCode} · ${company.companyName}` : '';
+		const user = this.userApi.items().find(u => u.id === id);
+		return user ? `${user.code} · ${user.fullName}` : '';
 	}
 
 	factoryLabel(id?: number | null): string {
@@ -77,63 +79,80 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 		return factory ? `${factory.factoryCode} · ${factory.factoryName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	workshopLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const workshop = this.workshopApi.items().find(u => u.id === id);
+		return workshop ? `${workshop.workshopCode} · ${workshop.workshopName}` : '';
 	}
 
-	readonly companyOptions = computed(() =>
-		this.companyApi.items().map(u => ({ label: `${u.companyCode} · ${u.companyName}`, value: u.id })));
+	typeLabel(type?: number | null): string {
+		if (type == null) return '';
+		const item = WORK_CENTER_TYPES.find(u => u.value === type);
+		return item ? this.i18n.t(item.labelKey) : '';
+	}
 
-	readonly factoryOptions = computed(() =>
-		this.factoryApi.items().map(u => ({ label: `${u.factoryCode} · ${u.factoryName}`, value: u.id })));
+	statusLabel(status?: number | null): string {
+		if (status == null) return '';
+		const item = WORK_CENTER_STATUSES.find(u => u.value === status);
+		return item ? this.i18n.t(item.labelKey) : '';
+	}
 
 	readonly userOptions = computed(() =>
 		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
 
-	// ─── Selection ──────────────────────────────────────────────────────────────
-	readonly selectedWorkshop = signal<WorkshopDto | null>(null);
+	readonly factoryOptions = computed(() =>
+		this.factoryApi.items().map(u => ({ label: `${u.factoryCode} · ${u.factoryName}`, value: u.id })));
 
-	readonly workshops = computed(() => {
-		const all = this.workshopApi.items();
+	readonly workshopOptions = computed(() =>
+		this.workshopApi.items().map(u => ({ label: `${u.workshopCode} · ${u.workshopName}`, value: u.id })));
+
+	readonly typeOptions = computed(() =>
+		WORK_CENTER_TYPES.map(d => ({ label: this.i18n.t(d.labelKey), value: d.value })));
+
+	readonly statusOptions = computed(() =>
+		WORK_CENTER_STATUSES.map(d => ({ label: this.i18n.t(d.labelKey), value: d.value })));
+
+	// ─── Selection ──────────────────────────────────────────────────────────────
+	readonly selectedWorkCenter = signal<WorkCenterDto | null>(null);
+	readonly workcenters = computed(() => {
+		const all = this.workCenterApi.items();
 		return all;
 	});
 
 	// ─── Global filter ──────────────────────────────────────────────────────────
-	private readonly workshopTable = viewChild<Table>('workshopTable');
+	private readonly workcenterTable = viewChild<Table>('workcenterTable');
 
 	readonly filterFields: Record<EntityKind, string[]> = {
-		workshop: [''],
+		workcenter: ['workCenterCode', 'workCenterName', 'shortName', 'englishName', 'location', 'description'],
 	};
 
 	applyFilter(kind: EntityKind, value: string): void {
 		const table = {
-			workshop: this.workshopTable(),
+			workcenter: this.workcenterTable(),
 		}[kind];
 		table?.filterGlobal(value, 'contains');
 	}
 
 	onFiltered(kind: EntityKind, rows: unknown[] | null | undefined): void {
 		const visible = (rows ?? []) as { id: number }[];
-		if (kind === 'workshop') {
-			this.selectedWorkshop.set(this._reconcile(this.selectedWorkshop(), visible as WorkshopDto[]));
+		if (kind === 'workcenter') {
+			this.selectedWorkCenter.set(this._reconcile(this.selectedWorkCenter(), visible as WorkCenterDto[]));
 		}
 	}
 
-	selectWorkshop(workshop: WorkshopDto): void {
-		if (this.selectedWorkshop()?.id === workshop.id) return;
-		this.selectedWorkshop.set(workshop);
+	selectWorkCenter(workcenter: WorkCenterDto): void {
+		if (this.selectedWorkCenter()?.id === workcenter.id) return;
+		this.selectedWorkCenter.set(workcenter);
 	}
 
 	constructor() {
 		// The combinations below each drive one list inside the detail modal, so the selected
 		// row has to stay valid when the underlying set changes (filter, reload, delete).
-		super(PERMISSIONS.workshop);
+		super(PERMISSIONS.workcenter);
 
 		effect(() => {
-			const workshops = this.workshops();
-			untracked(() => this.selectedWorkshop.set(this._reconcile(this.selectedWorkshop(), workshops)));
+			const workcenters = this.workcenters();
+			untracked(() => this.selectedWorkCenter.set(this._reconcile(this.selectedWorkCenter(), workcenters)));
 		});
 	}
 
@@ -143,12 +162,12 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 
 	reload(): void {
 		forkJoin({
-			workshops: this.workshopApi.load(),
-			companies: this.companyApi.load(),
-			factories: this.factoryApi.load(),
+			workcenters: this.workCenterApi.load(),
 			users: this.userApi.load(),
+			workshops: this.workshopApi.load(),
+			factories: this.factoryApi.load(),
 		}).subscribe({
-			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('workshop.err.load'), err),
+			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('workcenter.err.load'), err),
 		});
 	}
 
@@ -159,42 +178,39 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 	readonly formError = signal('');
 	form = this._emptyForm();
 
-	uploadedFiles: any[] = [];
-
 	readonly dialogTitle = computed(() =>
 		this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
-			entity: this.i18n.t('workshop.lower'),
+			entity: this.i18n.t('workcenter.lower'),
 		}));
 
 
 	openCreate(): void {
 		this.editingId.set(null);
 		this.formError.set('');
-		this.form = { ...this._emptyForm(), workshopCode: this._nextCode(), };
+		this.form = { ...this._emptyForm(), workCenterCode: this._nextWorkCenterCode() };
 
 		this.dialogOpen.set(true);
 	}
 
 	openEdit(): void {
-		const row = this.selectedWorkshop();
+		const row = this.selectedWorkCenter();
 		if (!row) return;
 		this.editingId.set(row.id);
 		this.formError.set('');
 
 		this.form = {
-			companyId: row.companyId ?? null,
 			factoryId: row.factoryId ?? null,
-			workshopCode: row.workshopCode.trim(),
-			workshopName: row.workshopName.trim(),
-			shortName: row.shortName.trim(),
-			englishName: row.englishName.trim(),
-			managerId: row.managerId ?? null,
-			phone: row.phone.trim(),
-			email: row.email.trim(),
-			location: row.location.trim(),
-			description: row.description.trim(),
-			isActive: row.isActive,
-			sortOrder: row.sortOrder,
+			workshopId: row.workshopId ?? null,
+			workCenterCode: row.workCenterCode.trim(),
+			workCenterName: row.workCenterName.trim(),
+			shortName: row.shortName?.trim() ?? null,
+			englishName: row.englishName?.trim() ?? null,
+			workCenterType: row.workCenterType ?? 1,
+			managerId: row.managerId,
+			location: row.location?.trim() ?? null,
+			description: row.description?.trim() ?? null,
+			status: row.status,
+			sortOrder: row.sortOrder ?? null,
 		};
 
 		this.dialogOpen.set(true);
@@ -202,11 +218,11 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 
 
 	save(): void {
-		// const error = this._validate();
-		// if (error) {
-		// 	this.formError.set(error);
-		// 	return;
-		// }
+		const error = this._validate();
+		if (error) {
+			this.formError.set(error);
+			return;
+		}
 
 		this.saving.set(true);
 		this.formError.set('');
@@ -215,43 +231,44 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 
 		// One call carrying the header and every line: the backend writes them in a single
 		// transaction, so a rejected line cannot leave a receipt behind.
-		this._saveCompany(id).subscribe({
+		this._saveWorkCenter(id).subscribe({
 			next: () => {
 				this.saving.set(false);
 				this.dialogOpen.set(false);
 				this.reload();
 				this._ok(this.i18n.t(id ? 'plant.ok.updated' : 'plant.ok.created', {
-					entity: this.i18n.t('workshop.lower'),
+					entity: this.i18n.t('workcenter.lower'),
 				}));
 			},
 			error: (err: HttpErrorResponse) => {
 				this.saving.set(false);
 				this.formError.set(err.error?.message
-					|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('workshop.lower') }));
+					|| this.i18n.t('plant.err.saveFailed', { entity: this.i18n.t('workcenter.lower') }));
 			},
 		});
 	}
 
 	askDelete(): void {
-		const row = this.selectedWorkshop();
+		const row = this.selectedWorkCenter();
 		if (!row) return;
 
 		// this.confirm.confirm({
 		this.confirm.confirm({
-			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t('workshop.lower') }),
-			message: `${this.i18n.t('plant.confirm.message', { label: row.workshopCode })} ${this.i18n.t('common.notUndoable')}`,
+			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t('workcenter.lower') }),
+			message: `${this.i18n.t('plant.confirm.message', { label: row.workCenterCode })} ${this.i18n.t('common.notUndoable')}`,
 			acceptLabel: this.i18n.t('common.delete'),
 			rejectLabel: this.i18n.t('common.cancel'),
 			acceptButtonStyleClass: 'p-button-danger',
 			rejectButtonStyleClass: 'p-button-text',
 			// The backend owns the "still used by products" rule and returns its own message.
-			accept: () => this.workshopApi.remove(row.id).subscribe({
-				next: () => { this.reload(); this._ok(this.i18n.t('plant.ok.deleted', { label: row.workshopCode })); },
+			accept: () => this.workCenterApi.remove(row.id).subscribe({
+				next: () => { this.reload(); this._ok(this.i18n.t('plant.ok.deleted', { label: row.workCenterCode })); },
 				error: (err: HttpErrorResponse) =>
-					this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t('workshop.lower') }), err),
+					this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t('workcenter.lower') }), err),
 			}),
 		});
 	}
+
 
 	onFactoryChange(factoryId: number | null): void {
 		if (this.form.sortOrder !== 0) return;
@@ -261,90 +278,92 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 	// ─── Internals ──────────────────────────────────────────────────────────────
 	private _emptyForm() {
 		return {
-			companyId: null as number | null,
 			factoryId: null as number | null,
-			workshopCode: '',
-			workshopName: '',
-			shortName: '',
-			englishName: '',
-			managerId: null as number | null,
-			phone: '',
-			email: '',
-			location: '',
-			description: '',
-
-			isActive: true,
+			workshopId: null as number | null,
+			workCenterCode: '',
+			workCenterName: '',
+			shortName: null as string | null,
+			englishName: null as string | null,
+			workCenterType: 1,
+			managerId: 0,
+			location: null as string | null,
+			description: null as string | null,
+			status: 1,
 			sortOrder: 0,
 		};
 	}
 
 
-	// private _validate(): string {
-	// 	const groupNo = this.form.groupNo.trim();
+	private _validate(): string {
+		const workCenterCode = this.form.workCenterCode.trim();
 
-	// 	if (!groupNo) {
-	// 		return this.i18n.t('productGroup.err.groupNoRequired');
-	// 	}
+		if (!workCenterCode) {
+			return this.i18n.t('workcenter.err.workCenterCodeRequired');
+		}
 
-	// 	if (!this.form.groupName) {
-	// 		return this.i18n.t('productGroup.err.groupNameRequired');
-	// 	}
+		if (!this.form.workCenterName) {
+			return this.i18n.t('workcenter.err.workCenterNameRequired');
+		}
+		if (!this.form.managerId || this.form.managerId <= 0) {
+			return this.i18n.t('workcenter.err.managerRequired');
+		}
 
-	// 	// IssueNo is unique across the entire goods issue list.
-	// 	const clash = this.groups().find(
-	// 		group =>
-	// 			group.groupNo.toLowerCase() === groupNo.toLowerCase() &&
-	// 			group.id !== this.editingId(),
-	// 	);
+		// IssueNo is unique across the entire goods issue list.
+		const clash = this.workcenters().find(
+			workcenter =>
+				workcenter.workCenterCode.toLowerCase() === workCenterCode.toLowerCase() &&
+				workcenter.id !== this.editingId(),
+		);
 
-	// 	return clash
-	// 		? this.i18n.t('productGroup.err.groupNoTaken', { groupNo })
-	// 		: '';
-	// }
+		return clash
+			? this.i18n.t('workcenter.err.workCenterCodeTaken', { workCenterCode })
+			: '';
+	}
 
 	/** Reports the first bad line by its position — the operator reads the grid by row, not by id. */
 
-	private _saveCompany(id: number | null): Observable<WorkshopDto> {
-		const body: WorkshopRequest = {
-			companyId: this.form.companyId ?? null,
+	private _saveWorkCenter(id: number | null): Observable<WorkCenterDto> {
+
+		const body: WorkCenterRequest = {
 			factoryId: this.form.factoryId ?? null,
-			workshopCode: this.form.workshopCode.trim(),
-			workshopName: this.form.workshopName.trim(),
-			shortName: this.form.shortName.trim(),
-			englishName: this.form.englishName.trim(),
-			managerId: this.form.managerId ?? null,
-			phone: this.form.phone.trim(),
-			email: this.form.email.trim(),
-			location: this.form.location.trim(),
-			description: this.form.description.trim(),
-			isActive: this.form.isActive,
+			workshopId: this.form.workshopId ?? null,
+			workCenterCode: this.form.workCenterCode,
+			workCenterName: this.form.workCenterName,
+			shortName: this.form.shortName ?? null,
+			englishName: this.form.englishName ?? null,
+			workCenterType: this.form.workCenterType ?? null,
+			managerId: this.form.managerId,
+			location: this.form.location ?? null,
+			description: this.form.description ?? null,
+			status: this.form.status,
 			sortOrder: this.form.sortOrder,
 		};
-		return id ? this.workshopApi.update(id, body) : this.workshopApi.create(body);
+		return id ? this.workCenterApi.update(id, body) : this.workCenterApi.create(body);
 	}
 
 	private _nextSortOrder(factoryId: number): number {
+
+		console.log('factoryId', factoryId);
 		const maxSortOrder = Math.max(
 			0,
-			...this.workshopApi
+			...this.workCenterApi
 				.items()
 				.filter(x => x.factoryId === factoryId)
 				.map(x => x.sortOrder)
 		);
-
 		console.log('maxSortOrder', maxSortOrder);
 		return maxSortOrder + 1;
 	}
 
-	private _nextCode(): string {
+	private _nextWorkCenterCode(): string {
 		let code = "";
 
-		const prefixCode = "WS_";
+		const prefixCode = "WCT_";
 		const maxCode = Math.max(
 			0,
-			...this.workshopApi.items()
-				.filter(x => x.workshopCode.startsWith(prefixCode))
-				.map(x => parseInt(x.workshopCode.replace(prefixCode, '')))
+			...this.workCenterApi.items()
+				.filter(x => x.workCenterCode.startsWith(prefixCode))
+				.map(x => parseInt(x.workCenterCode.replace(prefixCode, '')))
 		);
 
 		code = prefixCode + (maxCode + 1).toString().padStart(2, '0');

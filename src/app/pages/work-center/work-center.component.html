@@ -1,0 +1,251 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <section class="panel">
+        <div class="panel__head">
+            <h2 class="panel__title">{{ i18n.t('workcenter.title') }}</h2>
+            <span class="panel__count">{{ workcenters().length }}</span>
+        </div>
+        <ng-container
+                      *ngTemplateOutlet="toolbar; context: { kind: 'workcenter', perms: perms.workcenter, canAdd: true, hasSelection: !!selectedWorkCenter(), showReload: true }" />
+
+        <div class="table-scroll">
+            <p-table #workcenterTable [value]="workcenters()" [showGridlines]="true"
+                     class="grid" [globalFilterFields]="filterFields.workcenter"
+                     (onFilter)="onFiltered('workcenter', $event.filteredValue)"
+                     [scrollable]="true" scrollHeight="flex"
+                     rowGroupMode="subheader" groupRowsBy="factoryId">
+                <ng-template #header>
+                    <tr>
+                        <!-- <th class="col-factory">{{ i18n.t('workcenter.factory') }}</th> -->
+                        <th class="col-workshop">{{ i18n.t('workcenter.workshop') }}</th>
+                        <th class="col-sortOrder">{{ i18n.t('workcenter.sortOrder') }}</th>
+                        <th class="col-code">{{ i18n.t('workcenter.workcenterCode') }}</th>
+                        <th class="col-workcenterName">{{ i18n.t('workcenter.workcenterName') }}</th>
+                        <th class="col-shortName">{{ i18n.t('workcenter.shortName') }}</th>
+                        <th class="col-englishName">{{ i18n.t('workcenter.englishName') }}</th>
+                        <th class="col-type">{{ i18n.t('workcenter.type') }}</th>
+                        <th class="col-manager">{{ i18n.t('workcenter.manager') }}</th>
+                        <th class="col-location">{{ i18n.t('workcenter.location') }}</th>
+                        <th class="col-description">{{ i18n.t('workcenter.description') }}</th>
+                        <th class="col-status">{{ i18n.t('workcenter.status') }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template #groupheader let-row>
+                    <tr pRowGroupHeader>
+                        <td colspan="11">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold">{{ i18n.t('plant.factory') }}: {{ factoryLabel(row.factoryId) || '—' }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row" [class.row--selected]="selectedWorkCenter()?.id === row.id"
+                        (click)="selectWorkCenter(row)" (dblclick)="openEdit()">
+                        <!-- <td class="col-factory">{{ factoryLabel(row.factoryId) || '—' }}</td> -->
+                        <td class="col-workshop">{{ workshopLabel(row.workshopId) || '—' }}</td>
+                        <td class="col-sortOrder">{{ row.sortOrder || '—' }}</td>
+                        <td class="col-code">{{ row.workCenterCode || '—' }}</td>
+                        <td class="col-workcenterName">{{ row.workCenterName || '—' }}</td>
+                        <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                        <td class="col-type">{{ typeLabel(row.workCenterType) || '—' }}</td>
+                        <td class="col-manager">{{ userLabel(row.managerId) || '—' }}</td>
+                        <td class="col-location">{{ row.location || '—' }}</td>
+                        <td class="col-description">{{ row.description || '—' }}</td>
+                        <td class="col-status text-center">
+                            @if (statusOf(row.status); as status) {
+                            <p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+                            } @else {
+                            <span class="muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="11">
+                            <p class="empty">
+                                {{ selectedWorkCenter() ? i18n.t('workcenter.empty') :
+                                i18n.t('workcenter.emptyHint') }}
+                            </p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </section>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'auto' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+
+            <div class="field">
+                <label for="w-factoryId">
+                    {{ i18n.t('workcenter.factory') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="factoryOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.factoryId"
+                          (ngModelChange)="onFactoryChange($event)"
+                          [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                          [placeholder]="i18n.t('workcenter.factory.unset')" />
+            </div>
+            <div class="field">
+                <label for="w-workshopId">
+                    {{ i18n.t('workcenter.workshop') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="workshopOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.workshopId" [filter]="true" filterBy="label" [showClear]="true"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('workcenter.workshop.unset')" />
+            </div>
+            <div class="field">
+                <label for="w-type">
+                    {{ i18n.t('workcenter.type') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="typeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.workCenterType" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('workcenter.type.unset')" />
+            </div>
+            <div class="field">
+                <label for="w-sortOrder">
+                    {{ i18n.t('workcenter.sortOrder') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText type="number" min="0" id="w-sortOrder" name="sortOrder" [(ngModel)]="form.sortOrder" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="w-workcenterCode">
+                    {{ i18n.t('workcenter.workcenterCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="w-workcenterCode" name="workcenterCode" [(ngModel)]="form.workCenterCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="w-workcenterName">
+                    {{ i18n.t('workcenter.workcenterName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="w-workcenterName" name="workcenterName" [(ngModel)]="form.workCenterName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="w-shortName">
+                    {{ i18n.t('workcenter.shortName') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="w-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="w-englishName">
+                    {{ i18n.t('workcenter.englishName') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="w-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="w-managerId">
+                    {{ i18n.t('workcenter.manager') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.managerId" [filter]="true" filterBy="label" [showClear]="false" appendTo="body"
+                          class="w-full" [placeholder]="i18n.t('workcenter.manager.unset')" />
+            </div>
+
+            <div class="field">
+                <label for="d-location">
+                    {{ i18n.t('workcenter.location') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="d-location" name="location" [(ngModel)]="form.location" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="w-status">
+                    {{ i18n.t('workcenter.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('workcenter.status.unset')" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="w-description">{{ i18n.t('workcenter.description') }}</label>
+            <textarea pInputTextarea id="w-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

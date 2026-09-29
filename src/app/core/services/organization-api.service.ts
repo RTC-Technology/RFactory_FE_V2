@@ -6,6 +6,8 @@ import {
   DepartmentDto,
   DepartmentRequest,
   OrganizationDto, OrganizationRequest, UserDto, UserRequest,
+  WorkCenterDto,
+  WorkCenterRequest,
   WorkshopDto,
   WorkshopRequest,
 } from '../../domain/models/organization.model';
@@ -35,5 +37,10 @@ export class WorkshopApiService extends CrudApiService<WorkshopDto, WorkshopRequ
 @Injectable({ providedIn: 'root' })
 export class DepartmentApiService extends CrudApiService<DepartmentDto, DepartmentRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/organization/department`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class WorkCenterApiService extends CrudApiService<WorkCenterDto, WorkCenterRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/organization/work-center`;
 }
 

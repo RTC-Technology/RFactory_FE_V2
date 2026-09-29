@@ -103,7 +103,7 @@
                         <td class="col-email">{{ row.email || '—' }}</td>
                         <td class="col-location">{{ row.location || '—' }}</td>
                         <td class="col-description">{{ row.description || '—' }}</td>
-                        <td class="col-isActive">
+                        <td class="col-status">
                             @if (row.isActive) {
                             <p-tag severity="success" [value]="i18n.t('department.active')" [rounded]="true" />
                             } @else {
@@ -198,7 +198,9 @@
                     <!-- <span class="req">*</span> -->
                 </label>
                 <p-select [options]="companyOptions()" optionLabel="label" optionValue="value"
-                          [(ngModel)]="form.companyId" [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                          [(ngModel)]="form.companyId"
+                          (ngModelChange)="onCompanyChange($event)"
+                          [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
                           [placeholder]="i18n.t('department.company.unset')" />
             </div>
             <div class="field">

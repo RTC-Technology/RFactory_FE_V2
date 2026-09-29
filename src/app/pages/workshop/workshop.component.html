@@ -93,7 +93,7 @@
                         <td class="col-email">{{ row.email || '—' }}</td>
                         <td class="col-location">{{ row.location || '—' }}</td>
                         <td class="col-description">{{ row.description || '—' }}</td>
-                        <td class="col-isActive">
+                        <td class="col-status">
                             @if (row.isActive) {
                             <p-tag severity="success" [value]="i18n.t('workshop.active')" [rounded]="true" />
                             } @else {
@@ -131,7 +131,8 @@
                     <span class="req">*</span>
                 </label>
                 <p-select [options]="companyOptions()" optionLabel="label" optionValue="value"
-                          [(ngModel)]="form.companyId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                          [(ngModel)]="form.companyId" [showClear]="true"
+                          [filter]="true" filterBy="label" appendTo="body" class="w-full"
                           [placeholder]="i18n.t('workshop.company.unset')" />
             </div>
             <div class="field">
@@ -140,7 +141,9 @@
                     <span class="req">*</span>
                 </label>
                 <p-select [options]="factoryOptions()" optionLabel="label" optionValue="value"
-                          [(ngModel)]="form.factoryId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                          [(ngModel)]="form.factoryId"
+                          (ngModelChange)="onFactoryChange($event)" [showClear]="true"
+                          [filter]="true" filterBy="label" appendTo="body" class="w-full"
                           [placeholder]="i18n.t('workshop.factory.unset')" />
             </div>
             <div class="field">

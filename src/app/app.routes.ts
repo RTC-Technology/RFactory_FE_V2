@@ -357,6 +357,19 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//work-center
+			{
+				path: 'work-center',
+				loadComponent: () =>
+					import('./pages/work-center/work-center.component').then(m => m.WorkCenterComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.department.view
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

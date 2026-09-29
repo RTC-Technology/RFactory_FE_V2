@@ -201,7 +201,7 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 	openCreate(): void {
 		this.editingId.set(null);
 		this.formError.set('');
-		this.form = { ...this._emptyForm() };
+		this.form = { ...this._emptyForm(), departmentCode: this._nextCode() };
 
 		this.dialogOpen.set(true);
 	}
@@ -231,7 +231,7 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 		};
 
 		this.selectedNodes = this.findTreeNodeByKey(this.departmentTree(), row.parentId ?? 0);
-		console.log('this.selectedNodes: ', this.selectedNodes);
+		// console.log('this.selectedNodes: ', this.selectedNodes);
 
 		this.dialogOpen.set(true);
 	}
@@ -289,6 +289,10 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 		});
 	}
 
+	onCompanyChange(companyId: number | null): void {
+		if (this.form.sortOrder !== 0) return;
+		this.form.sortOrder = this._nextSortOrder(companyId ?? 0);
+	}
 
 	// ─── Internals ──────────────────────────────────────────────────────────────
 	private _emptyForm() {
@@ -343,7 +347,7 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 			companyId: this.form.companyId ?? null,
 			factoryId: this.form.factoryId ?? null,
 			workshopId: this.form.workshopId ?? null,
-			parentId: this.selectedNodes.data.id ?? 0,
+			parentId: this.selectedNodes?.data?.id ?? 0,
 			departmentCode: this.form.departmentCode,
 			departmentName: this.form.departmentName,
 			shortName: this.form.shortName ?? null,
@@ -407,7 +411,31 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 		return null;
 	}
 
+	private _nextSortOrder(companyId: number): number {
+		const maxSortOrder = Math.max(
+			0,
+			...this.departmentApi
+				.items()
+				.filter(x => x.companyId === companyId)
+				.map(x => x.sortOrder)
+		);
+		return maxSortOrder + 1;
+	}
 
+	private _nextCode(): string {
+		let code = "";
+
+		const prefixCode = "DP_";
+		const maxCode = Math.max(
+			0,
+			...this.departmentApi.items()
+				.filter(x => x.departmentCode.startsWith(prefixCode))
+				.map(x => parseInt(x.departmentCode.replace(prefixCode, '')))
+		);
+
+		code = prefixCode + (maxCode + 1).toString().padStart(2, '0');
+		return code;
+	}
 
 	private _reconcile<T extends { id: number }>(current: T | null, rows: T[]): T | null {
 		const match = current ? rows.find(row => row.id === current.id) : undefined;

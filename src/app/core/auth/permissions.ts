@@ -71,6 +71,7 @@ export const PERMISSIONS = {
   company: crud('company'),
   workshop: crud('workshop'),
   department: crud('department'),
+  workcenter: crud('workcenter'),
 
   settings: {
     view: 'settings.view',
