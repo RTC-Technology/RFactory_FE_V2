@@ -117,6 +117,18 @@ export const routes: Routes = [
 				},
 			},
 			{
+				// The flat line list — the same rows the factory-structure screen edits inside
+				// a selected area, plus the areas themselves to label and scope each one.
+				path: 'lines',
+				loadComponent: () =>
+					import('./pages/line/line.component').then(m => m.LineComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [PERMISSIONS.line.view, PERMISSIONS.area.view],
+					permissionMode: 'all',
+				},
+			},
+			{
 				// Reads the permission catalogue to assign rights, and users/organizations to
 				// pick members.
 				path: 'user-groups',

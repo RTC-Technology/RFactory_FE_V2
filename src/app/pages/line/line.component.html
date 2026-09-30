@@ -1,0 +1,177 @@
+<div class="page">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">{{ i18n.t('line.title') }}</h2>
+      <span class="panel__count">{{ lines().length }}</span>
+    </div>
+
+    <div class="toolbar">
+      @if (canAdd()) {
+        <button type="button" class="tool" (click)="openCreate()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="12" height="14" rx="1.5" />
+            <line x1="19" y1="9" x2="19" y2="17" />
+            <line x1="15" y1="13" x2="23" y2="13" />
+          </svg>
+          <span>{{ i18n.t('common.add') }}</span>
+        </button>
+      }
+      @if (canEdit()) {
+        <button type="button" class="tool" [disabled]="!selected()" (click)="openEdit()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 3h9l4 4v3" />
+            <path d="M4 3v18h13v-6" />
+            <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+          </svg>
+          <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+      }
+      @if (canDelete()) {
+        <button type="button" class="tool tool--danger" [disabled]="!selected()" (click)="askDelete()">
+          <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
+          <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+      }
+
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+
+      <!-- Narrows the list itself, like the panels in the master-detail screens, rather than
+           the table's search box. -->
+      <label class="tool-area">
+        <span>{{ i18n.t('plant.area') }}</span>
+        <p-select
+          [options]="areaFilterOptions()" optionLabel="label" optionValue="value"
+          [ngModel]="areaFilter()" (ngModelChange)="filterByArea($event)"
+          [ariaLabel]="i18n.t('plant.area')" appendTo="body" [style]="{ width: '170px' }"
+        />
+      </label>
+
+      <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+        [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter($any($event.target).value)" />
+    </div>
+
+    <div class="table-scroll">
+      <p-table #lineTable [value]="lines()" [showGridlines]="true" class="grid" [globalFilterFields]="filterFields"
+        (onFilter)="onFiltered($event.filteredValue)">
+        <ng-template #header>
+          <tr>
+            <th class="col-code">{{ i18n.t('plant.lineCode') }}</th>
+            <th>{{ i18n.t('plant.lineName') }}</th>
+            <th class="col-area">{{ i18n.t('plant.area') }}</th>
+            <th class="col-layout">{{ i18n.t('plant.layoutImage') }}</th>
+            <th class="col-status">{{ i18n.t('common.status') }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr class="row" [class.row--selected]="selected()?.id === row.id" (click)="select(row)"
+            (dblclick)="openEdit()">
+            <td class="col-code">{{ row.lineCode }}</td>
+            <td>{{ row.lineName }}</td>
+            <td class="col-area">
+              @if (areaLabel(row.areaId); as label) {
+                {{ label }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="col-layout">
+              @if (row.layoutImage) {
+                <span [title]="row.layoutImage">{{ row.layoutImage }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="col-status">
+              @if (statusOf(row.status); as status) {
+                <p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="5">
+              <!-- Distinguishes "this area has nothing" from "nothing has been declared yet";
+                   the backend has no filtered endpoint, both come off the one cached list. -->
+              <p class="empty">
+                {{ areaFilter() == null ? i18n.t('line.empty') : i18n.t('plant.empty.line') }}
+              </p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</div>
+
+<!-- ─── Create / Edit dialog ─────────────────────────────────────────────── -->
+<p-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [header]="dialogTitle()"
+  [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '460px' }">
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field">
+      <label for="ln-code">{{ i18n.t('plant.lineCode') }} <span class="req">*</span></label>
+      <input pInputText id="ln-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="ln-name">{{ i18n.t('plant.lineName') }} <span class="req">*</span></label>
+      <input pInputText id="ln-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+    </div>
+
+    <!-- Required, unlike the machine screen's line picker: a line always belongs to exactly
+         one area, so it is shown rather than defaulted silently. -->
+    <div class="field">
+      <label for="ln-area">{{ i18n.t('plant.area') }} <span class="req">*</span></label>
+      <p-select
+        inputId="ln-area" [options]="areaOptions()" optionLabel="label" optionValue="value"
+        [(ngModel)]="form.areaId" [filter]="true" filterBy="label"
+        [placeholder]="i18n.t('line.areaPick')" appendTo="body" class="w-full"
+      />
+      <small class="hint">{{ i18n.t('line.areaHint') }}</small>
+    </div>
+
+    <div class="field">
+      <label for="ln-layout">{{ i18n.t('plant.layoutImage') }}</label>
+      <input pInputText id="ln-layout" name="layoutImage" [(ngModel)]="form.layoutImage" autocomplete="off" />
+      <small class="hint">{{ i18n.t('line.layoutHint') }}</small>
+    </div>
+
+    <div class="field">
+      <label for="ln-status">{{ i18n.t('common.status') }}</label>
+      <p-select
+        inputId="ln-status" [options]="statuses()" optionLabel="label" optionValue="value"
+        [(ngModel)]="form.status" [showClear]="true" [placeholder]="i18n.t('plant.status.unset')"
+        appendTo="body" class="w-full"
+      />
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
