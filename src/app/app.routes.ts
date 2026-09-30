@@ -365,7 +365,20 @@ export const routes: Routes = [
 				canActivate: [permissionGuard],
 				data: {
 					permissions: [
-						PERMISSIONS.department.view
+						PERMISSIONS.workcenter.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//production-team
+			{
+				path: 'production-team',
+				loadComponent: () =>
+					import('./pages/production-team/production-team.component').then(m => m.ProductionTeamComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.productionTeam.view
 					],
 					permissionMode: 'all',
 				},

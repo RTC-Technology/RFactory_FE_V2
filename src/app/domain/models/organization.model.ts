@@ -184,3 +184,42 @@ export function workCenterStatusOf(status?: number | null) {
 	return WORK_CENTER_STATUSES.find(s => s.value === status);
 }
 //#endregion
+
+//#region Production Team
+
+export interface ProductionTeamDto {
+	id: number;
+	companyId?: number | null;
+	factoryId?: number | null;
+	workshopId?: number | null;
+	departmentId: number;
+	teamCode: string;
+	teamName: string;
+	shortName?: string | null;
+	englishName?: string | null;
+	teamLeaderId: number;
+	deputyLeaderId?: number | null;
+	phone?: string | null;
+	email?: string | null;
+	location?: string | null;
+	description?: string | null;
+	isActive: boolean;
+	sortOrder: number;
+}
+
+export interface ProductionTeamEmployeeDto {
+	id: number;
+	productionTeamId?: number | null;
+	employeeId?: number | null;
+	isPrimary?: boolean | null;
+	fromDate?: string | null;
+	toDate?: string | null;
+	remark?: string | null;
+}
+
+export type ProductionTeamRequest = Omit<ProductionTeamDto, 'id'> & {
+	employees?: ProductionTeamEmployeeRequest[] | [];
+};
+
+export type ProductionTeamEmployeeRequest = Omit<ProductionTeamEmployeeDto, 'id'>;
+//#endregion

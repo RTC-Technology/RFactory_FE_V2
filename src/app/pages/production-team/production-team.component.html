@@ -1,0 +1,466 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('productionTeam.title') }}</h2>
+                    <span class="panel__count">{{ teams().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'productionTeam', perms: perms.productionTeam, canAdd: true, hasSelection: !!selectedTeam(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #teamTable [value]="teams()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.productionTeam"
+                             (onFilter)="onFiltered('productionTeam', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="departmentId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-sortOrder">{{ i18n.t('productionTeam.sortOrder') }}</th>
+                                <th class="col-code">{{ i18n.t('productionTeam.teamCode') }}</th>
+                                <th class="col-name">{{ i18n.t('productionTeam.teamName') }}</th>
+                                <!-- <th class="col-shortName">{{ i18n.t('productionTeam.shortName') }}</th>
+                                <th class="col-englishName">{{ i18n.t('productionTeam.englishName') }}</th> -->
+                                <th class="col-teamLeader">{{ i18n.t('productionTeam.teamLeader') }}</th>
+                                <th class="col-deputyLeader">{{ i18n.t('productionTeam.deputyLeader') }}</th>
+                                <!-- <th class="col-phone">{{ i18n.t('productionTeam.phone') }}</th>
+                                <th class="col-email">{{ i18n.t('productionTeam.email') }}</th>
+                                <th class="col-location">{{ i18n.t('productionTeam.location') }}</th>
+                                <th class="col-description">{{ i18n.t('productionTeam.description') }}</th> -->
+                                <th class="col-status">{{ i18n.t('productionTeam.isActive') }}</th>
+                                <!-- <th class="col-company">{{ i18n.t('productionTeam.company') }}</th>
+                                <th class="col-factory">{{ i18n.t('productionTeam.factory') }}</th>
+                                <th class="col-workshop">{{ i18n.t('productionTeam.workshop') }}</th> -->
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="6">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold">{{ i18n.t('department.title') }}: {{ departmentLabel(row.departmentId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedTeam()?.id === row.id"
+                                (click)="selectTeam(row)" (dblclick)="openEdit('productionTeam')">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-code">{{ row.teamCode || '—' }}</td>
+                                <td class="col-name">{{ row.teamName || '—' }}</td>
+                                <!-- <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                                <td class="col-englishName">{{ row.englishName || '—' }}</td> -->
+                                <td class="col-teamLeader">{{ userLabel(row.teamLeaderId) || '—' }}</td>
+                                <td class="col-deputyLeader">{{ userLabel(row.deputyLeaderId) || '—' }}</td>
+                                <!-- <td class="col-phone">{{ row.phone || '—' }}</td>
+                                <td class="col-email">{{ row.email || '—' }}</td>
+                                <td class="col-location">{{ row.location || '—' }}</td>
+                                <td class="col-description">{{ row.description || '—' }}</td> -->
+                                <td class="col-status text-center">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('productionTeam.active')" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">{{ i18n.t('productionTeam.inactive') }}</span>
+                                    }
+                                </td>
+                                <!-- <td class="col-company">{{ companyLabel(row.companyId) || '—' }}</td>
+                                <td class="col-factory">{{ factoryLabel(row.factoryId) || '—' }}</td>
+                                <td class="col-workshop">{{ workshopLabel(row.workshopId) || '—' }}</td> -->
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">
+                                    <p class="empty">
+                                        {{ selectedTeam() ? i18n.t('productionTeam.empty') :
+                                        i18n.t('productionTeam.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('productionTeamEmployee.title') }}</h2>
+                    <span class="panel__count">{{ employees().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'productionTeamEmployee', perms: perms.productionTeamEmployee, canAdd: true, hasSelection: !!selectedEmployee(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #employeeTable [value]="employees()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.productionTeamEmployee"
+                             (onFilter)="onFiltered('productionTeamEmployee', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-employee">{{ i18n.t('productionTeamEmployee.employee') }}</th>
+                                <th class="col-fromDate">{{ i18n.t('productionTeamEmployee.fromDate') }}</th>
+                                <th class="col-toDate">{{ i18n.t('productionTeamEmployee.toDate') }}</th>
+                                <th class="col-remark">{{ i18n.t('productionTeamEmployee.remark') }}</th>
+                                <th class="col-status">{{ i18n.t('productionTeamEmployee.employeeType') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedEmployee()?.id === row.id"
+                                (click)="selectEmployee(row)" (dblclick)="openEdit('productionTeamEmployee')">
+                                <td class="col-employee">{{ userLabel(row.employeeId) || '—' }}</td>
+                                <td class="col-fromDate">{{ (row.fromDate | date) || '—' }}</td>
+                                <td class="col-toDate">{{ (row.toDate | date) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                                <td class="col-status text-center">
+                                    @if (row.isPrimary) {
+                                    <p-tag severity="success" [value]="i18n.t('productionTeamEmployee.primary')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('productionTeamEmployee.support')" [rounded]="true" />
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="5">
+                                    <p class="empty">
+                                        {{ selectedTeam() ? i18n.t('productionTeamEmployee.empty') :
+                                        i18n.t('productionTeamEmployee.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'65vh' }">
+
+    <p-tabs [value]="activeTab">
+        <p-tablist>
+            <p-tab value="team">{{i18n.t('productionTeam.title')}}</p-tab>
+            <p-tab value="employee">{{i18n.t('productionTeamEmployee.title')}}</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+            <p-tabpanel value="team">
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="t-companyId">
+                                {{ i18n.t('productionTeam.company') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="companyOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.companyId"
+                                      [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                                      [placeholder]="i18n.t('productionTeam.company.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="t-factoryId">
+                                {{ i18n.t('productionTeam.factory') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="factoryOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.factoryId"
+                                      [filter]="true" filterBy="label" [showClear]="true" appendTo="body" class="w-full"
+                                      [placeholder]="i18n.t('productionTeam.factory.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="t-workshopId">
+                                {{ i18n.t('productionTeam.workshop') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="workshopOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.workshopId" [filter]="true" filterBy="label" [showClear]="true"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.workshop.unset')" />
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="t-department">
+                                {{ i18n.t('productionTeam.department') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="departmentOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.departmentId"
+                                      (ngModelChange)="onDepartmentChange($event)"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.department.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="t-sortOrder">
+                                {{ i18n.t('productionTeam.sortOrder') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText type="number" min="0" id="t-sortOrder" name="sortOrder" [(ngModel)]="form.sortOrder" autocomplete="off" />
+                        </div>
+
+                        <div class="field">
+                            <label for="t-teamCode">
+                                {{ i18n.t('productionTeam.teamCode') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="t-teamCode" name="teamCode" [(ngModel)]="form.teamCode" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="t-teamName">
+                                {{ i18n.t('productionTeam.teamName') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="t-teamName" name="teamName" [(ngModel)]="form.teamName" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="t-shortName">
+                                {{ i18n.t('productionTeam.shortName') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText id="t-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="t-englishName">
+                                {{ i18n.t('productionTeam.englishName') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText id="t-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="t-teamLeaderId">
+                                {{ i18n.t('productionTeam.teamLeader') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.teamLeaderId"
+                                      [filter]="true" filterBy="label" [showClear]="true"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.teamLeader.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="t-deputyLeaderId">
+                                {{ i18n.t('productionTeam.deputyLeader') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.deputyLeaderId"
+                                      [filter]="true" filterBy="label" [showClear]="true"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.deputyLeader.unset')" />
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="t-phone">
+                                {{ i18n.t('productionTeam.phone') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText id="t-phone" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="t-email">
+                                {{ i18n.t('productionTeam.email') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText id="t-email" name="email" [(ngModel)]="form.email" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="t-location">
+                                {{ i18n.t('productionTeam.location') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <input pInputText id="t-location" name="location" [(ngModel)]="form.location" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="field field--inline">
+                        <p-toggleswitch inputId="t-active" [(ngModel)]="form.isActive" />
+                        <label for="t-active">{{ i18n.t('productionTeam.active') }}</label>
+                    </div>
+                    <div class="field">
+                        <label for="t-description">{{ i18n.t('productionTeam.description') }}</label>
+                        <textarea pInputTextarea id="t-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+                    </div>
+                </div>
+            </p-tabpanel>
+            <p-tabpanel value="employee">
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <section class="panel lines">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('productionTeamEmployee.title') }}</h2>
+                            <span class="panel__scope">
+                                {{ i18n.t('productionTeamEmployee.lineCount', { count: employeeRows().length || 0 }) }}
+                            </span>
+                            <button type="button" class="lines__add" (click)="addEmployeeRow()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('productionTeamEmployee.addLine') }}</span>
+                            </button>
+                        </div>
+
+                        <div class="lines__scroll">
+                            <p-table [value]="employeeRows()"
+                                     [showGridlines]="true"
+                                     class="grid grid--edit"
+                                     scrollable="true"
+                                     scrollHeight="flex"
+                                     [ngStyle]="{height:'34vh'}">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-idx">#</th>
+                                        <th class="col-employee" colspan="2">{{ i18n.t('productionTeamEmployee.employee') }}</th>
+                                        <th class="col-fromDate">{{ i18n.t('productionTeamEmployee.fromDate') }}</th>
+                                        <th class="col-toDate">{{ i18n.t('productionTeamEmployee.toDate') }}</th>
+                                        <th class="col-remark">{{ i18n.t('productionTeamEmployee.remark') }}</th>
+                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row let-i="rowIndex">
+                                    <tr class="row row--edit">
+                                        <td class="col-idx">{{ i + 1 }}</td>
+                                        <td class="col-employee">
+                                            <p-select [options]="userOptions()"
+                                                      optionLabel="label" optionValue="value"
+                                                      [(ngModel)]="row.employeeId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      appendTo="body"
+                                                      [placeholder]="i18n.t('productionTeamEmployee.employee.unset')" />
+
+
+                                        </td>
+
+                                        <td>
+                                            <p-togglebutton [(ngModel)]="row.isPrimary"
+                                                            [onLabel]="i18n.t('productionTeamEmployee.primary')"
+                                                            [offLabel]="i18n.t('productionTeamEmployee.support')" class="w-full" />
+
+                                        </td>
+
+                                        <td class="col-fromDate">
+                                            <input pInputText type="date" name="fromDate" class="w-full" [(ngModel)]="row.fromDate"
+                                                   autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-toDate">
+                                            <input pInputText type="date" name="toDate" class="w-full" [(ngModel)]="row.toDate"
+                                                   autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-remark">
+                                            <textarea pInputTextarea name="remark" class="w-full" [(ngModel)]="row.remark" autocomplete="off"
+                                                      [rows]="2"></textarea>
+                                        </td>
+
+                                        <td class="col-act">
+                                            <button type="button"
+                                                    class="row-del"
+                                                    [title]="i18n.t('productionTeamEmployee.removeLine')"
+                                                    [attr.aria-label]="i18n.t('productionTeamEmployee.removeLine')"
+                                                    (click)="removeEmployeeRow(row)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="7">
+                                            <p class="empty">{{ i18n.t('productionTeamEmployee.emptyLine') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </div>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
