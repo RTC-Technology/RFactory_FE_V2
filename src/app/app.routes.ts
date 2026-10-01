@@ -235,6 +235,34 @@ export const routes: Routes = [
 				},
 			},
 
+			//positions
+			{
+				path: 'positions',
+				loadComponent: () =>
+					import('./pages/position/position.component').then(m => m.PositionComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.position.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//skills
+			{
+				path: 'skills',
+				loadComponent: () =>
+					import('./pages/skill/skill.component').then(m => m.SkillComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.skill.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			//goods issue
 			{
 				// Reads receipts and their lines, plus products and units — the detail grid's row

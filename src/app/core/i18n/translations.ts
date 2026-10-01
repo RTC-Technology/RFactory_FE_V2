@@ -161,6 +161,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
     vi: 'chi tiết phiếu nhập',
     en: 'goods receipt line',
   },
+  'perm.entity.employee': { vi: 'nhân viên', en: 'employee' },
+  'perm.entity.position': { vi: 'chức vụ', en: 'position' },
+  'perm.entity.skill': { vi: 'kỹ năng', en: 'skill' },
+  'perm.entity.employee-skill': { vi: 'kỹ năng nhân viên', en: 'employee skill' },
   'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
 
   // ─── Dashboard (demo data) ────────────────────────────────────────────────

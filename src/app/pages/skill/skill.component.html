@@ -1,0 +1,111 @@
+<div class="page">
+  <section class="panel">
+    <div class="panel__head">
+      <h2 class="panel__title">{{ i18n.t('skill.title') }}</h2>
+      <span class="panel__count">{{ skills().length }}</span>
+    </div>
+
+    <div class="toolbar">
+      <button *appHasPermission="perms.skill.add" type="button" class="tool" (click)="openCreate()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="12" height="14" rx="1.5"/>
+          <line x1="19" y1="9" x2="19" y2="17"/><line x1="15" y1="13" x2="23" y2="13"/>
+        </svg>
+        <span>{{ i18n.t('common.add') }}</span>
+      </button>
+      <button *appHasPermission="perms.skill.edit" type="button" class="tool" [disabled]="!selected()" (click)="openEdit()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 3h9l4 4v3"/><path d="M4 3v18h13v-6"/>
+          <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z"/>
+        </svg>
+        <span>{{ i18n.t('common.edit') }}</span>
+      </button>
+      <button *appHasPermission="perms.skill.delete" type="button" class="tool tool--danger" [disabled]="!selected()" (click)="askDelete()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+        </svg>
+        <span>{{ i18n.t('common.delete') }}</span>
+      </button>
+
+      <span class="tool__sep"></span>
+      <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+        <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span>{{ i18n.t('common.reload') }}</span>
+      </button>
+      <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+             [attr.aria-label]="i18n.t('common.search')"
+             (input)="applyFilter($any($event.target).value)" />
+    </div>
+
+    <div class="table-scroll">
+      <p-table #skillTable [value]="skills()" [showGridlines]="true" class="grid"
+               [globalFilterFields]="filterFields" (onFilter)="onFiltered($event.filteredValue)">
+        <ng-template #header>
+          <tr>
+            <th class="col-code">{{ i18n.t('skill.code') }}</th>
+            <th>{{ i18n.t('skill.name') }}</th>
+            <th class="col-cat">{{ i18n.t('skill.category') }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr class="row" [class.row--selected]="selected()?.id === row.id"
+              (click)="select(row)" (dblclick)="openEdit()">
+            <td class="col-code">{{ row.skillCode }}</td>
+            <td>{{ row.skillName }}</td>
+            <td class="col-cat">{{ row.skillCategory ?? '—' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr><td colspan="3"><p class="empty">{{ i18n.t('skill.empty') }}</p></td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</div>
+
+<!-- ─── Dialog ─────────────────────────────────────────────────────────────── -->
+<p-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)"
+          [header]="dialogTitle()" [modal]="true" [draggable]="false" [resizable]="false"
+          [style]="{ width: '440px' }">
+  <div class="form">
+    @if (formError()) {
+      <div class="form__error">{{ formError() }}</div>
+    }
+
+    <div class="field-row">
+      <div class="field">
+        <label for="sk-code">{{ i18n.t('skill.code') }} <span class="req">*</span></label>
+        <input pInputText id="sk-code" name="skillCode" [(ngModel)]="form.skillCode" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="sk-name">{{ i18n.t('skill.name') }} <span class="req">*</span></label>
+        <input pInputText id="sk-name" name="skillName" [(ngModel)]="form.skillName" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="sk-cat">{{ i18n.t('skill.category') }}</label>
+      <input pInputText id="sk-cat" name="skillCategory" [(ngModel)]="form.skillCategory" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="sk-desc">{{ i18n.t('skill.description') }}</label>
+      <textarea pTextarea id="sk-desc" name="description" [(ngModel)]="form.description" rows="3" autocomplete="off"></textarea>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+      <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+    </button>
+    <button pButton type="button" [disabled]="saving()" (click)="save()">
+      <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+    </button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
