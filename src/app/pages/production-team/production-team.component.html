@@ -138,7 +138,12 @@
             <section class="panel">
                 <div class="panel__head">
                     <h2 class="panel__title">{{ i18n.t('productionTeamEmployee.title') }}</h2>
+                    @if (selectedTeam(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('productionTeamEmployee.scopeOf', { name: t.teamCode || '—' })}}
+                    </span>
                     <span class="panel__count">{{ employees().length }}</span>
+                    }
                 </div>
                 <ng-container
                               *ngTemplateOutlet="toolbar; context: { kind: 'productionTeamEmployee', perms: perms.productionTeamEmployee, canAdd: true, hasSelection: !!selectedEmployee(), showReload: true }" />

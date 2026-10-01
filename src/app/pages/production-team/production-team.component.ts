@@ -76,8 +76,6 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 	readonly loading = computed(() => false);
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
-
-
 	companyLabel(id?: number | null): string {
 		if (id == null) return '';
 		const company = this.companyApi.items().find(u => u.id === id);

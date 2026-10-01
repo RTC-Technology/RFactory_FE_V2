@@ -75,6 +75,10 @@ export const PERMISSIONS = {
   productionTeam: crud('production-team'),
   productionTeamEmployee: crud('production-team-employee'),
 
+  qualitySpecification: crud('quality-specification'),
+  qualitySpecificationItem: crud('quality-specification-item'),
+  qualitySpecificationProduct: crud('quality-specification-product'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

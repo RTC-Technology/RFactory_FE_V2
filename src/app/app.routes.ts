@@ -383,6 +383,21 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//quality-specification
+			{
+				path: 'quality-spec',
+				loadComponent: () =>
+					import('./pages/quality-specification/quality-specification.component').then(m => m.QualitySpecificationComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.qualitySpecification.view,
+						PERMISSIONS.qualitySpecificationItem.view,
+						PERMISSIONS.qualitySpecificationProduct.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{
