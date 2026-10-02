@@ -398,6 +398,34 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//inspection-plan
+			{
+				path: 'inspection-plan',
+				loadComponent: () =>
+					import('./pages/inspection-plan/inspection-plan.component').then(m => m.InspectionPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.inspectionPlan.view,
+						PERMISSIONS.inspectionItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//inspection-execution
+			{
+				path: 'inspection-execution',
+				loadComponent: () =>
+					import('./pages/inspection-execution/inspection-execution.component').then(m => m.InspectionExecutionComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.inspectionExecution.view,
+						PERMISSIONS.inspectionResult.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

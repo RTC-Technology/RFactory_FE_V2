@@ -390,7 +390,7 @@ export class QualitySpecificationComponent extends PermissionAwarePage implement
 			version: this._nextSpecVersion(),
 			inspectionType: 1,
 			status: 1,
-			effectiveFrom: null as string | null,
+			effectiveFrom: formatDate(new Date(), DATETIME_LOCAL, 'en-US') as string | null,
 			effectiveTo: null as string | null,
 			remark: null as string | null,
 		};
@@ -480,6 +480,9 @@ export class QualitySpecificationComponent extends PermissionAwarePage implement
 				productId: r.productId ?? null,
 			})),
 		};
+
+		// console.log('productRows:', this.productRows());
+		// console.log('productOptions:', this.productOptions());
 		return id ? this.specApi.update(id, body) : this.specApi.create(body);
 	}
 

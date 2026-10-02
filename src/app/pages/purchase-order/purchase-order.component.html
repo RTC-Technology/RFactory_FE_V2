@@ -549,7 +549,7 @@
 											<p-select [options]="productOptions()"
 													  optionLabel="label"
 													  optionValue="value"
-													  [ngModel]="row.productId || null"
+													  [(ngModel)]="row.productId"
 													  (ngModelChange)="onDetailProductChange(row, $event)"
 													  [filter]="true"
 													  filterBy="label"

@@ -79,6 +79,11 @@ export const PERMISSIONS = {
   qualitySpecificationItem: crud('quality-specification-item'),
   qualitySpecificationProduct: crud('quality-specification-product'),
 
+  inspectionPlan: crud('inspection-plan'),
+  inspectionItem: crud('inspection-item'),
+  inspectionExecution: crud('inspection-execution'),
+  inspectionResult: crud('inspection-result'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
