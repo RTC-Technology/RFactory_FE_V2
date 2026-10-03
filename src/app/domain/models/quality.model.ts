@@ -48,6 +48,7 @@ export interface InspectionPlanDto {
     approvedBy?: number | null;
     approvedAt?: string | null;
     remark?: string | null;
+    samplingPlanId?: number | null;
 }
 
 export interface InspectionItemDto {
@@ -89,6 +90,7 @@ export interface InspectionResultDto {
     textValue?: string | null;
     booleanValue?: boolean | null;
     result: number;
+    defectId?: number | null;
     inspectionTime?: string | null;
     inspectorId?: number | null;
     remark?: string | null;
@@ -115,7 +117,33 @@ export interface DefectGroupDto {
     description?: string | null;
     sortOrder?: number | null;
     isActive?: boolean | null;
+}
 
+export interface SamplingPlanDto {
+    id: number;
+    samplingPlanCode: string;
+    samplingPlanName: string;
+    description?: string | null;
+    samplingMethod?: number | null;
+    inspectionLevel?: string | null;
+    aqlValue?: number | null;
+    frequencyType?: number | null;
+    frequencyValue?: number | null;
+    status: number;
+    effectiveFrom?: string | null;
+    effectiveTo?: string | null;
+    remark?: string | null;
+}
+
+export interface SamplingPlanRuleDto {
+    id: number;
+    samplingPlanId?: number | null;
+    lotSizeFrom?: number | null;
+    lotSizeTo?: number | null;
+    sampleSize?: number | null;
+    acceptanceNumber?: number | null;
+    rejectionNumber?: number | null;
+    sortOrder: number;
 }
 //#endregion
 
@@ -137,11 +165,13 @@ export type InspectionExecutionRequest = Omit<InspectionExecutionDto, 'id'> & {
 };
 export type InspectionResultRequest = Omit<InspectionResultDto, 'id'>;
 
-export type DefectRequest = Omit<DefectDto, 'id'> & {
-
-};
+export type DefectRequest = Omit<DefectDto, 'id'>;
 export type DefectGroupRequest = Omit<DefectGroupDto, 'id'>;
 
+export type SamplingPlanRequest = Omit<SamplingPlanDto, 'id'> & {
+    samplingPlanRules?: SamplingPlanRuleRequest[] | null;
+};
+export type SamplingPlanRuleRequest = Omit<SamplingPlanRuleDto, 'id'>;
 
 //#endregion
 
@@ -216,6 +246,42 @@ export const DEFECT_SEVERITY = [
 export function defectSeverityOf(severity?: number | null) {
     return DEFECT_SEVERITY.find(s => s.value === severity);
 }
+
+
+export const SAMPLING_PLAN_METHODS = [
+    { labelKey: 'samplingPlan.samplingMethod.fixedQuantity', value: 1 },
+    { labelKey: 'samplingPlan.samplingMethod.percentage', value: 2 },
+    { labelKey: 'samplingPlan.samplingMethod.lotSizeBased', value: 3 },
+    { labelKey: 'samplingPlan.samplingMethod.aql', value: 4 },
+    { labelKey: 'samplingPlan.samplingMethod.100Percent', value: 5 },
+];
+
+export const SAMPLING_PLAN_LEVELS = [
+    { labelKey: 'samplingPlan.inspectionLevel.levelI', value: 'I' },
+    { labelKey: 'samplingPlan.inspectionLevel.levelII', value: 'II' },
+    { labelKey: 'samplingPlan.inspectionLevel.levelIII', value: 'III' },
+];
+
+export const SAMPLING_PLAN_FREQUENCY_TYPES = [
+    { labelKey: 'samplingPlan.frequencyType.perLot', value: 1 },
+    { labelKey: 'samplingPlan.frequencyType.perShift', value: 2 },
+    { labelKey: 'samplingPlan.frequencyType.perHour', value: 3 },
+    { labelKey: 'samplingPlan.frequencyType.perDay', value: 4 },
+    { labelKey: 'samplingPlan.frequencyType.perQuantity', value: 5 },
+    { labelKey: 'samplingPlan.frequencyType.firstPiece', value: 6 },
+    { labelKey: 'samplingPlan.frequencyType.lastPiece', value: 7 },
+    { labelKey: 'samplingPlan.frequencyType.periodic', value: 8 },
+];
+
+export const SAMPLING_PLAN_STATUSES = [
+    { labelKey: 'samplingPlan.status.draft', value: 1 },
+    { labelKey: 'samplingPlan.status.pendingApproval', value: 2 },
+    { labelKey: 'samplingPlan.status.approved', value: 3 },
+    { labelKey: 'samplingPlan.status.active', value: 4 },
+    { labelKey: 'samplingPlan.status.inactive', value: 5 },
+    { labelKey: 'samplingPlan.status.expired', value: 6 },
+    { labelKey: 'samplingPlan.status.cancelled', value: 7 },
+];
 //#endregion
 
 

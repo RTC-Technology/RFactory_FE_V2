@@ -21,7 +21,7 @@ import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { I18nService } from '../../core/services/i18n.service';
 import { UnitApiService, ProductApiService, RoutingApiService } from '../../core/services/product-api.service';
-import { InspectionItemApiService, InspectionPlanApiService, QualitySpecificationApiService, QualitySpecificationItemApiService, QualitySpecificationProductApiService } from '../../core/services/quality-api.service';
+import { InspectionItemApiService, InspectionPlanApiService, QualitySpecificationApiService, QualitySpecificationItemApiService, QualitySpecificationProductApiService, SamplingPlanApiService } from '../../core/services/quality-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { INSPECTION_EXECUTION_TYPE, INSPECTION_PLAN_STATUSES, INSPECTION_PLAN_TYPES, InspectionItemDto, InspectionPlanDto, InspectionPlanRequest, QUALITY_INSPECTION_TYPES, QUALITY_STATUSES, QualitySpecificationDto, QualitySpecificationItemDto, QualitySpecificationProductDto, QualitySpecificationRequest } from '../../domain/models/quality.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
@@ -81,6 +81,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 	private readonly specApi = inject(QualitySpecificationApiService);
 	private readonly specItemApi = inject(QualitySpecificationItemApiService);
 	private readonly specProductApi = inject(QualitySpecificationProductApiService);
+	private readonly samplingPlanApi = inject(SamplingPlanApiService);
 
 	private readonly productApi = inject(ProductApiService);
 	private readonly unitApi = inject(UnitApiService);
@@ -131,6 +132,12 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 		return specItem ? `${specItem.parameterCode} · ${specItem.parameterName}` : '';
 	}
 
+	samplingPlanLabel(id?: number | null): string {
+		if (id == null) return '';
+		const samplingPlan = this.samplingPlanApi.items().find(u => u.id === id);
+		return samplingPlan ? `${samplingPlan.samplingPlanCode} · ${samplingPlan.samplingPlanName}` : '';
+	}
+
 	userLabel(id?: number | null): string {
 		if (id == null) return '';
 		const user = this.userApi.items().find(u => u.id === id);
@@ -176,10 +183,9 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			.map(r => ({ label: `${r.specificationCode} · ${r.specificationName}`, value: r.id }));
 	}
 
-	// readonly specItemOptions = computed(() =>
-	// 	this.specItemApi.items()
-	// 		.filter(x => x.qualitySpecificationId == this.form.qualitySpecificationId)
-	// 		.map(r => ({ label: `${r.parameterCode} · ${r.parameterName}`, value: r.id })));
+	readonly samplingPlanOptions = computed(() =>
+		this.samplingPlanApi.items()
+			.map(r => ({ label: `${r.samplingPlanCode} · ${r.samplingPlanName}`, value: r.id })));
 
 	specItemOptions() {
 		return this.specItemApi.items()
@@ -276,6 +282,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			specProducts: this.specProductApi.load(),
 			users: this.userApi.load(),
 			units: this.unitApi.load(),
+			samplingPlans: this.samplingPlanApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('inspectionPlan.err.load'), err),
 		});
@@ -338,6 +345,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			approvedBy: row.approvedBy ?? null,
 			approvedAt: this._toLocalInput(row.approvedAt),
 			remark: row.remark ?? null,
+			samplingPlanId: row.samplingPlanId ?? null,
 		};
 
 		this.itemRows.set(
@@ -460,6 +468,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			approvedBy: null as number | null,
 			approvedAt: null as string | null,
 			remark: null as string | null,
+			samplingPlanId: null as number | null,
 		};
 	}
 
@@ -521,11 +530,12 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			approvedBy: this.form.approvedBy ?? null,
 			approvedAt: this.form.approvedAt ?? null,
 			remark: this.form.remark ?? null,
-			inspectionItems: this.itemRows().map(r => ({
+			samplingPlanId: this.form.samplingPlanId ?? null,
+			inspectionItems: this.itemRows().map((r, index) => ({
 				id: r.id > 0 ? r.id : 0,
 				inspectionPlanId: r.inspectionPlanId ?? null,
 				qualitySpecificationItemId: r.qualitySpecificationItemId,
-				sequenceNo: r.sequenceNo,
+				sequenceNo: index + 1,
 				inspectionMethod: r.inspectionMethod,
 				sampleSize: r.sampleSize ?? null,
 				frequency: r.frequency,

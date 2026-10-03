@@ -19,7 +19,7 @@ import { ToastModule } from 'primeng/toast';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
-import { InspectionExecutionApiService, InspectionItemApiService, InspectionPlanApiService, InspectionResultApiService } from '../../core/services/quality-api.service';
+import { DefectApiService, InspectionExecutionApiService, InspectionItemApiService, InspectionPlanApiService, InspectionResultApiService } from '../../core/services/quality-api.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserApiService } from '../../core/services/organization-api.service';
@@ -85,6 +85,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 	private readonly unitApi = inject(UnitApiService);
 	private readonly authService = inject(AuthService);
 	private readonly userApi = inject(UserApiService);
+	private readonly defectApi = inject(DefectApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -137,6 +138,11 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 		const user = this.userApi.items().find(u => u.id === id);
 		return user ? `${user.code} · ${user.fullName}` : '';
 	}
+	defectLabel(id?: number | null): string {
+		if (id == null) return '';
+		const defect = this.defectApi.items().find(u => u.id === id);
+		return defect ? `${defect.defectCode} · ${defect.defectName}` : '';
+	}
 
 	readonly typeOptions = computed(() =>
 		INSPECTION_EXECUTION_TYPE.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
@@ -162,6 +168,10 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 	readonly userOptions = computed(() =>
 		this.userApi.items()
 			.map(r => ({ label: `${r.code} · ${r.fullName}`, value: r.id })));
+
+	readonly defectOptions = computed(() =>
+		this.defectApi.items()
+			.map(r => ({ label: `${r.defectCode} · ${r.defectName}`, value: r.id })));
 
 	readonly productOptions = computed<ProductOption[]>(() => {
 		const units = new Map(this.unitApi.items().map(u => [u.id, u.symbol || u.unitCode]));
@@ -262,6 +272,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 			products: this.productApi.load(),
 			users: this.userApi.load(),
 			units: this.unitApi.load(),
+			defects: this.defectApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('inspectionExecution.err.load'), err),
 		});
@@ -295,18 +306,8 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 		const items = this.inspectionItemApi.items()
 			.filter(x => x.inspectionPlanId == this.form.inspectionPlanId)
 			.map(x => ({
-				id: this._tempItemId--,
-				inspectionExecutionId: null as number | null,
+				...this._emptyResultRow(),
 				inspectionItemId: x.id,
-				sampleNo: null as number | null,
-				actualValue: '',
-				numericValue: null as number | null,
-				textValue: null as string | null,
-				booleanValue: null as boolean | null,
-				result: 0,
-				inspectionTime: formatDate(new Date(), DATETIME_LOCAL, 'en-US') as string | null,
-				inspectorId: parseInt(this.currentUser()?.id ?? '0') as number | null,
-				remark: null as string | null,
 			}));
 
 		this.resultRows.set(items);
@@ -400,18 +401,8 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 		const items = this.inspectionItemApi.items()
 			.filter(x => x.inspectionPlanId == planId)
 			.map(x => ({
-				id: this._tempItemId--,
-				inspectionExecutionId: null as number | null,
+				...this._emptyResultRow(),
 				inspectionItemId: x.id,
-				sampleNo: null as number | null,
-				actualValue: '',
-				numericValue: null as number | null,
-				textValue: null as string | null,
-				booleanValue: null as boolean | null,
-				result: 0,
-				inspectionTime: formatDate(new Date(), DATETIME_LOCAL, 'en-US') as string | null,
-				inspectorId: parseInt(this.currentUser()?.id ?? '0') as number | null,
-				remark: null as string | null,
 			}));
 
 		this.resultRows.set(items);
@@ -457,6 +448,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 			textValue: null as string | null,
 			booleanValue: null as boolean | null,
 			result: 0,
+			defectId: null as number | null,
 			inspectionTime: formatDate(new Date(), DATETIME_LOCAL, 'en-US') as string | null,
 			inspectorId: parseInt(this.currentUser()?.id ?? '0') as number | null,
 			remark: null as string | null,
@@ -509,6 +501,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 				textValue: r.textValue ?? null,
 				booleanValue: r.booleanValue ?? null,
 				result: r.result,
+				defectId: r.defectId ?? null,
 				inspectionTime: r.inspectionTime ?? null,
 				inspectorId: r.inspectorId ?? null,
 				remark: r.remark ?? null,

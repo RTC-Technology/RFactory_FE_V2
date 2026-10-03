@@ -157,6 +157,7 @@
                                 <th class="col-textValue">{{ i18n.t('inspectionResult.textValue') }}</th>
                                 <!-- <th class="col-booleanValue">{{ i18n.t('inspectionResult.booleanValue') }}</th> -->
                                 <th class="col-status">{{ i18n.t('inspectionResult.result') }}</th>
+                                <th class="col-defect">{{ i18n.t('inspectionResult.defect') }}</th>
                                 <th class="col-inspectionTime">{{ i18n.t('inspectionResult.inspectionTime') }}</th>
                                 <th class="col-inspector">{{ i18n.t('inspectionResult.inspector') }}</th>
                                 <th class="col-remark">{{ i18n.t('inspectionResult.remark') }}</th>
@@ -180,6 +181,7 @@
                                     <span class="muted">—</span>
                                     }
                                 </td>
+                                <td class="col-defect">{{ defectLabel(row.defectId) || '—' }}</td>
                                 <td class="col-inspectionTime">{{ (row.inspectionTime|date) || '—' }}</td>
                                 <td class="col-inspector">{{ userLabel(row.inspectorId) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
@@ -187,7 +189,7 @@
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="9">
+                                <td colspan="10">
                                     <p class="empty">
                                         {{ selectedExecution() ? i18n.t('inspectionResult.empty') :
                                         i18n.t('inspectionResult.emptyHint') }}
@@ -367,6 +369,7 @@
                             <th class="col-textValue">{{ i18n.t('inspectionResult.textValue') }}</th>
                             <!-- <th class="col-booleanValue">{{ i18n.t('inspectionResult.booleanValue') }}</th> -->
                             <th class="col-result">{{ i18n.t('inspectionResult.result') }}</th>
+                            <th class="col-defect">{{ i18n.t('inspectionResult.defect') }}</th>
                             <th class="col-inspectionTime">{{ i18n.t('inspectionResult.inspectionTime') }}</th>
                             <th class="col-inspector">{{ i18n.t('inspectionResult.inspector') }}</th>
                             <th class="col-remark">{{ i18n.t('inspectionResult.remark') }}</th>
@@ -421,6 +424,15 @@
                                           appendTo="body"
                                           [placeholder]="i18n.t('inspectionResult.result.unset')" />
                             </td>
+                            <td class="col-result">
+                                <p-select [options]="defectOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.defectId"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('inspectionResult.defect.unset')" />
+                            </td>
                             <td class="col-inspectionTime">
                                 <input pInputText type="datetime-local" class="cell-input cell-input--text" name="inspectionTime" [(ngModel)]="row.inspectionTime" autocomplete="off" />
                             </td>
@@ -454,7 +466,7 @@
 
                     <ng-template #emptymessage>
                         <tr>
-                            <td colspan="11">
+                            <td colspan="12">
                                 <p class="empty">{{ i18n.t('inspectionResult.emptyLine') }}</p>
                             </td>
                         </tr>

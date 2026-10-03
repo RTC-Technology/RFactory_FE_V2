@@ -490,7 +490,7 @@ export class QualitySpecificationComponent extends PermissionAwarePage implement
 	private _nextSpecCode(): string {
 		let code = "";
 
-		const prefixCode = "SP_";
+		const prefixCode = "QS_";
 		const maxCode = Math.max(
 			0,
 			...this.specApi.items()

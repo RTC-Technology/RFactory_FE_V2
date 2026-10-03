@@ -440,6 +440,20 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//sampling plan
+			{
+				path: 'sampling-plan',
+				loadComponent: () =>
+					import('./pages/sampling-plan/sampling-plan.component').then(m => m.SamplingPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.samplingPlan.view,
+						PERMISSIONS.samplingPlanRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CrudApiService } from './crud-api.service';
-import { DefectDto, DefectGroupDto, DefectGroupRequest, DefectRequest, InspectionExecutionDto, InspectionExecutionRequest, InspectionItemDto, InspectionItemRequest, InspectionPlanDto, InspectionPlanRequest, InspectionResultDto, InspectionResultRequest, QualitySpecificationDto, QualitySpecificationItemDto, QualitySpecificationItemRequest, QualitySpecificationProductDto, QualitySpecificationProductRequest, QualitySpecificationRequest } from '../../domain/models/quality.model';
+import { DefectDto, DefectGroupDto, DefectGroupRequest, DefectRequest, InspectionExecutionDto, InspectionExecutionRequest, InspectionItemDto, InspectionItemRequest, InspectionPlanDto, InspectionPlanRequest, InspectionResultDto, InspectionResultRequest, QualitySpecificationDto, QualitySpecificationItemDto, QualitySpecificationItemRequest, QualitySpecificationProductDto, QualitySpecificationProductRequest, QualitySpecificationRequest, SamplingPlanDto, SamplingPlanRequest, SamplingPlanRuleDto, SamplingPlanRuleRequest } from '../../domain/models/quality.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -46,4 +46,14 @@ export class DefectApiService extends CrudApiService<DefectDto, DefectRequest> {
 @Injectable({ providedIn: 'root' })
 export class DefectGroupApiService extends CrudApiService<DefectGroupDto, DefectGroupRequest> {
 	protected readonly baseUrl = `${environment.apiUrl}/quality/defect/groups`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class SamplingPlanApiService extends CrudApiService<SamplingPlanDto, SamplingPlanRequest> {
+	protected readonly baseUrl = `${environment.apiUrl}/quality/sampling-plans`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class SamplingPlanRuleApiService extends CrudApiService<SamplingPlanRuleDto, SamplingPlanRuleRequest> {
+	protected readonly baseUrl = `${environment.apiUrl}/quality/sampling-plan/rules`;
 }

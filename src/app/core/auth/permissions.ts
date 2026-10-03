@@ -84,6 +84,9 @@ export const PERMISSIONS = {
   inspectionExecution: crud('inspection-execution'),
   inspectionResult: crud('inspection-result'),
 
+  samplingPlan: crud('sampling-plan'),
+  samplingPlanRule: crud('sampling-plan-rule'),
+
   defect: crud('defect'),
   defectGroup: crud('defect-group'),
 

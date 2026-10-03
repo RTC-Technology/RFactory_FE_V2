@@ -93,7 +93,7 @@
                             <tr>
                                 <th class="col-code">{{ i18n.t('inspectionPlan.planCode') }}</th>
                                 <th class="col-planName">{{ i18n.t('inspectionPlan.planName') }}</th>
-                                <!-- <th class="col-product">{{ i18n.t('inspectionPlan.product') }}</th> -->
+                                <th class="col-samplingPlan">{{ i18n.t('inspectionPlan.samplingPlan') }}</th>
                                 <th class="col-routing">{{ i18n.t('inspectionPlan.routing') }}</th>
                                 <th class="col-qualitySpecification">{{ i18n.t('inspectionPlan.qualitySpecification') }}</th>
                                 <th class="col-inspectionType">{{ i18n.t('inspectionPlan.inspectionType') }}</th>
@@ -120,7 +120,7 @@
                                 (click)="selectPlan(row)" (dblclick)="openEdit()">
                                 <td class="col-code">{{ row.planCode || '—' }}</td>
                                 <td class="col-planName">{{ row.planName || '—' }}</td>
-                                <!-- <td class="col-product">{{ productLabel(row.productId) || '—' }}</td> -->
+                                <td class="col-samplingPlan">{{ samplingPlanLabel(row.samplingPlanId) || '—' }}</td>
                                 <td class="col-routing">{{ routingLabel(row.routingId) || '—' }}</td>
                                 <td class="col-qualitySpecification">{{ specLabel(row.qualitySpecificationId) || '—' }}</td>
                                 <td class="col-inspectionType">{{ typeLabel(row.inspectionType) || '—' }}</td>
@@ -135,7 +135,7 @@
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="12">
+                                <td colspan="13">
                                     <p class="empty">
                                         {{ selectedPlan() ? i18n.t('inspectionPlan.empty') :
                                         i18n.t('inspectionPlan.emptyHint') }}
@@ -237,9 +237,18 @@
             <div class="field">
                 <label for="p-version">
                     {{ i18n.t('inspectionPlan.version') }}
-                    <span class="req">*</span>
+                    <!-- <span class="req">*</span> -->
                 </label>
                 <input pInputText id="p-version" name="version" [(ngModel)]="form.version" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="p-samplingPlanId">
+                    {{ i18n.t('inspectionPlan.samplingPlan') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="samplingPlanOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.samplingPlanId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.samplingPlan.unset')" />
             </div>
         </div>
 
