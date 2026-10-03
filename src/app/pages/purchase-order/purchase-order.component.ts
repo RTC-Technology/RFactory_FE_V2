@@ -451,7 +451,6 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		const product = this.productApi.items().find(p => p.id === productId);
 		// const receipDetail = this.goodsReceiptDetailApi.items().find(p => p.productId === productId);
 		row.unitId = product?.defaultUnitId ?? row.unitId;
-
 	}
 
 	/** Received quantity tracks the ordered one until someone edits it apart. */

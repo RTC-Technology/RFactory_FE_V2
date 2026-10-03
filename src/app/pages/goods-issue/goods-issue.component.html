@@ -1,5 +1,5 @@
 <ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
-    let-showReload="showReload">
+             let-showReload="showReload">
     <div class="toolbar">
         <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd" (click)="openCreate()">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -10,7 +10,7 @@
             <span>{{ i18n.t('common.add') }}</span>
         </button>
         <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
-            (click)="openEdit()">
+                (click)="openEdit()">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M4 3h9l4 4v3" />
                 <path d="M4 3v18h13v-6" />
@@ -19,7 +19,7 @@
             <span>{{ i18n.t('common.edit') }}</span>
         </button>
         <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-            (click)="askDelete()">
+                (click)="askDelete()">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M4 7h16" />
                 <path d="M10 11v6" />
@@ -43,14 +43,14 @@
 
         <span class="tool__sep"></span>
         <button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
-            (click)="askApprove(true)">
+                (click)="askApprove(true)">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M5 12.5l4.2 4.2L19 2.5" />
             </svg>
             <span>{{ i18n.t('common.approve') }}</span>
         </button>
         <button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
-            (click)="askApprove(false)">
+                (click)="askApprove(false)">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <line x1="6" y1="6" x2="18" y2="18" />
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -60,7 +60,7 @@
         }
 
         <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
-            [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
     </div>
 </ng-template>
 
@@ -68,7 +68,7 @@
 
 <div class="page">
     <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
-        [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
 
         <ng-template #panel>
             <section class="panel">
@@ -77,12 +77,12 @@
                     <span class="panel__count">{{ issue().length }}</span>
                 </div>
                 <ng-container
-                    *ngTemplateOutlet="toolbar; context: { kind: 'goodsIssue', perms: perms.goodsIssue, canAdd: true, hasSelection: !!selectedIssue(), showReload: true }" />
+                              *ngTemplateOutlet="toolbar; context: { kind: 'goodsIssue', perms: perms.goodsIssue, canAdd: true, hasSelection: !!selectedIssue(), showReload: true }" />
 
                 <div class="table-scroll">
                     <p-table #issueTable [value]="issue()" [showGridlines]="true" class="grid"
-                        [globalFilterFields]="filterFields.goodsIssue"
-                        (onFilter)="onFiltered('goodsIssue', $event.filteredValue)">
+                             [globalFilterFields]="filterFields.goodsIssue"
+                             (onFilter)="onFiltered('goodsIssue', $event.filteredValue)">
                         <ng-template #header>
                             <tr>
                                 <th class="col-issueNo">{{ i18n.t('goodsIssue.issueNo') }}</th>
@@ -191,7 +191,7 @@
 
 
 <p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
-    [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw', maxWidth: '1280px',height:'90vh' }">
 
     <div class="form">
         @if (formError()) {
@@ -213,8 +213,8 @@
                     <span class="req">*</span>
                 </label>
                 <p-select inputId="gi-warehouseId" [options]="warehouseOptions()" optionLabel="label"
-                    optionValue="value" [(ngModel)]="form.warehouseId"
-                    [placeholder]="i18n.t('goodsIssue.warehouse.unset')" appendTo="body" class="w-full" />
+                          optionValue="value" [(ngModel)]="form.warehouseId"
+                          [placeholder]="i18n.t('goodsIssue.warehouse.unset')" appendTo="body" class="w-full" />
             </div>
 
             <div class="field">
@@ -223,8 +223,8 @@
                     <span class="req">*</span>
                 </label>
                 <p-select inputId="gi-issueType" [options]="typeOptions()" optionLabel="label" optionValue="value"
-                    [(ngModel)]="form.issueType" [placeholder]="i18n.t('goodsIssue.issueType.unset')" appendTo="body"
-                    class="w-full" />
+                          [(ngModel)]="form.issueType" [placeholder]="i18n.t('goodsIssue.issueType.unset')" appendTo="body"
+                          class="w-full" />
             </div>
         </div>
 
@@ -232,13 +232,13 @@
             <div class="field">
                 <label for="gi-referenceType">{{ i18n.t('goodsIssue.referenceType') }}</label>
                 <input pInputText id="gi-referenceType" name="referenceType" [(ngModel)]="form.referenceType"
-                    autocomplete="off" />
+                       autocomplete="off" />
             </div>
 
             <div class="field">
                 <label for="gi-referenceId">{{ i18n.t('goodsIssue.reference') }}</label>
                 <input pInputText type="number" min="0" id="gi-referenceId" name="referenceId"
-                    [(ngModel)]="form.referenceId" />
+                       [(ngModel)]="form.referenceId" />
             </div>
 
             <div class="field">
@@ -247,7 +247,7 @@
                     <span class="req">*</span>
                 </label>
                 <input pInputText id="gi-issueDate" name="issueDate" type="datetime-local"
-                    [(ngModel)]="form.issueDate" />
+                       [(ngModel)]="form.issueDate" />
             </div>
 
             <div class="field">
@@ -256,8 +256,8 @@
                     <span class="req">*</span>
                 </label>
                 <p-select inputId="gi-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
-                    [(ngModel)]="form.status" [placeholder]="i18n.t('goodsIssue.status.unset')" appendTo="body"
-                    class="w-full" />
+                          [(ngModel)]="form.status" [placeholder]="i18n.t('goodsIssue.status.unset')" appendTo="body"
+                          class="w-full" />
             </div>
         </div>
 
@@ -282,7 +282,7 @@
 
             <div class="lines__scroll">
                 <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
-                    scrollable="true" scrollHeight="flex">
+                         scrollable="true" scrollHeight="flex">
                     <ng-template #header>
                         <tr>
                             <th class="col-idx">#</th>
@@ -319,13 +319,13 @@
 
                             <td class="col-product">
                                 <p-select [options]="productOptions()" optionLabel="label" optionValue="value"
-                                    [ngModel]="row.productId || null"
-                                    (ngModelChange)="onDetailProductChange(row, $event)" [filter]="true"
-                                    filterBy="label" [resetFilterOnHide]="true"
-                                    [filterPlaceholder]="i18n.t('common.search')"
-                                    [placeholder]="i18n.t('goodsIssueDetail.selectProduct')"
-                                    [emptyFilterMessage]="i18n.t('goodsIssueDetail.noProduct')" appendTo="body"
-                                    class="w-full" panelStyleClass="grid-picker" scrollHeight="18rem">
+                                          [(ngModel)]="row.productId"
+                                          (ngModelChange)="onDetailProductChange(row, $event)" [filter]="true"
+                                          filterBy="label" [resetFilterOnHide]="true"
+                                          [filterPlaceholder]="i18n.t('common.search')"
+                                          [placeholder]="i18n.t('goodsIssueDetail.selectProduct')"
+                                          [emptyFilterMessage]="i18n.t('goodsIssueDetail.noProduct')" appendTo="body"
+                                          class="w-full" panelStyleClass="grid-picker" scrollHeight="18rem">
 
                                     <ng-template #header>
                                         <div class="picker-row picker-row--head">
@@ -350,7 +350,7 @@
                                             <span class="picker-cell picker-cell--center">
                                                 @if (opt.statusLabel) {
                                                 <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
-                                                    [rounded]="true" />
+                                                       [rounded]="true" />
                                                 } @else {
                                                 <span class="picker-cell--muted">—</span>
                                                 }
@@ -362,19 +362,19 @@
 
                             <td class="col-unit">
                                 <p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
-                                    [ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0"
-                                    [filter]="true" filterBy="label"
-                                    [placeholder]="i18n.t('goodsIssueDetail.selectUnit')" appendTo="body"
-                                    class="w-full" />
+                                          [ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0"
+                                          [filter]="true" filterBy="label"
+                                          [placeholder]="i18n.t('goodsIssueDetail.selectUnit')" appendTo="body"
+                                          class="w-full" />
                             </td>
 
                             <td class="col-location">
                                 <p-select [options]="locationOptions(row.productId)" optionLabel="label"
-                                    optionValue="value" optionDisabled="disabled" [ngModel]="row.locationId || null"
-                                    (ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
-                                    [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" optionLabel="label"
-                                    optionValue="value" class="w-full md:w-56" appendTo="body"
-                                    panelStyleClass="grid-picker" scrollHeight="18rem">
+                                          optionValue="value" optionDisabled="disabled" [ngModel]="row.locationId || null"
+                                          (ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
+                                          [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" optionLabel="label"
+                                          optionValue="value" class="w-full md:w-56" appendTo="body"
+                                          panelStyleClass="grid-picker" scrollHeight="18rem">
                                     <ng-template #header>
                                         <div class="picker-row picker-row--head">
                                             <span class="picker-cell">{{ i18n.t('inventory.locationCode') }}</span>
@@ -406,12 +406,12 @@
                                 <!-- <input pInputText class="cell-input" autocomplete="off" [(ngModel)]="row.serialNo" /> -->
 
                                 <p-autocomplete #serialAutoComplete [(ngModel)]="row.serialNo" [group]="true"
-                                    [suggestions]="filteredSerialNoGroups()"
-                                    (completeMethod)="onSearchSerialNo($event,row.productId)" optionLabel="label"
-                                    optionGroupLabel="label" optionGroupChildren="items" placeholder=""
-                                    inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200" appendTo="body"
-                                    (onFocus)="onSerialFocus(serialAutoComplete, row.productId)" scrollHeight="18rem"
-                                    [pt]="{ optionGroup: 'border-b border-surface' }">
+                                                [suggestions]="filteredSerialNoGroups()"
+                                                (completeMethod)="onSearchSerialNo($event,row.productId)" optionLabel="label"
+                                                optionGroupLabel="label" optionGroupChildren="items" placeholder=""
+                                                inputStyleClass="w-full md:w-200 xl:w-200 lg:w-200" appendTo="body"
+                                                (onFocus)="onSerialFocus(serialAutoComplete, row.productId)" scrollHeight="18rem"
+                                                [pt]="{ optionGroup: 'border-b border-surface' }">
 
                                     <!-- Item trong dropdown -->
                                     <ng-template #item let-item>
@@ -422,8 +422,8 @@
                                             {
                                             <small class="text-color-secondary ml-3">
                                                 @if (item.daysRemaining < 0) { Quá {{ item.daysRemaining }} ngày } @else
-                                                    { @if (item.daysRemaining===0) { Hết hạn hôm nay } @else { Còn
-                                                    {{item.daysRemaining }} ngày } } </small>
+                                                  { @if (item.daysRemaining===0) { Hết hạn hôm nay } @else { Còn
+                                                  {{item.daysRemaining }} ngày } } </small>
                                                     }
                                         </div>
                                     </ng-template>
@@ -438,23 +438,23 @@
 
                             <td class="col-quantity">
                                 <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.quantity"
-                                    mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
+                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
                             </td>
 
                             <td class="col-unitPrice">
                                 <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.unitPrice"
-                                    mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
+                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
                             </td>
 
                             <td class="col-remark">
                                 <textarea pTextarea class="cell-input" autocomplete="off" rows="2"
-                                    [(ngModel)]="row.remark"></textarea>
+                                          [(ngModel)]="row.remark"></textarea>
                             </td>
 
                             <td class="col-act">
                                 <button type="button" class="row-del" [title]="i18n.t('goodsIssueDetail.removeLine')"
-                                    [attr.aria-label]="i18n.t('goodsIssueDetail.removeLine')"
-                                    (click)="removeDetailRow(row)">
+                                        [attr.aria-label]="i18n.t('goodsIssueDetail.removeLine')"
+                                        (click)="removeDetailRow(row)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="6" y1="6" x2="18" y2="18" />
                                         <line x1="18" y1="6" x2="6" y2="18" />

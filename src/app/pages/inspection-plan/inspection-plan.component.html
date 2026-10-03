@@ -1,0 +1,443 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+        <span class="tool__sep"></span>
+        <button *appHasPermission="perms.approve" type="button" class="tool tool--success" [disabled]="!hasSelection"
+                (click)="askApprove(true)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M5 12.5l4.2 4.2L19 2.5" />
+            </svg>
+            <span>{{ i18n.t('common.approve') }}</span>
+        </button>
+        <button *appHasPermission="perms.unapprove" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askApprove(false)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.unapprove') }}</span>
+        </button>
+        <span class="tool__sep"></span>
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openResult()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polygon points="6 3 20 12 6 21 6 3" />
+            </svg>
+            <span>{{ i18n.t('inspectionExecution.title') }}</span>
+        </button>
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('inspectionPlan.title') }}</h2>
+                    <span class="panel__count">{{ inspectionPlans().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'inspectionPlan', perms: perms.inspectionPlan, canAdd: true, hasSelection: !!selectedPlan(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #planTable [value]="inspectionPlans()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.inspectionPlan"
+                             (onFilter)="onFiltered('inspectionPlan', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="productId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('inspectionPlan.planCode') }}</th>
+                                <th class="col-planName">{{ i18n.t('inspectionPlan.planName') }}</th>
+                                <!-- <th class="col-product">{{ i18n.t('inspectionPlan.product') }}</th> -->
+                                <th class="col-routing">{{ i18n.t('inspectionPlan.routing') }}</th>
+                                <th class="col-qualitySpecification">{{ i18n.t('inspectionPlan.qualitySpecification') }}</th>
+                                <th class="col-inspectionType">{{ i18n.t('inspectionPlan.inspectionType') }}</th>
+                                <th class="col-version">{{ i18n.t('inspectionPlan.version') }}</th>
+                                <th class="col-status">{{ i18n.t('inspectionPlan.status') }}</th>
+                                <th class="col-effectiveFrom">{{ i18n.t('inspectionPlan.effectiveFrom') }}</th>
+                                <th class="col-effectiveTo">{{ i18n.t('inspectionPlan.effectiveTo') }}</th>
+                                <th class="col-approvedBy">{{ i18n.t('inspectionPlan.approvedBy') }}</th>
+                                <th class="col-approvedAt">{{ i18n.t('inspectionPlan.approvedAt') }}</th>
+                                <th class="col-remark">{{ i18n.t('inspectionPlan.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="12">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{ productLabel(row.productId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedPlan()?.id === row.id"
+                                (click)="selectPlan(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.planCode || '—' }}</td>
+                                <td class="col-planName">{{ row.planName || '—' }}</td>
+                                <!-- <td class="col-product">{{ productLabel(row.productId) || '—' }}</td> -->
+                                <td class="col-routing">{{ routingLabel(row.routingId) || '—' }}</td>
+                                <td class="col-qualitySpecification">{{ specLabel(row.qualitySpecificationId) || '—' }}</td>
+                                <td class="col-inspectionType">{{ typeLabel(row.inspectionType) || '—' }}</td>
+                                <td class="col-version">{{ row.version || '—' }}</td>
+                                <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+                                <td class="col-effectiveFrom">{{ (row.effectiveFrom|date) || '—' }}</td>
+                                <td class="col-effectiveTo">{{ (row.effectiveTo|date) || '—' }}</td>
+                                <td class="col-approvedBy">{{ userLabel(row.approvedBy) || '—' }}</td>
+                                <td class="col-approvedAt">{{ (row.approvedAt|date) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="12">
+                                    <p class="empty">
+                                        {{ selectedPlan() ? i18n.t('inspectionPlan.empty') :
+                                        i18n.t('inspectionPlan.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('inspectionItem.title') }}</h2>
+                    @if (selectedPlan(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('inspectionItem.scopeOf', { name: t.planCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ inspectionItems().length }}</span>
+                    }
+                </div>
+
+                <div class="table-scroll">
+                    <p-table #itemTable [value]="inspectionItems()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.inspectionItem"
+                             (onFilter)="onFiltered('inspectionItem', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('inspectionItem.sequenceNo') }}</th>
+                                <th class="col-qualitySpecificationItem">{{ i18n.t('inspectionItem.qualitySpecificationItem') }}</th>
+                                <th class="col-inspectionMethod">{{ i18n.t('inspectionItem.inspectionMethod') }}</th>
+                                <th class="col-sampleSize">{{ i18n.t('inspectionItem.sampleSize') }}</th>
+                                <th class="col-frequency">{{ i18n.t('inspectionItem.frequency') }}</th>
+                                <th class="col-isRequired">{{ i18n.t('inspectionItem.isRequired') }}</th>
+                                <th class="col-remark">{{ i18n.t('inspectionItem.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                (click)="selectItem(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sequenceNo || '—' }}</td>
+                                <td class="col-qualitySpecificationItem">{{ specItemLabel(row.qualitySpecificationItemId) || '—' }}</td>
+                                <td class="col-inspectionMethod">{{ row.inspectionMethod || '—' }}</td>
+                                <td class="col-sampleSize text-right">{{ row.sampleSize != null ? (row.sampleSize|number:'1.0-2') : 0 }}</td>
+                                <td class="col-frequency ">{{ row.frequency || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.isRequired) {
+                                    <p-tag severity="success" [value]="i18n.t('inspectionItem.required')" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">{{ i18n.t('inspectionItem.unRequired') }}</span>
+                                    }
+                                </td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="7">
+                                    <p class="empty">
+                                        {{ selectedPlan() ? i18n.t('inspectionItem.empty') :
+                                        i18n.t('inspectionItem.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'90vh' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="p-planCode">
+                    {{ i18n.t('inspectionPlan.planCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="p-planCode" name="planCode" [(ngModel)]="form.planCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="p-planName">
+                    {{ i18n.t('inspectionPlan.planName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="p-planName" name="planName" [(ngModel)]="form.planName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="p-version">
+                    {{ i18n.t('inspectionPlan.version') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="p-version" name="version" [(ngModel)]="form.version" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="p-productId">
+                    {{ i18n.t('inspectionPlan.product') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="productOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.productId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.product.unset')" />
+            </div>
+            <div class="field">
+                <label for="p-routingId">
+                    {{ i18n.t('inspectionPlan.routing') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="routingOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.routingId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.routing.unset')" />
+            </div>
+            <div class="field">
+                <label for="p-qualitySpecificationId">
+                    {{ i18n.t('inspectionPlan.qualitySpecification') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="specOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.qualitySpecificationId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.qualitySpecification.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="p-type">
+                    {{ i18n.t('inspectionPlan.type') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="typeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.inspectionType" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.type.unset')" />
+            </div>
+            <div class="field">
+                <label for="p-status">
+                    {{ i18n.t('inspectionPlan.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.status.unset')" />
+            </div>
+
+            <div class="field">
+                <label for="p-effectiveFrom">
+                    {{ i18n.t('inspectionPlan.effectiveFrom') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="p-effectiveFrom" type="date" name="effectiveFrom" [(ngModel)]="form.effectiveFrom" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="p-effectiveTo">
+                    {{ i18n.t('inspectionPlan.effectiveTo') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="p-effectiveTo" type="date" name="effectiveTo" [(ngModel)]="form.effectiveTo" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="p-remark">{{ i18n.t('inspectionPlan.remark') }}</label>
+            <textarea pInputTextarea id="p-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('inspectionItems.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('inspectionItems.lineCount', { count: itemRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addItemRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('inspectionItems.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="itemRows()"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <th class="col-qualitySpecificationItem" colspan="2">{{ i18n.t('inspectionItem.qualitySpecificationItem') }}</th>
+                            <!-- <th class="col-isRequired">{{ i18n.t('inspectionItem.isRequired') }}</th> -->
+                            <th class="col-inspectionMethod">{{ i18n.t('inspectionItem.inspectionMethod') }}</th>
+                            <th class="col-sampleSize">{{ i18n.t('inspectionItem.sampleSize') }}</th>
+                            <th class="col-frequency">{{ i18n.t('inspectionItem.frequency') }}</th>
+                            <th class="col-remark">{{ i18n.t('inspectionItem.remark') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+                            <td class="col-qualitySpecificationItem">
+                                <p-select [options]="specItemOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.qualitySpecificationItemId"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('inspectionItem.qualitySpecificationItem.unset')" />
+
+                            </td>
+                            <td class="col-isRequired">
+                                <div class="flex items-center">
+                                    <p-checkbox [inputId]="'i-isRequired-' + i" name="i-isRequired" binary="true" [(ngModel)]="row.isRequired" />
+                                    <label [for]="'i-isRequired-' + i" class="ml-2"
+                                           [ngStyle]="{'text-wrap':'nowrap'}">
+                                        {{ i18n.t('inspectionItem.isRequired') }}
+                                    </label>
+                                </div>
+                            </td>
+
+                            <td class="col-inspectionMethod">
+                                <input pInputText class="cell-input cell-input--text" name="inspectionMethod" [(ngModel)]="row.inspectionMethod" autocomplete="off" />
+
+                            </td>
+                            <td class="col-sampleSize">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.sampleSize"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-frequency">
+                                <input pInputText class="cell-input cell-input--text" name="frequency" [(ngModel)]="row.frequency" autocomplete="off" />
+                            </td>
+                            <td class="col-remark">
+                                <textarea pInputTextarea name="remark" class="cell-input cell-input--text" [(ngModel)]="row.remark" autocomplete="off"
+                                          [rows]="2"></textarea>
+                            </td>
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('inspectionItem.removeLine')"
+                                        [attr.aria-label]="i18n.t('inspectionItem.removeLine')"
+                                        (click)="removeItemRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="8">
+                                <p class="empty">{{ i18n.t('inspectionItem.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+
+<p-dialog [visible]="resultOpen()" (visibleChange)="resultOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: '100vw', height: '100vh', margin: '0' }"
+          [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+    <app-inspection-execution [inspectionPlanDto]="selectedPlan()"></app-inspection-execution>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

@@ -1,0 +1,22 @@
+@use '../../shared/styles/master-detail';
+
+.check-ico {
+    width: 16px;
+    height: 16px;
+    color: #10b981;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.cancel-ico {
+    width: 16px;
+    height: 16px;
+    color: #ef4444;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
+:host ::ng-deep .p-togglebutton.p-togglebutton-checked {
+    background-color: var(--item-check) !important;
+}
