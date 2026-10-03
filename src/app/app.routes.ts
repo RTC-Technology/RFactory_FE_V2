@@ -426,6 +426,20 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//defect
+			{
+				path: 'defect',
+				loadComponent: () =>
+					import('./pages/defect/defect.component').then(m => m.DefectComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.defectGroup.view,
+						PERMISSIONS.defect.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

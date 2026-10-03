@@ -84,6 +84,9 @@ export const PERMISSIONS = {
   inspectionExecution: crud('inspection-execution'),
   inspectionResult: crud('inspection-result'),
 
+  defect: crud('defect'),
+  defectGroup: crud('defect-group'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

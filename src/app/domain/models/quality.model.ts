@@ -94,6 +94,29 @@ export interface InspectionResultDto {
     remark?: string | null;
 }
 
+
+export interface DefectDto {
+    id: number;
+    defectGroupId?: number | null;
+    defectCode?: string | null;
+    defectName?: string | null;
+    shortName?: string | null;
+    description?: string | null;
+    severity?: number | null;
+    sortOrder?: number | null;
+    isActive?: boolean | null;
+}
+
+export interface DefectGroupDto {
+    id: number;
+    groupCode?: string | null;
+    groupName?: string | null;
+    shortName?: string | null;
+    description?: string | null;
+    sortOrder?: number | null;
+    isActive?: boolean | null;
+
+}
 //#endregion
 
 //#region Request
@@ -113,6 +136,11 @@ export type InspectionExecutionRequest = Omit<InspectionExecutionDto, 'id'> & {
     inspectionResults?: InspectionResultRequest[] | null;
 };
 export type InspectionResultRequest = Omit<InspectionResultDto, 'id'>;
+
+export type DefectRequest = Omit<DefectDto, 'id'> & {
+
+};
+export type DefectGroupRequest = Omit<DefectGroupDto, 'id'>;
 
 
 //#endregion
@@ -179,6 +207,15 @@ export function inspectionResultOf(status?: number | null) {
     return INSPECTION_RESULTS.find(s => s.value === status);
 }
 
+export const DEFECT_SEVERITY = [
+    { labelKey: 'defect.severity.minor', value: 1, severity: 'secondary' as const },
+    { labelKey: 'defect.severity.major', value: 2, severity: 'warn' as const },
+    { labelKey: 'defect.severity.critical', value: 3, severity: 'danger' as const },
+];
+
+export function defectSeverityOf(severity?: number | null) {
+    return DEFECT_SEVERITY.find(s => s.value === severity);
+}
 //#endregion
 
 
