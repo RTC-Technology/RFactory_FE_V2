@@ -1049,6 +1049,111 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'supplier.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
 
 
+	// ─── Customer ─────────────────────────────────────────────────────────────
+	'customer.title': { vi: 'Khách hàng', en: 'Customers' },
+	'customer.lower': { vi: 'khách hàng', en: 'customer' },
+	'customer.customerCode': { vi: 'Mã khách hàng', en: 'Customer Code' },
+	'customer.customerName': { vi: 'Tên khách hàng', en: 'Customer Name' },
+	'customer.shortName': { vi: 'Tên viết tắt', en: 'Short Name' },
+	'customer.englishName': { vi: 'Tên tiếng Anh', en: 'English Name' },
+	'customer.customerType': { vi: 'Loại khách hàng', en: 'Customer Type' },
+	'customer.customerType.unset': { vi: '— Chọn loại khách hàng —', en: '— Select Customer Type —' },
+	'customer.taxCode': { vi: 'Mã số thuế', en: 'Tax Code' },
+	'customer.contactPerson': { vi: 'Người liên hệ', en: 'Contact Person' },
+	'customer.phone': { vi: 'Điện thoại', en: 'Phone' },
+	'customer.phoneNumber': { vi: 'Loại khách hàng', en: 'Customer Type' },
+	'customer.email': { vi: 'Email', en: 'Email' },
+	'customer.address': { vi: 'Địa chỉ', en: 'Address' },
+	'customer.country': { vi: 'Quốc gia', en: 'Country' },
+	'customer.country.unset': { vi: '— Chọn quốc gia —', en: '— Select Country —' },
+	'customer.province': { vi: 'Tỉnh/Thành phố', en: 'Province' },
+	'customer.province.unset': { vi: '— Chọn tỉnh/thành —', en: '— Select Province —' },
+	'customer.district': { vi: 'Quận/Huyện', en: 'District' },
+	'customer.district.unset': { vi: '— Chọn quận/huyện —', en: '— Select District —' },
+	'customer.paymentTerm': { vi: 'Điều khoản thanh toán', en: 'Payment Term' },
+	'customer.currency': { vi: 'Tiền tệ', en: 'Currency' },
+	'customer.currency.unset': { vi: '— Chọn tiền tệ —', en: '— Select Currency —' },
+	'customer.defaultWarehouse': { vi: 'Kho mặc định', en: 'Default Warehouse' },
+	'customer.defaultWarehouse.unset': { vi: '— Chọn kho —', en: '— Select Warehouse —' },
+	'customer.remark': { vi: 'Ghi chú', en: 'Remark' },
+	'customer.isActive': { vi: 'Trạng thái', en: 'Status' },
+	'customer.active': { vi: 'Hoạt động', en: 'Active' },
+	'customer.inactive': { vi: 'Ngừng hoạt động', en: 'Inactive' },
+
+	// Customer types
+	'customer.type.domestic': { vi: 'Nội địa', en: 'Domestic' },
+	'customer.type.international': { vi: 'Quốc tế', en: 'International' },
+	'customer.type.internal': { vi: 'Nội bộ', en: 'Internal' },
+	'customer.type.other': { vi: 'Khác', en: 'Other' },
+
+	// Customer countries
+	'customer.country.vietnam': { vi: 'Việt Nam', en: 'Vietnam' },
+	'customer.country.other': { vi: 'Khác', en: 'Other' },
+
+	// Customer provinces
+	'customer.province.hanoi': { vi: 'Hà Nội', en: 'Ha Noi' },
+	'customer.province.haiphong': { vi: 'Hải Phòng', en: 'Hai Phong' },
+	'customer.province.hungyen': { vi: 'Hưng Yên', en: 'Hung Yen' },
+
+	// Customer districts
+	'customer.district.hanoi': { vi: 'Ba Đình', en: 'Ba Dinh' },
+	'customer.district.haiphong': { vi: 'Hồng Bàng', en: 'Hong Bang' },
+	'customer.district.hungyen': { vi: 'Mỹ Hào', en: 'My Hao' },
+
+	// Customer currencies
+	'customer.currency.vnd': { vi: 'VND', en: 'VND' },
+	'customer.currency.usd': { vi: 'USD', en: 'USD' },
+	'customer.currency.eur': { vi: 'EUR', en: 'EUR' },
+	'customer.currency.gbp': { vi: 'GBP', en: 'GBP' },
+	'customer.currency.jpy': { vi: 'JPY', en: 'JPY' },
+	'customer.currency.krw': { vi: 'KRW', en: 'KRW' },
+	'customer.currency.cny': { vi: 'CNY', en: 'CNY' },
+	'customer.currency.other': { vi: 'Khác', en: 'Other' },
+
+	'customer.empty': { vi: 'Chưa có khách hàng nào.', en: 'No customers yet.' },
+	'customer.emptyHint': { vi: 'Nhấn Thêm để tạo khách hàng mới.', en: 'Click Add to create a new customer.' },
+	'customer.err.load': { vi: 'Không thể tải danh sách khách hàng.', en: 'Failed to load customers.' },
+	'customer.err.customerCodeRequired': { vi: 'Mã khách hàng không được để trống.', en: 'Customer code is required.' },
+	'customer.err.customerNameRequired': { vi: 'Tên khách hàng không được để trống.', en: 'Customer name is required.' },
+	'customer.err.shortNameRequired': { vi: 'Tên viết tắt không được để trống.', en: 'Short name is required.' },
+	'customer.err.addressRequired': { vi: 'Địa chỉ không được để trống.', en: 'Address is required.' },
+	'customer.err.customerCodeTaken': { vi: 'Mã khách hàng "{customerCode}" đã tồn tại.', en: 'Customer code "{customerCode}" already exists.' },
+
+	// ─── Customer Contact ─────────────────────────────────────────────────────
+	'customerContact.title': { vi: 'Liên hệ', en: 'Contacts' },
+	'customerContact.lower': { vi: 'liên hệ', en: 'contact' },
+	'customerContact.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'customerContact.contactName': { vi: 'Tên liên hệ', en: 'Contact Name' },
+	'customerContact.contactType': { vi: 'Loại liên hệ', en: 'Contact Type' },
+	'customerContact.contactType.unset': { vi: '— Chọn loại liên hệ —', en: '— Select Contact Type —' },
+	'customerContact.position': { vi: 'Chức vụ', en: 'Position' },
+	'customerContact.phone': { vi: 'Điện thoại', en: 'Phone' },
+	'customerContact.email': { vi: 'Email', en: 'Email' },
+	'customerContact.isPrimary': { vi: 'Liên hệ chính', en: 'Primary Contact' },
+	'customerContact.primary': { vi: 'Chính', en: 'Primary' },
+	'customerContact.isActive': { vi: 'Trạng thái', en: 'Status' },
+	'customerContact.active': { vi: 'Hoạt động', en: 'Active' },
+	'customerContact.inactive': { vi: 'Ngừng hoạt động', en: 'Inactive' },
+	'customerContact.remark': { vi: 'Ghi chú', en: 'Remark' },
+
+	// Contact types
+	'customerContact.type.purchasing': { vi: 'Mua hàng', en: 'Purchasing' },
+	'customerContact.type.technical': { vi: 'Kỹ thuật', en: 'Technical' },
+	'customerContact.type.quality': { vi: 'Chất lượng', en: 'Quality' },
+	'customerContact.type.receiver': { vi: 'Nhận hàng', en: 'Receiver' },
+	'customerContact.type.accountant': { vi: 'Kế toán', en: 'Accountant' },
+	'customerContact.type.other': { vi: 'Khác', en: 'Other' },
+
+	'customerContact.empty': { vi: 'Chưa có liên hệ nào cho khách hàng này.', en: 'No contacts for this customer yet.' },
+	'customerContact.emptyHint': { vi: 'Chọn khách hàng để xem liên hệ.', en: 'Select a customer to view contacts.' },
+	'customerContact.lineCount': { vi: '{count} liên hệ', en: '{count} contact(s)' },
+	'customerContact.addLine': { vi: 'Thêm liên hệ', en: 'Add Contact' },
+	'customerContact.removeLine': { vi: 'Xóa liên hệ', en: 'Remove Contact' },
+	'customerContact.emptyLine': { vi: 'Chưa có liên hệ nào. Nhấn "Thêm liên hệ" để bắt đầu.', en: 'No contacts yet. Click "Add Contact" to start.' },
+	'customerContact.err.linesRequired': { vi: 'Khách hàng phải có ít nhất một liên hệ.', en: 'A customer needs at least one contact.' },
+	'customerContact.err.contactNameRequired': { vi: 'Dòng {line}: tên liên hệ không được để trống.', en: 'Line {line}: contact name is required.' },
+	'customerContact.err.phoneRequired': { vi: 'Dòng {line}: điện thoại không được để trống.', en: 'Line {line}: phone is required.' },
+
 	// goods-issue
 	'goodsIssue.title': { vi: 'Phiếu xuất', en: 'Goods Issue' },
 	'goodsIssue.lower': { vi: 'phiếu xuất', en: 'goods issue' },

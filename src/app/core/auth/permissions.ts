@@ -90,6 +90,9 @@ export const PERMISSIONS = {
   defect: crud('defect'),
   defectGroup: crud('defect-group'),
 
+  customer: crud('customer'),
+  customerContact: crud('customer-contact'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

@@ -213,6 +213,20 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//customer
+			{
+				path: 'customer',
+				loadComponent: () =>
+					import('./pages/customer/customer.component').then(m => m.CustomerComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.customer.view,
+						PERMISSIONS.customerContact.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 			//goods issue
 			{

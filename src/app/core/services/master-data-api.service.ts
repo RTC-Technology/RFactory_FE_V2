@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import {
   AreaDto, AreaRequest,
+  CustomerContactDto,
+  CustomerContactRequest,
+  CustomerDto,
+  CustomerRequest,
   FactoryDto, FactoryRequest,
   LineDto, LineRequest,
   SupplierDto,
@@ -29,4 +33,14 @@ export class LineApiService extends CrudApiService<LineDto, LineRequest> {
 @Injectable({ providedIn: 'root' })
 export class SupplierApiService extends CrudApiService<SupplierDto, SupplierRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/supplier`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class CustomerApiService extends CrudApiService<CustomerDto, CustomerRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/customer`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class CustomerContactApiService extends CrudApiService<CustomerContactDto, CustomerContactRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/customer/contacts`;
 }
