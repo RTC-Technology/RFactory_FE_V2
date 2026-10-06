@@ -166,3 +166,107 @@ export function supplierStatusOf(status?: number | null) {
 export function lineStatusOf(status?: number | null) {
 	return LINE_STATUSES.find(s => s.value === status);
 }
+
+
+
+//#region lot
+export interface LotDto {
+	id: number;
+	lotNo: string;
+	lotRuleId?: number | null;
+	productId: number;
+	supplierId?: number | null;
+	supplierLotNo: string;
+	manufactureDate?: string | null;
+	expireDate?: string | null;
+	status?: number | null;
+}
+
+export interface LotRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	template: string;
+	prefix: string;
+	dateFormat: string;
+	sequenceLength?: number | null;
+	sequenceResetType: number;
+	status: number;
+	description?: string | null;
+}
+
+export interface LotRuleSequenceDto {
+	id: number;
+	lotRuleId: number;
+	sequenceKey: string;
+	currentValue: number;
+}
+
+export interface ProductLotRuleDto {
+	id: number;
+	productId?: number | null;
+	lotRuleId?: number | null;
+	isDefault?: boolean | null;
+	effectiveFrom?: string | null;
+	effectiveTo?: string | null;
+}
+
+
+export type LotRequest = Omit<LotDto, 'id'>;
+export type LotRuleRequest = Omit<LotRuleDto, 'id'> & {
+	productLotRules?: ProductLotRuleRequest[] | [];
+};
+export type LotRuleSequenceRequest = Omit<LotRuleSequenceDto, 'id'>;
+export type ProductLotRuleRequest = Omit<ProductLotRuleDto, 'id'>;
+
+export const LOT_STATUS = [
+	{ labelKey: 'lot.status.available', value: 1 },
+	{ labelKey: 'lot.status.hold', value: 2 },
+	{ labelKey: 'lot.status.blocked', value: 3 },
+	{ labelKey: 'lot.status.closed', value: 4 },
+];
+
+export const LOT_RULE_STATUS = [
+	{ labelKey: 'lotRule.status.draft', value: 1, severity: 'warn' as const },
+	{ labelKey: 'lotRule.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'lotRule.status.inactive', value: 3, severity: 'danger' as const },
+];
+
+export const LOT_RULE_SEQUENCE_RESET_TYPES = [
+	{ labelKey: 'lotRule.sequenceResetType.daily', value: 1 },
+	{ labelKey: 'lotRule.sequenceResetType.monthly', value: 2 },
+	{ labelKey: 'lotRule.sequenceResetType.yearly', value: 3 },
+	{ labelKey: 'lotRule.sequenceResetType.never', value: 4 },
+];
+
+export function lotRuleStatusOf(status?: number | null) {
+	return LOT_RULE_STATUS.find(s => s.value === status);
+}
+//#endregion
+
+//#region Serial
+export interface SerialRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	productId: number;
+	prefix: string;
+	suffix?: string | null;
+	dateFormat: string;
+	separator: string;
+	sequenceLength: number;
+	sequenceResetType: number;
+	pattern: string;
+	isActive?: boolean | null;
+	isDefault: boolean;
+	remark?: string | null;
+}
+
+export type SerialRuleRequest = Omit<SerialRuleDto, 'id'>
+export const SERIAL_RULE_SEQUENCE_RESET_TYPES = [
+	{ labelKey: 'serialRule.sequenceResetType.daily', value: 1 },
+	{ labelKey: 'serialRule.sequenceResetType.monthly', value: 2 },
+	{ labelKey: 'serialRule.sequenceResetType.yearly', value: 3 },
+	{ labelKey: 'serialRule.sequenceResetType.never', value: 4 },
+];
+//#endregion

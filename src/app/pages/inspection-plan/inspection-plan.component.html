@@ -258,9 +258,46 @@
                     {{ i18n.t('inspectionPlan.product') }}
                     <span class="req">*</span>
                 </label>
-                <p-select [options]="productOptions()" optionLabel="label" optionValue="value"
-                          [(ngModel)]="form.productId" [filter]="true" filterBy="label" [showClear]="false"
-                          appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionPlan.product.unset')" />
+                <p-select [options]="productOptions()"
+                          optionLabel="label"
+                          optionValue="value"
+                          [(ngModel)]="form.productId"
+                          [filter]="true"
+                          filterBy="label"
+                          [placeholder]="i18n.t('inspectionPlan.product.unset')"
+                          appendTo="body"
+                          class="w-full">
+                    <ng-template #header>
+                        <div class="picker-row picker-row--head">
+                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                }}</span>
+                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                }}</span>
+                        </div>
+                    </ng-template>
+
+                    <ng-template #item let-opt>
+                        <div class="picker-row">
+                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                {{ opt.drawingNo || '—' }}
+                            </span>
+                            <span class="picker-cell picker-cell--center">
+                                @if (opt.statusLabel) {
+                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                       [rounded]="true" />
+                                } @else {
+                                <span class="picker-cell--muted">—</span>
+                                }
+                            </span>
+                        </div>
+                    </ng-template>
+                </p-select>
             </div>
             <div class="field">
                 <label for="p-routingId">

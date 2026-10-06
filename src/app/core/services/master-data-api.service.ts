@@ -8,6 +8,14 @@ import {
   CustomerRequest,
   FactoryDto, FactoryRequest,
   LineDto, LineRequest,
+  LotRuleDto,
+  LotRuleRequest,
+  LotRuleSequenceDto,
+  LotRuleSequenceRequest,
+  ProductLotRuleDto,
+  ProductLotRuleRequest,
+  SerialRuleDto,
+  SerialRuleRequest,
   SupplierDto,
   SupplierRequest,
 } from '../../domain/models/master-data.model';
@@ -44,3 +52,28 @@ export class CustomerApiService extends CrudApiService<CustomerDto, CustomerRequ
 export class CustomerContactApiService extends CrudApiService<CustomerContactDto, CustomerContactRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/customer/contacts`;
 }
+
+
+//#region lot
+@Injectable({ providedIn: 'root' })
+export class LotRuleApiService extends CrudApiService<LotRuleDto, LotRuleRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/lot-rule`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class LotRuleSequenceApiService extends CrudApiService<LotRuleSequenceDto, LotRuleSequenceRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/lot-rule-sequence`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ProductLotRuleApiService extends CrudApiService<ProductLotRuleDto, ProductLotRuleRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/product-lot-rule`;
+}
+//#endregion
+
+//#region Serial
+@Injectable({ providedIn: 'root' })
+export class SerialRuleApiService extends CrudApiService<SerialRuleDto, SerialRuleRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/serial-rule`;
+}
+//#endregion

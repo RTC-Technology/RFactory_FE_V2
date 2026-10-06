@@ -227,6 +227,34 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//lot rule
+			{
+				path: 'lot-rule',
+				loadComponent: () =>
+					import('./pages/lot-rule/lot-rule.component').then(m => m.LotRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.lotRule.view,
+						PERMISSIONS.productLotRule.view,
+						PERMISSIONS.lotRuleSequence.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//serial rule
+			{
+				path: 'serial-rule',
+				loadComponent: () =>
+					import('./pages/serial-rule/serial-rule.component').then(m => m.SerialRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.serialRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 			//goods issue
 			{

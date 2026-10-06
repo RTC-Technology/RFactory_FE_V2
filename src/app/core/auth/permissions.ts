@@ -93,6 +93,14 @@ export const PERMISSIONS = {
   customer: crud('customer'),
   customerContact: crud('customer-contact'),
 
+  lotRule: crud('lot-rule'),
+  lotRuleSequence: crud('lot-rule-sequence'),
+  productLotRule: crud('product-lot-rule'),
+
+  serial: crud('serial'),
+  serialRule: crud('serial-rule'),
+  serialRuleSequence: crud('serial-rule-sequence'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
