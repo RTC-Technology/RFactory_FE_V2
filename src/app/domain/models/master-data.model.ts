@@ -262,11 +262,55 @@ export interface SerialRuleDto {
 	remark?: string | null;
 }
 
-export type SerialRuleRequest = Omit<SerialRuleDto, 'id'>
+export type SerialRuleRequest = Omit<SerialRuleDto, 'id'>;
 export const SERIAL_RULE_SEQUENCE_RESET_TYPES = [
 	{ labelKey: 'serialRule.sequenceResetType.daily', value: 1 },
 	{ labelKey: 'serialRule.sequenceResetType.monthly', value: 2 },
 	{ labelKey: 'serialRule.sequenceResetType.yearly', value: 3 },
 	{ labelKey: 'serialRule.sequenceResetType.never', value: 4 },
 ];
+//#endregion
+
+//#region TraceabilityRule
+
+export interface TraceabilityRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	productId?: number | null;
+	traceDirection: number;
+	isActive?: boolean | null;
+	description?: string | null;
+}
+
+export interface TraceabilityRuleItemDto {
+	id: number;
+	traceabilityRuleId?: number | null;
+	traceTypeId: number;
+	isRequired?: boolean | null;
+	sortOrder: number;
+	description?: string | null;
+}
+
+export interface TraceabilityTypeDto {
+	id: number;
+	sortOrder: number;
+	traceCode: string;
+	traceName: string;
+	isActive?: boolean | null;
+	description?: string | null;
+}
+
+export type TraceabilityRuleRequest = Omit<TraceabilityRuleDto, 'id'> & {
+	traceabilityRuleItems?: TraceabilityRuleItemRequest[] | [];
+};
+export type TraceabilityRuleItemRequest = Omit<TraceabilityRuleItemDto, 'id'>;
+export type TraceabilityTypeRequest = Omit<TraceabilityTypeDto, 'id'>;
+
+export const TRACEABILITY_DIRECTION = [
+	{ labelKey: 'traceability.direction.forward', value: 1 },
+	{ labelKey: 'traceability.direction.backward', value: 2 },
+	{ labelKey: 'traceability.direction.both', value: 3 },
+];
+
 //#endregion

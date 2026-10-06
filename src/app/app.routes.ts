@@ -496,6 +496,34 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//traceability-type
+			{
+				path: 'traceability-type',
+				loadComponent: () =>
+					import('./pages/traceability-type/traceability-type.component').then(m => m.TraceabilityTypeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.traceabilityType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//traceability-rule
+			{
+				path: 'traceability-rule',
+				loadComponent: () =>
+					import('./pages/traceability-rule/traceability-rule.component').then(m => m.TraceabilityRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.traceabilityRule.view,
+						PERMISSIONS.traceabilityRuleItem.view,
+						PERMISSIONS.traceabilityType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

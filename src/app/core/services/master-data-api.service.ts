@@ -18,6 +18,12 @@ import {
   SerialRuleRequest,
   SupplierDto,
   SupplierRequest,
+  TraceabilityRuleDto,
+  TraceabilityRuleItemDto,
+  TraceabilityRuleItemRequest,
+  TraceabilityRuleRequest,
+  TraceabilityTypeDto,
+  TraceabilityTypeRequest,
 } from '../../domain/models/master-data.model';
 import { CrudApiService } from './crud-api.service';
 
@@ -75,5 +81,20 @@ export class ProductLotRuleApiService extends CrudApiService<ProductLotRuleDto, 
 @Injectable({ providedIn: 'root' })
 export class SerialRuleApiService extends CrudApiService<SerialRuleDto, SerialRuleRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/serial-rule`;
+}
+//#endregion
+
+//#region traceability
+@Injectable({ providedIn: 'root' })
+export class TraceabilityRuleApiService extends CrudApiService<TraceabilityRuleDto, TraceabilityRuleRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/traceability-rule`;
+}
+@Injectable({ providedIn: 'root' })
+export class TraceabilityRuleItemApiService extends CrudApiService<TraceabilityRuleItemDto, TraceabilityRuleItemRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/traceability-rule/items`;
+}
+@Injectable({ providedIn: 'root' })
+export class TraceabilityTypeApiService extends CrudApiService<TraceabilityTypeDto, TraceabilityTypeRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/traceability/types`;
 }
 //#endregion

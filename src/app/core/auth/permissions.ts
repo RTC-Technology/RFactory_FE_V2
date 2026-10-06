@@ -101,6 +101,10 @@ export const PERMISSIONS = {
   serialRule: crud('serial-rule'),
   serialRuleSequence: crud('serial-rule-sequence'),
 
+  traceabilityType: crud('traceability-type'),
+  traceabilityRule: crud('traceability-rule'),
+  traceabilityRuleItem: crud('traceability-rule-item'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
