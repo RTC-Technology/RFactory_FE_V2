@@ -126,7 +126,7 @@
                     }
                 </div>
                 <div class="table-scroll">
-                    <p-table #itemTable [value]="traceItems()" dataKey="id" [showGridlines]="true"
+                    <p-table #itemTable [value]="traceItems()" [showGridlines]="true"
                              class="grid" [globalFilterFields]="filterFields.traceabilityRuleItem"
                              (onFilter)="onFiltered('traceabilityRuleItem', $event.filteredValue)"
                              [scrollable]="true" scrollHeight="flex">

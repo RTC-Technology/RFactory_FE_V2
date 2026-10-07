@@ -524,6 +524,47 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//maintenance-type
+			{
+				path: 'maintenance-type',
+				loadComponent: () =>
+					import('./pages/maintenance-type/maintenance-type.component').then(m => m.MaintenanceTypeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-check-list
+			{
+				path: 'maintenance-checklist',
+				loadComponent: () =>
+					import('./pages/maintenance-checklist/maintenance-checklist.component').then(m => m.MaintenanceChecklistComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceChecklist.view,
+						PERMISSIONS.maintenanceChecklistItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-plan
+			{
+				path: 'maintenance-plan',
+				loadComponent: () =>
+					import('./pages/maintenance-plan/maintenance-plan.component').then(m => m.MaintenancePlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenancePlan.view,
+						PERMISSIONS.maintenanceType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

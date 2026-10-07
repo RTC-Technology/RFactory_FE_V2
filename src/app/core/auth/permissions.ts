@@ -105,6 +105,11 @@ export const PERMISSIONS = {
   traceabilityRule: crud('traceability-rule'),
   traceabilityRuleItem: crud('traceability-rule-item'),
 
+  maintenanceType: crud('maintenance-type'),
+  maintenanceChecklist: crud('maintenance-checklist'),
+  maintenanceChecklistItem: crud('maintenance-checklist-item'),
+  maintenancePlan: crud('maintenance-plan'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

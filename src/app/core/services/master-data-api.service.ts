@@ -12,6 +12,14 @@ import {
   LotRuleRequest,
   LotRuleSequenceDto,
   LotRuleSequenceRequest,
+  MaintenanceChecklistDto,
+  MaintenanceChecklistItemDto,
+  MaintenanceChecklistItemRequest,
+  MaintenanceChecklistRequest,
+  MaintenancePlanDto,
+  MaintenancePlanRequest,
+  MaintenanceTypeDto,
+  MaintenanceTypeRequest,
   ProductLotRuleDto,
   ProductLotRuleRequest,
   SerialRuleDto,
@@ -96,5 +104,24 @@ export class TraceabilityRuleItemApiService extends CrudApiService<TraceabilityR
 @Injectable({ providedIn: 'root' })
 export class TraceabilityTypeApiService extends CrudApiService<TraceabilityTypeDto, TraceabilityTypeRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/traceability/types`;
+}
+//#endregion
+
+//#region  maintenance
+@Injectable({ providedIn: 'root' })
+export class MaintenanceTypeApiService extends CrudApiService<MaintenanceTypeDto, MaintenanceTypeRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-type`;
+}
+@Injectable({ providedIn: 'root' })
+export class MaintenanceChecklistApiService extends CrudApiService<MaintenanceChecklistDto, MaintenanceChecklistRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-checklist`;
+}
+@Injectable({ providedIn: 'root' })
+export class MaintenanceChecklistItemApiService extends CrudApiService<MaintenanceChecklistItemDto, MaintenanceChecklistItemRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-checklist/items`;
+}
+@Injectable({ providedIn: 'root' })
+export class MaintenancePlanApiService extends CrudApiService<MaintenancePlanDto, MaintenancePlanRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-plan`;
 }
 //#endregion

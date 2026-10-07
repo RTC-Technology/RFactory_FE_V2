@@ -314,3 +314,127 @@ export const TRACEABILITY_DIRECTION = [
 ];
 
 //#endregion
+
+//#region Maintenance
+
+export interface MaintenanceTypeDto {
+	id: number;
+	typeCode: string;
+	typeName: string;
+	shortName?: string | null;
+	description?: string | null;
+	typeCategory?: number | null;
+	priority?: number | null;
+	sortOrder?: number | null;
+	isActive?: boolean | null;
+}
+
+export interface MaintenanceChecklistDto {
+	id: number;
+	checklistCode: string;
+	checklistName: string;
+	description?: string | null;
+	version: number;
+	status: number;
+}
+
+export interface MaintenanceChecklistItemDto {
+	id: number;
+	maintenanceChecklistId?: number | null;
+	sequenceNo: number;
+	itemCode: string;
+	itemName: string;
+	checkType: number;
+	unitId?: number | null;
+	targetValue?: number | null;
+	minValue?: number | null;
+	maxValue?: number | null;
+	expectedResult?: string | null;
+	isRequired?: boolean | null;
+	isActive?: boolean | null;
+}
+
+export interface MaintenancePlanDto {
+	id: number;
+	planCode: string;
+	planName: string;
+	maintenanceTypeId: number;
+	machineId: number;
+	workCenterId?: number | null;
+	maintenanceChecklistId?: number | null;
+	frequency: number;
+	frequencyUnit: number;
+	startDate: string;
+	endDate?: string | null;
+	lastMaintenanceDate?: string | null;
+	nextMaintenanceDate?: string | null;
+	priority: number;
+	status: number;
+	responsibleDepartmentId?: number | null;
+	responsibleEmployeeId?: number | null;
+	remark?: string | null;
+}
+
+export type MaintenanceTypeRequest = Omit<MaintenanceTypeDto, 'id'>;
+export type MaintenanceChecklistRequest = Omit<MaintenanceChecklistDto, 'id'> & {
+	maintenanceChecklistItems?: MaintenanceChecklistItemRequest[] | [];
+};
+export type MaintenanceChecklistItemRequest = Omit<MaintenanceChecklistItemDto, 'id'>;
+export type MaintenancePlanRequest = Omit<MaintenancePlanDto, 'id'>;
+
+export const MAINTENANCE_TYPE_CATEGORY = [
+	{ labelKey: 'maintenanceType.category.planned', value: 1 },
+	{ labelKey: 'maintenanceType.category.unplanned', value: 2 },
+	{ labelKey: 'maintenanceType.category.condition', value: 3 },
+	{ labelKey: 'maintenanceType.category.special', value: 4 },
+];
+
+export const MAINTENANCE_TYPE_PRIORITY = [
+	{ labelKey: 'maintenanceType.priority.low', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceType.priority.normal', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceType.priority.high', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceType.priority.critical', value: 4, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_CHECKLIST_STATUS = [
+	{ labelKey: 'maintenanceChecklist.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceChecklist.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'maintenanceChecklist.status.inactive', value: 3, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_CHECKLIST_TYPE = [
+	{ labelKey: 'maintenanceChecklist.checkType.yesNo', value: 1 },
+	{ labelKey: 'maintenanceChecklist.checkType.numeric', value: 2 },
+	{ labelKey: 'maintenanceChecklist.checkType.text', value: 3 },
+	{ labelKey: 'maintenanceChecklist.checkType.selection', value: 4 },
+	{ labelKey: 'maintenanceChecklist.checkType.passFail', value: 5 },
+	{ labelKey: 'maintenanceChecklist.checkType.inspection', value: 6 },
+];
+
+export const MAINTENANCE_PLAN_FREQUENCY_UNIT = [
+	{ labelKey: 'maintenancePlan.frequencyUnit.day', value: 1 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.week', value: 2 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.month', value: 3 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.year', value: 4 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.hour', value: 5 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.productionQuantity', value: 6 },
+];
+
+export const MAINTENANCE_PLAN_STATUS = [
+	{ labelKey: 'maintenancePlan.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenancePlan.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'maintenancePlan.status.inactive', value: 3, severity: 'danger' as const },
+	{ labelKey: 'maintenancePlan.status.expired', value: 4, severity: 'warn' as const },
+];
+
+export function priorityOf(value?: number | null) {
+	return MAINTENANCE_TYPE_PRIORITY.find(s => s.value === value);
+}
+export function statusOf(value?: number | null) {
+	return MAINTENANCE_CHECKLIST_STATUS.find(s => s.value === value);
+}
+export function planStatusOf(value?: number | null) {
+	return MAINTENANCE_PLAN_STATUS.find(s => s.value === value);
+}
+
+//#endregion

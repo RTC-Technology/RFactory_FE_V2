@@ -1,0 +1,330 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenancePlan.title') }}</h2>
+                    <span class="panel__count">{{ plans().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'plan', perms: perms.maintenancePlan, canAdd: true, hasSelection: !!selectedPlan(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #planTable [value]="plans()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenancePlan"
+                             (onFilter)="onFiltered('maintenancePlan', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="machineId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('maintenancePlan.planCode') }}</th>
+                                <th class="col-planName">{{ i18n.t('maintenancePlan.planName') }}</th>
+                                <th class="col-maintenanceType">{{ i18n.t('maintenancePlan.maintenanceType') }}</th>
+                                <th class="col-workCenter">{{ i18n.t('maintenancePlan.workCenter') }}</th>
+                                <th class="col-maintenanceChecklist">{{ i18n.t('maintenancePlan.maintenanceChecklist') }}</th>
+                                <th class="col-frequency">{{ i18n.t('maintenancePlan.frequency') }}</th>
+                                <th class="col-frequencyUnit">{{ i18n.t('maintenancePlan.frequencyUnit') }}</th>
+                                <th class="col-startDate">{{ i18n.t('maintenancePlan.startDate') }}</th>
+                                <th class="col-endDate">{{ i18n.t('maintenancePlan.endDate') }}</th>
+                                <th class="col-lastMaintenanceDate">{{ i18n.t('maintenancePlan.lastMaintenanceDate') }}</th>
+                                <th class="col-nextMaintenanceDate">{{ i18n.t('maintenancePlan.nextMaintenanceDate') }}</th>
+                                <th class="col-priority">{{ i18n.t('maintenancePlan.priority') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenancePlan.status') }}</th>
+                                <th class="col-responsibleDepartment">{{ i18n.t('maintenancePlan.responsibleDepartment') }}</th>
+                                <th class="col-responsibleEmployee">{{ i18n.t('maintenancePlan.responsibleEmployee') }}</th>
+                                <th class="col-remark">{{ i18n.t('maintenancePlan.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="16">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{ machineLabel(row.machineId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedPlan()?.id === row.id"
+                                (click)="selectPlan(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.planCode || '—' }}</td>
+                                <td class="col-planName">{{ row.planName || '—' }}</td>
+                                <td class="col-maintenanceType">{{ maintenanceTypeLabel(row.maintenanceTypeId)|| '—' }}</td>
+                                <td class="col-workCenter">{{ workCenterLabel(row.workCenterId) || '—' }}</td>
+                                <td class="col-maintenanceChecklist">{{checklistLabel(row.maintenanceChecklistId) || '—' }}</td>
+                                <td class="col-frequency">{{row.frequency || '—' }}</td>
+                                <td class="col-frequencyUnit">{{frequencyUnitLabel(row.frequencyUnit) || '—' }}</td>
+                                <td class="col-startDate">{{ row.startDate ? (row.startDate| date) : '—' }}</td>
+                                <td class="col-endDate">{{ row.endDate ? (row.endDate| date) : '—' }}</td>
+                                <td class="col-lastMaintenanceDate">{{ row.lastMaintenanceDate ? (row.lastMaintenanceDate| date) : '—' }}</td>
+                                <td class="col-nextMaintenanceDate">{{ row.nextMaintenanceDate ? (row.nextMaintenanceDate| date) : '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.priority) {
+                                    <p-tag [severity]="prioritySeverity(row.priority)?.severity" [value]="priorityLabel(row.priority)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="statusSeverity(row.status)?.severity" [value]="statusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-responsibleDepartment">{{ departmentLabel(row.responsibleDepartmentId) || '—' }}</td>
+                                <td class="col-responsibleEmployee">{{ userLabel(row.responsibleEmployeeId) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="16">
+                                    <p class="empty">
+                                        {{ selectedPlan() ? i18n.t('maintenancePlan.empty') :
+                                        i18n.t('maintenancePlan.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'auto' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-planCode">
+                    {{ i18n.t('maintenancePlan.planCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="m-planCode" name="planCode" [(ngModel)]="form.planCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-planName">
+                    {{ i18n.t('maintenancePlan.planName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="m-planName" name="planName" [(ngModel)]="form.planName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-maintenanceTypeId">
+                    {{ i18n.t('maintenancePlan.maintenanceType') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="maintenanceTypeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.maintenanceTypeId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.maintenanceType.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-machineId">
+                    {{ i18n.t('maintenancePlan.machine') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="machineOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.machineId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.machine.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-workCenterId">
+                    {{ i18n.t('maintenancePlan.workCenter') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="workCenterOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.workCenterId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.workCenter.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-maintenanceChecklistId">
+                    {{ i18n.t('maintenancePlan.maintenanceChecklist') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="checklistOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.maintenanceChecklistId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.maintenanceChecklist.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-frequency">
+                    {{ i18n.t('maintenancePlan.frequency') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="m-frequency" type="number" name="frequency" [(ngModel)]="form.frequency" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-frequencyUnit">
+                    {{ i18n.t('maintenancePlan.frequencyUnit') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="frequencyUnitOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.frequencyUnit"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.frequencyUnit.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-startDate">
+                    {{ i18n.t('maintenancePlan.startDate') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="m-startDate" type="date" name="startDate" [(ngModel)]="form.startDate" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-endDate">
+                    {{ i18n.t('maintenancePlan.endDate') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="m-endDate" type="date" name="endDate" [(ngModel)]="form.endDate" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-lastMaintenanceDate">
+                    {{ i18n.t('maintenancePlan.lastMaintenanceDate') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="m-lastMaintenanceDate" type="date" name="lastMaintenanceDate" [(ngModel)]="form.lastMaintenanceDate" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="m-nextMaintenanceDate">
+                    {{ i18n.t('maintenancePlan.nextMaintenanceDate') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="m-nextMaintenanceDate" type="date" name="nextMaintenanceDate" [(ngModel)]="form.nextMaintenanceDate" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-priority">
+                    {{ i18n.t('maintenancePlan.priority') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="priorityOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.priority"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.priority.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-status">
+                    {{ i18n.t('maintenancePlan.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.status.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-responsibleDepartmentId">
+                    {{ i18n.t('maintenancePlan.responsibleDepartment') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="departmentOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.responsibleDepartmentId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.responsibleDepartment.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-responsibleEmployeeId">
+                    {{ i18n.t('maintenancePlan.responsibleEmployee') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.responsibleEmployeeId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.responsibleEmployee.unset')" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="m-remark">{{ i18n.t('maintenancePlan.remark') }}</label>
+            <textarea pInputTextarea id="m-remark" name="remark" [(ngModel)]="form.remark"
+                      autocomplete="off" [rows]="2">
+            </textarea>
+        </div>
+    </div>
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
