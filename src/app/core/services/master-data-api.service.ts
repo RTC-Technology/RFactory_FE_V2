@@ -7,6 +7,10 @@ import {
   CustomerDto,
   CustomerRequest,
   FactoryDto, FactoryRequest,
+  FailureCodeDto,
+  FailureCodeRequest,
+  FailureGroupDto,
+  FailureGroupRequest,
   LineDto, LineRequest,
   LotRuleDto,
   LotRuleRequest,
@@ -16,6 +20,12 @@ import {
   MaintenanceChecklistItemDto,
   MaintenanceChecklistItemRequest,
   MaintenanceChecklistRequest,
+  MaintenanceOrderChecklistDto,
+  MaintenanceOrderChecklistItemDto,
+  MaintenanceOrderChecklistItemRequest,
+  MaintenanceOrderChecklistRequest,
+  MaintenanceOrderDto,
+  MaintenanceOrderRequest,
   MaintenancePlanDto,
   MaintenancePlanRequest,
   MaintenanceTypeDto,
@@ -112,16 +122,44 @@ export class TraceabilityTypeApiService extends CrudApiService<TraceabilityTypeD
 export class MaintenanceTypeApiService extends CrudApiService<MaintenanceTypeDto, MaintenanceTypeRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-type`;
 }
+
 @Injectable({ providedIn: 'root' })
 export class MaintenanceChecklistApiService extends CrudApiService<MaintenanceChecklistDto, MaintenanceChecklistRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-checklist`;
 }
+
 @Injectable({ providedIn: 'root' })
 export class MaintenanceChecklistItemApiService extends CrudApiService<MaintenanceChecklistItemDto, MaintenanceChecklistItemRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-checklist/items`;
 }
+
 @Injectable({ providedIn: 'root' })
 export class MaintenancePlanApiService extends CrudApiService<MaintenancePlanDto, MaintenancePlanRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/master-data/maintenance-plan`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class MaintenanceOrderApiService extends CrudApiService<MaintenanceOrderDto, MaintenanceOrderRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/maintenance-order`;
+}
+@Injectable({ providedIn: 'root' })
+export class MaintenanceOrderChecklistApiService extends CrudApiService<MaintenanceOrderChecklistDto, MaintenanceOrderChecklistRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/maintenance-order/checklists`;
+}
+@Injectable({ providedIn: 'root' })
+export class MaintenanceOrderChecklistItemApiService extends CrudApiService<MaintenanceOrderChecklistItemDto, MaintenanceOrderChecklistItemRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/maintenance-order/checklist/items`;
+}
+//#endregion
+
+//#region Failure Code
+@Injectable({ providedIn: 'root' })
+export class FailureGroupApiService extends CrudApiService<FailureGroupDto, FailureGroupRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/failure-group`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class FailureCodeApiService extends CrudApiService<FailureCodeDto, FailureCodeRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/failure-code`;
 }
 //#endregion

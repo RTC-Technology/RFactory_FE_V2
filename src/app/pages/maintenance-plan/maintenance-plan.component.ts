@@ -28,6 +28,7 @@ import { DepartmentApiService, UserApiService, WorkCenterApiService } from '../.
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MaintenanceOrderComponent } from '../maintenance-order/maintenance-order.component';
 
 type EntityKind = 'maintenancePlan';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -54,6 +55,7 @@ const DATETIME_LOCAL = "yyyy-MM-dd";
 		TabsModule,
 		CheckboxModule,
 		ToggleButtonModule,
+		MaintenanceOrderComponent
 	],
 	providers: [MessageService, ConfirmationService],
 	standalone: true,
@@ -227,7 +229,7 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 
 	// ─── Dialog ─────────────────────────────────────────────────────────────────
 	readonly dialogOpen = signal(false);
-	readonly resultOpen = signal(false);
+	readonly orderOpen = signal(false);
 
 	readonly editingId = signal<number | null>(null);
 	readonly saving = signal(false);
@@ -330,10 +332,9 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 		});
 	}
 
-	// onCategoryChange(typeCategory: number | null): void {
-	// 	if (this.form.sortOrder !== 0) return;
-	// 	this.form.sortOrder = this._nextSortOrder(typeCategory ?? 0);
-	// }
+	openOrder(): void {
+		this.orderOpen.set(true);
+	}
 
 	// ─── Internals ──────────────────────────────────────────────────────────────
 	private _emptyForm() {

@@ -3,7 +3,6 @@ import { Component, computed, effect, inject, OnInit, signal, untracked, viewChi
 import { FormsModule } from '@angular/forms';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -11,45 +10,44 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { SplitterModule } from 'primeng/splitter';
 import { Table, TableModule } from 'primeng/table';
-import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { Textarea } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
+import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
+import { FailureCodeApiService, FailureGroupApiService } from '../../core/services/master-data-api.service';
 import { I18nService } from '../../core/services/i18n.service';
-import { DefectApiService, DefectGroupApiService } from '../../core/services/quality-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { DEFECT_SEVERITY, DefectDto, DefectGroupDto, DefectGroupRequest, DefectRequest, defectSeverityOf } from '../../domain/models/quality.model';
-import { PERMISSIONS } from '../../core/auth/permissions';
-import { forkJoin, Observable } from 'rxjs';
+import { FAILURE_CODE_SEVERITY, FailureCodeDto, FailureCodeRequest, FailureGroupDto, FailureGroupRequest, failureSeverityOf } from '../../domain/models/master-data.model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, Observable } from 'rxjs';
+import { PERMISSIONS } from '../../core/auth/permissions';
 
-type EntityKind = 'defect' | 'defectGroup';
+type EntityKind = 'failureCode' | 'failureGroup';
 
 interface EntityForm {
-	defectGroupId?: number | null;
-	defectCode?: string | null;
-	defectName?: string | null;
+	groupCode: string;
+	groupName: string;
 	shortName?: string | null;
 	description?: string | null;
-	severity?: number | null;
-	sortOrder?: number | null;
+	sortOrder: number;
 	isActive?: boolean | null;
 
-	groupCode?: string | null,
-	groupName?: string | null,
+	code: string;
+	name: string;
+	failureGroupId?: number | null;
+	severity: number;
 }
 
 const LABEL_KEYS: Record<EntityKind, string> = {
-	defectGroup: 'defectGroup.lower',
-	defect: 'defect.lower',
+	failureGroup: 'failureGroup.lower',
+	failureCode: 'failureCode.lower',
 };
 
 @Component({
-	selector: 'app-defect',
+	selector: 'app-failure-code',
 	imports: [
 		CommonModule,
 		FormsModule,
@@ -70,88 +68,87 @@ const LABEL_KEYS: Record<EntityKind, string> = {
 	],
 	providers: [MessageService, ConfirmationService],
 	standalone: true,
-	templateUrl: './defect.component.html',
-	styleUrl: './defect.component.scss',
+	templateUrl: './failure-code.component.html',
+	styleUrl: './failure-code.component.scss',
 })
-export class DefectComponent extends PermissionAwarePage implements OnInit {
-	private readonly defectApi = inject(DefectApiService);
-	private readonly defectGroupApi = inject(DefectGroupApiService);
+export class FailureCodeComponent extends PermissionAwarePage implements OnInit {
+	private readonly failureCodeApi = inject(FailureCodeApiService);
+	private readonly failureGroupApi = inject(FailureGroupApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
 	readonly i18n = inject(I18nService);
 	readonly split = inject(SplitStateService);
 	readonly loading = computed(() => false);
-	readonly severityOf = defectSeverityOf;
+	readonly severityOf = failureSeverityOf;
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
 	groupLabel(id?: number | null): string {
 		if (id == null) return '';
-		const defectGroup = this.defectGroupApi.items().find(u => u.id === id);
-		return defectGroup ? `${defectGroup.groupCode} · ${defectGroup.groupName}` : '';
+		const group = this.failureGroupApi.items().find(u => u.id === id);
+		return group ? `${group.groupCode} · ${group.groupName}` : '';
 	}
 
 	severityLabel(id?: number | null): string {
 		if (id == null) return '';
-		const severity = DEFECT_SEVERITY.find(u => u.value === id);
+		const severity = FAILURE_CODE_SEVERITY.find(u => u.value === id);
 		return severity ? this.i18n.t(severity.labelKey) : '';
 	}
 
 	readonly groupOptions = computed(() =>
-		this.defectGroupApi.items().map(u => ({ label: `${u.groupCode} · ${u.groupName}`, value: u.id })));
+		this.failureGroupApi.items().map(u => ({ label: `${u.groupCode} · ${u.groupName}`, value: u.id })));
 
 	readonly severityOptions = computed(() =>
-		DEFECT_SEVERITY.map(u => ({ label: this.i18n.t(u.labelKey), value: u.value })));
+		FAILURE_CODE_SEVERITY.map(u => ({ label: this.i18n.t(u.labelKey), value: u.value })));
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
-	readonly selectedDefect = signal<DefectDto | null>(null);
-	readonly selectedGroup = signal<DefectGroupDto | null>(null);
+	readonly selectedCode = signal<FailureCodeDto | null>(null);
+	readonly selectedGroup = signal<FailureGroupDto | null>(null);
 
 	readonly groups = computed(() => {
-		const all = this.defectGroupApi.items();
+		const all = this.failureGroupApi.items();
 		return all;
 	});
 
-	readonly defects = computed(() => {
+	readonly codes = computed(() => {
 		const id = this.selectedGroup()?.id;
 		if (id == null) return [];
-		const all = this.defectApi.items().filter(d => d.defectGroupId === id);
+		const all = this.failureCodeApi.items().filter(d => d.failureGroupId === id);
 		return all;
 	});
 
-
 	// ─── Global filter ──────────────────────────────────────────────────────────
-	private readonly defectTable = viewChild<Table>('defectTable');
+	private readonly codeTable = viewChild<Table>('codeTable');
 	private readonly groupTable = viewChild<Table>('groupTable');
 
 	readonly filterFields: Record<EntityKind, string[]> = {
-		defect: [''],
-		defectGroup: [''],
+		failureCode: ['code', 'name', 'shortName', 'description'],
+		failureGroup: ['groupCode', 'groupName', 'shortName', 'description', 'sortOrder'],
 	};
 
 	applyFilter(kind: EntityKind, value: string): void {
 		const table = {
-			defect: this.defectTable(),
-			defectGroup: this.groupTable(),
+			failureCode: this.codeTable(),
+			failureGroup: this.groupTable(),
 		}[kind];
 		table?.filterGlobal(value, 'contains');
 	}
 
 	onFiltered(kind: EntityKind, rows: unknown[] | null | undefined): void {
 		const visible = (rows ?? []) as { id: number }[];
-		if (kind === 'defect') {
-			this.selectedDefect.set(this._reconcile(this.selectedDefect(), visible as DefectDto[]));
-		} else if (kind === 'defectGroup') {
-			this.selectedGroup.set(this._reconcile(this.selectedGroup(), visible as DefectGroupDto[]));
+		if (kind === 'failureCode') {
+			this.selectedCode.set(this._reconcile(this.selectedCode(), visible as FailureCodeDto[]));
+		} else if (kind === 'failureGroup') {
+			this.selectedGroup.set(this._reconcile(this.selectedGroup(), visible as FailureGroupDto[]));
 		}
 	}
 
-	selectDefect(defect: DefectDto): void {
-		if (this.selectedDefect()?.id === defect.id) return;
-		this.selectedDefect.set(defect);
+	selectCode(code: FailureCodeDto): void {
+		if (this.selectedCode()?.id === code.id) return;
+		this.selectedCode.set(code);
 	}
 
-	selectGroup(group: DefectGroupDto): void {
+	selectGroup(group: FailureGroupDto): void {
 		if (this.selectedGroup()?.id === group.id) return;
 		this.selectedGroup.set(group);
 	}
@@ -159,11 +156,11 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 	constructor() {
 		// The combinations below each drive one list inside the detail modal, so the selected
 		// row has to stay valid when the underlying set changes (filter, reload, delete).
-		super(PERMISSIONS.defect);
+		super(PERMISSIONS.failureCode);
 
 		effect(() => {
-			const defects = this.defects();
-			untracked(() => this.selectedDefect.set(this._reconcile(this.selectedDefect(), defects)));
+			const codes = this.codes();
+			untracked(() => this.selectedCode.set(this._reconcile(this.selectedCode(), codes)));
 		});
 
 		effect(() => {
@@ -178,16 +175,16 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 
 	reload(): void {
 		forkJoin({
-			defects: this.defectApi.load(),
-			defectGroups: this.defectGroupApi.load(),
+			codes: this.failureCodeApi.load(),
+			groups: this.failureGroupApi.load(),
 		}).subscribe({
-			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('defect.err.load'), err),
+			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('failureCode.err.load'), err),
 		});
 	}
 
 	// ─── Dialog ─────────────────────────────────────────────────────────────────
 	readonly dialogOpen = signal(false);
-	readonly dialogKind = signal<EntityKind>('defectGroup');
+	readonly dialogKind = signal<EntityKind>('failureGroup');
 	readonly editingId = signal<number | null>(null);
 	readonly saving = signal(false);
 	readonly formError = signal('');
@@ -206,10 +203,10 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 		this.formError.set('');
 		this.form = {
 			...this._emptyForm(),
-			defectGroupId: this.selectedGroup()?.id,
-			sortOrder: kind === 'defectGroup' ? this._nextSortOrderGroup() : this._nextSortOrderDefect(this.selectedGroup()?.id ?? 0),
-			defectCode: kind === 'defect' ? this._nextDefectCode() : null,
-			groupCode: kind === 'defectGroup' ? this._nextGroupCode() : null
+			failureGroupId: this.selectedGroup()?.id ?? 0,
+			sortOrder: this._nextSortOrder(),
+			groupCode: this._nextGroupCode(),
+			code: this._nextFailureCode()
 		};
 
 		this.dialogOpen.set(true);
@@ -217,7 +214,8 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 
 	openEdit(kind: EntityKind): void {
 		const row = {
-			defectGroup: this.selectedGroup(), defect: this.selectedDefect(),
+			failureGroup: this.selectedGroup(),
+			failureCode: this.selectedCode(),
 		}[kind];
 		if (!row) return;
 
@@ -225,28 +223,27 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 		this.editingId.set(row.id);
 		this.formError.set('');
 
-		if (kind === 'defect') {
-			const d = row as DefectDto;
+		if (kind === 'failureCode') {
+			const d = row as FailureCodeDto;
 			this.form = {
 				...this._emptyForm(),
-				defectGroupId: d.defectGroupId ?? 0,
-				defectCode: d.defectCode ?? '',
-				defectName: d.defectName ?? '',
+				code: d.code,
+				name: d.name,
 				shortName: d.shortName ?? null,
 				description: d.description ?? null,
-				severity: d.severity ?? 1,
-				sortOrder: d.sortOrder ?? 1,
+				failureGroupId: d.failureGroupId ?? 0,
+				severity: d.severity ?? 3,
 				isActive: d.isActive ?? true,
 			};
 		} else {
-			const d = row as DefectGroupDto;
+			const d = row as FailureGroupDto;
 			this.form = {
 				...this._emptyForm(),
 				groupCode: d.groupCode ?? '',
 				groupName: d.groupName ?? '',
 				shortName: d.shortName ?? null,
 				description: d.description ?? null,
-				sortOrder: d.sortOrder ?? 1,
+				sortOrder: d.sortOrder ?? this._nextSortOrder(),
 				isActive: d.isActive ?? true,
 			};
 		}
@@ -291,93 +288,90 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 	}
 
 	askDelete(kind: EntityKind): void {
-		const row = kind === 'defect'
-			? this.selectedDefect()
+		const row = kind === 'failureCode'
+			? this.selectedCode()
 			: this.selectedGroup();
 
 		if (!row) return;
 
-		const label = kind === 'defect'
-			? (row as DefectDto).defectCode
-			: (row as DefectGroupDto).groupCode;
+		const label = kind === 'failureCode'
+			? (row as FailureCodeDto).code
+			: (row as FailureGroupDto).groupCode;
 
 		this.confirm.confirm({
-			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(kind === 'defect' ? 'defect.lower' : 'defectGroup.lower') }),
+			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(kind === 'failureCode' ? 'failureCode.lower' : 'failureGroup.lower') }),
 			message: `${this.i18n.t('plant.confirm.message', { label })} ${this.i18n.t('common.notUndoable')}`,
 			acceptLabel: this.i18n.t('common.delete'),
 			rejectLabel: this.i18n.t('common.cancel'),
 			acceptButtonStyleClass: 'p-button-danger',
 			rejectButtonStyleClass: 'p-button-text',
 			// The backend owns the "still used by products" rule and returns its own message.
-			accept: () => (kind === 'defect' ? this.defectApi.remove(row.id) : this.defectGroupApi.remove(row.id)).subscribe({
+			accept: () => (kind === 'failureCode' ? this.failureCodeApi.remove(row.id) : this.failureGroupApi.remove(row.id)).subscribe({
 				next: () => { this.reload(); this._ok(this.i18n.t('plant.ok.deleted', { label: label })); },
 				error: (err: HttpErrorResponse) =>
-					this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t(kind === 'defect' ? 'defect.lower' : 'defectGroup.lower') }), err),
+					this._fail(this.i18n.t('plant.err.deleteFailed', { entity: this.i18n.t(kind === 'failureCode' ? 'failureCode.lower' : 'failureGroup.lower') }), err),
 			}),
 		});
-	}
-
-	onGroupChange(groupId: number | null): void {
-		if (this.form.sortOrder !== 0) return;
-		this.form.sortOrder = this._nextSortOrderDefect(groupId ?? 0);
 	}
 
 	// ─── Internals ──────────────────────────────────────────────────────────────
 	private _emptyForm(): EntityForm {
 		return {
-			defectGroupId: null as number | null,
-			defectCode: null as string | null,
-			defectName: null as string | null,
+			groupCode: '',
+			groupName: '',
 			shortName: null as string | null,
 			description: null as string | null,
-			severity: 1 as number | null,
-			sortOrder: 0 as number | null,
-			isActive: true as boolean | null,
+			sortOrder: 0,
+			isActive: true,
 
-			groupCode: null as string | null,
-			groupName: null as string | null,
+			code: '',
+			name: '',
+			failureGroupId: null as number | null,
+			severity: 3,
 		};
 	}
 
 	private _validate(kind: EntityKind): string {
-		if (kind == 'defect') {
-			const defectCode = this.form.defectCode?.trim();
+		if (kind == 'failureCode') {
+			const code = this.form.code?.trim();
 
-			if (!defectCode) {
-				return this.i18n.t('defect.err.defectCodeRequired');
+			if (!code) {
+				return this.i18n.t('failureCode.err.codeRequired');
 			}
 
-			if (!this.form.defectName) {
-				return this.i18n.t('defect.err.defectNameRequired');
+			if (!this.form.name) {
+				return this.i18n.t('failureCode.err.nameRequired');
 			}
 
-			if (!this.form.defectGroupId || this.form.defectGroupId <= 0) {
-				return this.i18n.t('defect.err.defectGroupIdRequired');
+			if (!this.form.severity || this.form.severity <= 0) {
+				return this.i18n.t('failureCode.err.severityRequired');
 			}
 
-			// IssueNo is unique across the entire goods issue list.
-			const clash = this.defects().find(
-				defect =>
-					defect.defectCode?.toLowerCase() === defectCode.toLowerCase() &&
-					defect.id !== this.editingId(),
+			const clash = this.codes().find(
+				c =>
+					c.code.toLowerCase() === code.toLowerCase() &&
+					c.id !== this.editingId(),
 			);
 
 			return clash
-				? this.i18n.t('defect.err.defectCodeTaken', { defectCode })
+				? this.i18n.t('failureCode.err.codeTaken', { code })
 				: '';
 		}
-		else if (kind == 'defectGroup') {
+		else if (kind == 'failureGroup') {
 			const groupCode = this.form.groupCode?.trim();
 
 			if (!groupCode) {
-				return this.i18n.t('defectGroup.err.groupCodeRequired');
+				return this.i18n.t('failureGroup.err.groupCodeRequired');
 			}
 
 			if (!this.form.groupName) {
-				return this.i18n.t('defectGroup.err.groupNameRequired');
+				return this.i18n.t('failureGroup.err.groupNameRequired');
 			}
 
-			// IssueNo is unique across the entire goods issue list.
+			if (!this.form.sortOrder || this.form.sortOrder <= 0) {
+				return this.i18n.t('failureGroup.err.sortOrderRequired');
+			}
+
 			const clash = this.groups().find(
 				group =>
 					group.groupCode?.toLowerCase() === groupCode.toLowerCase() &&
@@ -385,7 +379,7 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 			);
 
 			return clash
-				? this.i18n.t('defectGroup.err.groupCodeTaken', { groupCode })
+				? this.i18n.t('failureGroup.err.groupCodeTaken', { groupCode })
 				: '';
 		}
 		return '';
@@ -397,21 +391,20 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 	/** Reports the first bad line by its position — the operator reads the grid by row, not by id. */
 
 	private _buildRequest(kind: EntityKind, id: number | null): Observable<unknown> | null {
-		if (kind == 'defect') {
-			const body: DefectRequest = {
-				defectGroupId: this.form.defectGroupId,
-				defectCode: this.form.defectCode,
-				defectName: this.form.defectName,
+		if (kind == 'failureCode') {
+			const body: FailureCodeRequest = {
+				code: this.form.code,
+				name: this.form.name,
 				shortName: this.form.shortName ?? null,
 				description: this.form.description ?? null,
+				failureGroupId: this.form.failureGroupId ?? null,
 				severity: this.form.severity,
-				sortOrder: this.form.sortOrder,
-				isActive: this.form.isActive,
+				isActive: this.form.isActive ?? true,
 			};
-			return id ? this.defectApi.update(id, body) : this.defectApi.create(body);
+			return id ? this.failureCodeApi.update(id, body) : this.failureCodeApi.create(body);
 		}
-		else if (kind == 'defectGroup') {
-			const body: DefectGroupRequest = {
+		else if (kind == 'failureGroup') {
+			const body: FailureGroupRequest = {
 				groupCode: this.form.groupCode,
 				groupName: this.form.groupName,
 				shortName: this.form.shortName ?? null,
@@ -419,54 +412,43 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 				sortOrder: this.form.sortOrder,
 				isActive: this.form.isActive,
 			};
-			return id ? this.defectGroupApi.update(id, body) : this.defectGroupApi.create(body);
+			return id ? this.failureGroupApi.update(id, body) : this.failureGroupApi.create(body);
 		}
 		return null;
 	}
 
-
-	private _nextSortOrderDefect(defectGroupId: number | null): number {
-		if (!defectGroupId) return 0;
+	private _nextSortOrder(): number {
 		const maxSortOrder = Math.max(
 			0,
-			...this.defectApi
-				.items()
-				.filter(x => x.defectGroupId === defectGroupId)
-				.map(x => x.sortOrder ?? 0)
-		);
-		return maxSortOrder + 1;
-	}
-	private _nextSortOrderGroup(): number {
-		const maxSortOrder = Math.max(
-			0,
-			...this.defectGroupApi
+			...this.failureGroupApi
 				.items()
 				.map(x => x.sortOrder ?? 0)
 		);
 		return maxSortOrder + 1;
 	}
 
-	private _nextDefectCode(): string {
+	private _nextFailureCode(): string {
 		let code = "";
 
-		const prefixCode = "D_";
+		const prefixCode = "FC_";
 		const maxCode = Math.max(
 			0,
-			...this.defectApi.items()
-				.filter(x => x.defectCode?.startsWith(prefixCode))
-				.map(x => parseInt(x.defectCode?.replace(prefixCode, '') ?? '0'))
+			...this.failureCodeApi.items()
+				.filter(x => x.code?.startsWith(prefixCode))
+				.map(x => parseInt(x.code?.replace(prefixCode, '') ?? '0'))
 		);
 
 		code = prefixCode + (maxCode + 1).toString().padStart(2, '0');
 		return code;
 	}
+
 	private _nextGroupCode(): string {
 		let code = "";
 
-		const prefixCode = "DG_";
+		const prefixCode = "FG_";
 		const maxCode = Math.max(
 			0,
-			...this.defectGroupApi.items()
+			...this.failureGroupApi.items()
 				.filter(x => x.groupCode?.startsWith(prefixCode))
 				.map(x => parseInt(x.groupCode?.replace(prefixCode, '') ?? '0'))
 		);
@@ -493,5 +475,4 @@ export class DefectComponent extends PermissionAwarePage implements OnInit {
 			life: 4500,
 		});
 	}
-
 }

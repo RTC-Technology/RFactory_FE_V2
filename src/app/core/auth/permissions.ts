@@ -110,6 +110,13 @@ export const PERMISSIONS = {
   maintenanceChecklistItem: crud('maintenance-checklist-item'),
   maintenancePlan: crud('maintenance-plan'),
 
+  maintenanceOrder: crud('maintenance-order'),
+  maintenanceOrderChecklist: crud('maintenance-order-checklist'),
+  maintenanceOrderChecklistItem: crud('maintenance-order-checklist-item'),
+
+  failureCode: crud('failure-code'),
+  failureGroup: crud('failure-group'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

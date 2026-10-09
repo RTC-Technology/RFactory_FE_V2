@@ -438,3 +438,164 @@ export function planStatusOf(value?: number | null) {
 }
 
 //#endregion
+
+//#region Failure
+
+export interface FailureGroupDto {
+	id: number;
+	groupCode: string;
+	groupName: string;
+	shortName?: string | null;
+	description?: string | null;
+	sortOrder: number;
+	isActive?: boolean | null;
+}
+
+export interface FailureCodeDto {
+	id: number;
+	code: string;
+	name: string;
+	shortName?: string | null;
+	description?: string | null;
+	failureGroupId?: number | null;
+	severity: number;
+	isActive: boolean;
+}
+
+export type FailureGroupRequest = Omit<FailureGroupDto, 'id'>;
+export type FailureCodeRequest = Omit<FailureCodeDto, 'id'>;
+
+export const FAILURE_CODE_SEVERITY = [
+	{ labelKey: 'failureCode.severity.critical', value: 1, severity: 'danger' as const },
+	{ labelKey: 'failureCode.severity.major', value: 2, severity: 'warn' as const },
+	{ labelKey: 'failureCode.severity.minor', value: 3, severity: 'info' as const },
+];
+
+export function failureSeverityOf(value?: number | null) {
+	return FAILURE_CODE_SEVERITY.find(s => s.value === value);
+}
+
+//#endregion
+
+
+//#region maintenance order
+
+export interface MaintenanceOrderDto {
+	id: number;
+	orderNo: string;
+	maintenancePlanId?: number | null;
+	maintenanceTypeId: number;
+	machineId: number;
+	priority: number;
+	status: number;
+	plannedStartDate?: string | null;
+	plannedEndDate?: string | null;
+	actualStartDate?: string | null;
+	actualEndDate?: string | null;
+	responsibleEmployeeId?: number | null;
+	description?: string | null;
+	completionNote?: string | null;
+	remark?: string | null;
+}
+
+export interface MaintenanceOrderChecklistDto {
+	id: number;
+	maintenanceOrderId?: number | null;
+	maintenanceChecklistId?: number | null;
+	checklistCode: string;
+	checklistName: string;
+	checklistVersion?: number | null;
+	status: number;
+	startedDate?: string | null;
+	completedDate?: string | null;
+	completedBy?: number | null;
+	remark?: string | null;
+	maintenanceOrderChecklistItems: MaintenanceOrderChecklistItemDto[];
+}
+
+export interface MaintenanceOrderChecklistItemDto {
+	id: number;
+	maintenanceOrderChecklistId?: number | null;
+	maintenanceChecklistItemId?: number | null;
+	sequenceNo: number;
+	itemCode: string;
+	itemName: string;
+	checkType: number;
+	unitId?: number | null;
+	targetValue?: number | null;
+	minValue?: number | null;
+	maxValue?: number | null;
+	expectedResult?: string | null;
+	actualValue?: number | null;
+	actualText?: string | null;
+	result?: number | null;
+	isRequired?: boolean | null;
+	completedDate?: string | null;
+	completedBy?: number | null;
+	remark?: string | null;
+	failureCodeId?: number | null;
+}
+
+export type MaintenanceOrderChecklistItemRequest = Omit<MaintenanceOrderChecklistItemDto, 'id'>;
+
+export type MaintenanceOrderChecklistRequest = Omit<MaintenanceOrderChecklistDto, 'id'> & {
+	maintenanceOrderChecklistItems?: MaintenanceOrderChecklistItemRequest[] | null;
+};
+
+export type MaintenanceOrderRequest = Omit<MaintenanceOrderDto, 'id'> & {
+	maintenanceOrderChecklists?: MaintenanceOrderChecklistRequest[] | null;
+};
+
+export const MAINTENANCE_ORDER_PRIORITY = [
+	{ labelKey: 'maintenanceOrder.priority.low', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrder.priority.normal', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceOrder.priority.high', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrder.priority.critical', value: 4, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_ORDER_STATUS = [
+	{ labelKey: 'maintenanceOrder.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrder.status.released', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceOrder.status.inProgress', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrder.status.completed', value: 4, severity: 'success' as const },
+	{ labelKey: 'maintenanceOrder.status.cancelled', value: 5, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_STATUS = [
+	{ labelKey: 'maintenanceOrderChecklist.status.pending', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrderChecklist.status.inProgress', value: 2, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrderChecklist.status.completed', value: 3, severity: 'success' as const },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_ITEM_TYPE = [
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.yesNo', value: 1 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.numeric', value: 2 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.text', value: 3 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.selection', value: 4 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.passFail', value: 5 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.inspection', value: 6 },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_ITEM_RESULT = [
+	{ labelKey: 'maintenanceOrderChecklistItem.result.pass', value: 1, severity: 'success' as const },
+	{ labelKey: 'maintenanceOrderChecklistItem.result.fail', value: 2, severity: 'danger' as const },
+	{ labelKey: 'maintenanceOrderChecklistItem.result.na', value: 3, severity: 'secondary' as const },
+];
+
+export function maintenanceOrderPriorityOf(value?: number | null) {
+	return MAINTENANCE_ORDER_PRIORITY.find(s => s.value === value);
+}
+
+export function maintenanceOrderStatusOf(value?: number | null) {
+	return MAINTENANCE_ORDER_STATUS.find(s => s.value === value);
+}
+
+export function maintenanceOrderChecklistStatusOf(value?: number | null) {
+	return MAINTENANCE_ORDER_CHECKLIST_STATUS.find(s => s.value === value);
+}
+
+export function maintenanceOrderChecklistItemResultOf(value?: number | null) {
+	return MAINTENANCE_ORDER_CHECKLIST_ITEM_RESULT.find(s => s.value === value);
+}
+
+//#endregion

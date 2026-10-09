@@ -1,0 +1,677 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenanceOrder.title') }}</h2>
+                    @if (_maintenancePlanDto(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('maintenanceOrder.scopeOf', { name: t.planCode || '—' })}}
+                    </span>
+                    }
+                    <span class="panel__count">{{ maintenanceOrders().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'maintenanceOrder', perms: perms.maintenanceOrder, canAdd: true, hasSelection: !!selectedOrder(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #orderTable [value]="maintenanceOrders()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenanceOrder"
+                             (onFilter)="onFiltered('maintenanceOrder', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="maintenancePlanId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('maintenanceOrder.orderNo') }}</th>
+                                <!-- <th class="col-maintenancePlan">{{ i18n.t('maintenanceOrder.maintenancePlan') }}</th> -->
+                                <th class="col-maintenanceType">{{ i18n.t('maintenanceOrder.maintenanceType') }}</th>
+                                <th class="col-machine">{{ i18n.t('maintenanceOrder.machine') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceOrder.priority') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceOrder.status') }}</th>
+                                <th class="col-plannedStartDate">{{ i18n.t('maintenanceOrder.plannedStartDate') }}</th>
+                                <th class="col-plannedEndDate">{{ i18n.t('maintenanceOrder.plannedEndDate') }}</th>
+                                <th class="col-actualStartDate">{{ i18n.t('maintenanceOrder.actualStartDate') }}</th>
+                                <th class="col-actualEndDate">{{ i18n.t('maintenanceOrder.actualEndDate') }}</th>
+                                <th class="col-responsibleEmployee">{{ i18n.t('maintenanceOrder.responsibleEmployee') }}</th>
+                                <th class="col-description">{{ i18n.t('maintenanceOrder.description') }}</th>
+                                <th class="col-completionNote">{{ i18n.t('maintenanceOrder.completionNote') }}</th>
+                                <th class="col-remark">{{ i18n.t('maintenanceOrder.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="13">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold">{{i18n.t('maintenancePlan.title')}} : {{ maintenancePlanLabel(row.maintenancePlanId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedOrder()?.id === row.id"
+                                (click)="selectOrder(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.orderNo || '—' }}</td>
+                                <!-- <td class="col-maintenancePlan">{{ maintenancePlanLabel(row.maintenancePlanId) || '—' }}</td> -->
+                                <td class="col-maintenanceType">{{ maintenanceTypeLabel(row.maintenanceTypeId) || '—' }}</td>
+                                <td class="col-machine">{{ machineLabel(row.machineId) || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.priority) {
+                                    <p-tag [severity]="prioritySeverity(row.priority)?.severity" [value]="priorityLabel(row.priority)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="statusSeverity(row.status)?.severity" [value]="statusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-plannedStartDate">{{ row.plannedStartDate ? (row.plannedStartDate | date) : '—' }}</td>
+                                <td class="col-plannedEndDate">{{ row.plannedEndDate ? (row.plannedEndDate | date) : '—' }}</td>
+                                <td class="col-actualStartDate">{{ row.actualStartDate ? (row.actualStartDate | date) : '—' }}</td>
+                                <td class="col-actualEndDate">{{ row.actualEndDate ? (row.actualEndDate | date) : '—' }}</td>
+                                <td class="col-responsibleEmployee">{{ employeeLabel(row.responsibleEmployeeId) || '—' }}</td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                                <td class="col-completionNote">{{ row.completionNote || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="13">
+                                    <p class="empty">
+                                        {{ selectedOrder() ? i18n.t('maintenanceOrder.empty') :
+                                        i18n.t('maintenanceOrder.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenanceOrderChecklist.title') }}</h2>
+                    @if (selectedOrder(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('maintenanceOrder.scopeOf', { name: t.orderNo || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ maintenanceOrderChecklists().length }}</span>
+                    }
+                </div>
+                <div class="table-scroll">
+                    <p-table #itemTable [value]="maintenanceOrderChecklists()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenanceOrderChecklist"
+                             (onFilter)="onFiltered('maintenanceOrderChecklist', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-maintenanceChecklist">{{ i18n.t('maintenanceOrderChecklist.maintenanceChecklist') }}</th>
+                                <!-- <th class="col-checklistCode">{{ i18n.t('maintenanceOrderChecklist.checklistCode') }}</th>
+                                <th class="col-checklistName">{{ i18n.t('maintenanceOrderChecklist.checklistName') }}</th> -->
+                                <th class="col-checklistVersion">{{ i18n.t('maintenanceOrderChecklist.checklistVersion') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceOrderChecklist.status') }}</th>
+                                <th class="col-startedDate">{{ i18n.t('maintenanceOrderChecklist.startedDate') }}</th>
+                                <th class="col-completedDate">{{ i18n.t('maintenanceOrderChecklist.completedDate') }}</th>
+                                <th class="col-completedBy">{{ i18n.t('maintenanceOrderChecklist.completedBy') }}</th>
+                                <th class="col-remark">{{ i18n.t('maintenanceOrderChecklist.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                (click)="selectItem(row)" (dblclick)="openEdit()">
+                                <td class="col-maintenanceChecklist">{{ maintenanceChecklistLabel(row.maintenanceChecklistId) || '—' }}</td>
+                                <!-- <td class="col-checklistCode">{{ row.checklistCode || '—' }}</td>
+                                <td class="col-checklistName">{{row.checklistName || '—' }}</td> -->
+                                <td class="col-checklistVersion">{{row.checklistVersion || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="checklistStatusSeverity(row.status)?.severity" [value]="checklistStatusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-startedDate">{{ row.startedDate ? (row.startedDate | date) : '—' }}</td>
+                                <td class="col-completedDate">{{ row.completedDate ? (row.completedDate | date) : '—' }}</td>
+                                <td class="col-completedBy">{{ employeeLabel(row.completedBy) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="9">
+                                    <p class="empty">
+                                        {{ selectedOrder() ? i18n.t('maintenanceOrderChecklist.empty') :
+                                        i18n.t('maintenanceOrderChecklist.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw',height:'90vh' }">
+    <p-tabs [(value)]="activeTab">
+        <p-tablist>
+            <p-tab value="order">{{i18n.t('maintenanceOrder.title')}}</p-tab>
+            <p-tab value="checklist">{{i18n.t('maintenanceOrderChecklist.title')}}</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+            <p-tabpanel value="order">
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="mo-orderNo">
+                                {{ i18n.t('maintenanceOrder.orderNo') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="mo-orderNo" name="orderNo" [(ngModel)]="form.orderNo" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-maintenancePlanId">
+                                {{ i18n.t('maintenanceOrder.maintenancePlan') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="maintenancePlanOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.maintenancePlanId"
+                                      (ngModelChange)="onMaintenancePlanChange($event)"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.maintenancePlan.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-maintenanceTypeId">
+                                {{ i18n.t('maintenanceOrder.maintenanceType') }}
+                                <!-- <span class="req">*</span> -->
+                            </label>
+                            <p-select [options]="maintenanceTypeOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.maintenanceTypeId"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.maintenanceType.unset')" />
+                        </div>
+
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="mo-priority">
+                                {{ i18n.t('maintenanceOrder.priority') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="priorityOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.priority"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.priority.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-status">
+                                {{ i18n.t('maintenanceOrder.status') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.status"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.status.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-responsibleEmployeeId">
+                                {{ i18n.t('maintenanceOrder.responsibleEmployee') }}
+                                <!-- <span class="req">*</span>  -->
+                            </label>
+                            <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.responsibleEmployeeId"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.responsibleEmployee.unset')" />
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="mo-plannedStartDate">
+                                {{ i18n.t('maintenanceOrder.plannedStartDate') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText type="date" id="mo-plannedStartDate" name="plannedStartDate" [(ngModel)]="form.plannedStartDate" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-plannedEndDate">
+                                {{ i18n.t('maintenanceOrder.plannedEndDate') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText type="date" id="mo-plannedEndDate" name="plannedEndDate" [(ngModel)]="form.plannedEndDate" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-actualStartDate">
+                                {{ i18n.t('maintenanceOrder.actualStartDate') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText type="date" id="mo-actualStartDate" name="actualStartDate" [(ngModel)]="form.actualStartDate" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-actualEndDate">
+                                {{ i18n.t('maintenanceOrder.actualEndDate') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText type="date" id="mo-plannedEndDate" name="plannedEndDate" [(ngModel)]="form.plannedEndDate" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="mo-description">{{ i18n.t('maintenanceOrder.description') }}</label>
+                        <textarea pInputTextarea id="mo-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="mo-completionNote">{{ i18n.t('maintenanceOrder.completionNote') }}</label>
+                        <textarea pInputTextarea id="mo-completionNote" name="completionNote" [(ngModel)]="form.completionNote" autocomplete="off" [rows]="2"></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="mo-remark">{{ i18n.t('maintenanceOrder.remark') }}</label>
+                        <textarea pInputTextarea id="mo-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+                    </div>
+                </div>
+            </p-tabpanel>
+
+            <p-tabpanel value="checklist">
+                <section class="panel" [ngStyle]="{border:'none'}">
+                    <div class="panel__head" [ngStyle]="{borderTop:'0',borderRight:'0',borderLeft:'0',paddingTop:'0'}">
+                        <button type="button" class="lines__add" (click)="addChecklist()">
+                            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            <span>{{ i18n.t('maintenanceOrderChecklist.addLine') }}</span>
+                        </button>
+                    </div>
+                    <div class="tab-content" [ngStyle]="{height:'65vh',overflowY:'auto'}">
+                        @for (check of checklistRows(); track $index) {
+                        <p-panel [toggleable]="true"
+                                 [ngStyle]="{'margin-top': '1em'}">
+                            <div class="form">
+                                @if (formError()) {
+                                <div class="form__error">{{ formError() }}</div>
+                                }
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label for="ch-maintenanceChecklistId">
+                                            {{ i18n.t('maintenanceOrderChecklist.maintenanceChecklist') }}
+                                            <!-- <span class="req">*</span> -->
+                                        </label>
+                                        <p-select [options]="maintenanceChecklistOptions()" optionLabel="label" optionValue="value"
+                                                  [(ngModel)]="check.maintenanceChecklistId"
+                                                  (ngModelChange)="onMaintenanceChecklistChange($event,check)"
+                                                  [filter]="true" filterBy="label" [showClear]="false"
+                                                  appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrderChecklist.maintenanceChecklist.unset')" />
+                                    </div>
+                                    <!-- <div class="field">
+                                        <label for="ch-checklistCode">
+                                            {{ i18n.t('maintenanceOrderChecklist.checklistCode') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="ch-checklistCode" name="checklistCode" [(ngModel)]="check.checklistCode" autocomplete="off" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="ch-checklistName">
+                                            {{ i18n.t('maintenanceOrderChecklist.checklistName') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="ch-checklistName" name="checklistName" [(ngModel)]="check.checklistName" autocomplete="off" />
+                                    </div>
+                                    <div class="field">
+                                        <label for="ch-checklistName">
+                                            {{ i18n.t('maintenanceOrderChecklist.checklistVersion') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText id="ch-checklistVersion" name="checklistVersion" [(ngModel)]="check.checklistVersion" autocomplete="off" />
+                                    </div> -->
+                                    <div class="field">
+                                        <label for="ch-status">
+                                            {{ i18n.t('maintenanceOrderChecklist.status') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <p-select [options]="checklistStatusOptions()" optionLabel="label" optionValue="value"
+                                                  [(ngModel)]="check.status"
+                                                  [filter]="true" filterBy="label" [showClear]="false"
+                                                  appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrderChecklist.status.unset')" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="ch-startedDate">
+                                            {{ i18n.t('maintenanceOrderChecklist.startedDate') }}
+                                            <span class="req">*</span>
+                                        </label>
+                                        <input pInputText type="date" id="ch-startedDate" name="startedDate" [(ngModel)]="check.startedDate" autocomplete="off" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="ch-completedDate">
+                                            {{ i18n.t('maintenanceOrderChecklist.completedDate') }}
+                                            <!-- <span class="req">*</span> -->
+                                        </label>
+                                        <input pInputText type="date" id="ch-completedDate" name="completedDate" [(ngModel)]="check.completedDate" autocomplete="off" />
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label for="ch-remark">{{ i18n.t('maintenanceOrderChecklist.remark') }}</label>
+                                    <textarea pInputTextarea id="ch-remark" name="remark" [(ngModel)]="check.remark" autocomplete="off" [rows]="2"></textarea>
+                                </div>
+
+                                <section class="panel lines">
+                                    <div class="panel__head">
+                                        <h2 class="panel__title">{{ i18n.t('maintenanceChecklistItem.title') }}</h2>
+                                        <span class="panel__scope">
+                                            {{ i18n.t('maintenanceOrderChecklistItem.lineCount', { count: check.maintenanceOrderChecklistItems.length || 0 }) }}
+                                        </span>
+                                        <button type="button" class="lines__add" (click)="addChecklistItem(check)">
+                                            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                 stroke-width="1.8">
+                                                <line x1="12" y1="5" x2="12" y2="19" />
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                            </svg>
+                                            <span>{{ i18n.t('maintenanceOrderChecklistItem.addLine') }}</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="lines__scroll">
+                                        <p-table [value]="check.maintenanceOrderChecklistItems"
+                                                 dataKey="id"
+                                                 [showGridlines]="true"
+                                                 class="grid grid--edit"
+                                                 scrollable="true"
+                                                 scrollHeight="flex">
+                                            <ng-template #header>
+                                                <tr>
+                                                    <th class="col-idx">#</th>
+                                                    <th class="col-maintenanceChecklistItem" colspan="2">{{ i18n.t('maintenanceOrderChecklistItem.maintenanceChecklistItem') }}</th>
+                                                    <!-- <th class="col-itemCode">{{ i18n.t('maintenanceOrderChecklistItem.itemCode') }}</th>
+                                                    <th class="col-itemName">{{ i18n.t('maintenanceOrderChecklistItem.itemName') }}</th> -->
+                                                    <th class="col-checkType">{{ i18n.t('maintenanceOrderChecklistItem.checkType') }}</th>
+                                                    <th class="col-unit">{{ i18n.t('maintenanceOrderChecklistItem.unit') }}</th>
+                                                    <th class="col-targetValue">{{ i18n.t('maintenanceOrderChecklistItem.targetValue') }}</th>
+                                                    <th class="col-minValue">{{ i18n.t('maintenanceOrderChecklistItem.minValue') }}</th>
+                                                    <th class="col-maxValue">{{ i18n.t('maintenanceOrderChecklistItem.maxValue') }}</th>
+                                                    <th class="col-expectedResult">{{ i18n.t('maintenanceOrderChecklistItem.expectedResult') }}</th>
+                                                    <th class="col-actualValue">{{ i18n.t('maintenanceOrderChecklistItem.actualValue') }}</th>
+                                                    <th class="col-actualText">{{ i18n.t('maintenanceOrderChecklistItem.actualText') }}</th>
+                                                    <th class="col-result">{{ i18n.t('maintenanceOrderChecklistItem.result') }}</th>
+                                                    <th class="col-failureCode">{{ i18n.t('maintenanceOrderChecklistItem.failureCode') }}</th>
+                                                    <th class="col-completedDate">{{ i18n.t('maintenanceOrderChecklistItem.completedDate') }}</th>
+                                                    <th class="col-completedBy">{{ i18n.t('maintenanceOrderChecklistItem.completedBy') }}</th>
+                                                    <th class="col-remark">{{ i18n.t('maintenanceOrderChecklistItem.remark') }}</th>
+                                                    <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template #body let-row let-i="rowIndex">
+                                                <tr class="row row--edit">
+                                                    <td class="col-idx">{{ i + 1 }}</td>
+                                                    <td class="col-maintenanceChecklistItem">
+                                                        <p-select [options]="maintenanceChecklistItemOptions(check.maintenanceChecklistId)"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.maintenanceChecklistItemId"
+                                                                  (ngModelChange)="onMaintenanceChecklistItemChange($event, row)"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.maintenanceChecklistItem.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-status">
+                                                        <div class="flex items-center">
+                                                            <p-checkbox [inputId]="'i-isRequired-' + i" name="i-isRequired" binary="true" [(ngModel)]="row.isRequired" />
+                                                            <label [for]="'i-isRequired-' + i" class="ml-2"
+                                                                   [ngStyle]="{'text-wrap':'nowrap'}">
+                                                                {{ i18n.t('maintenanceOrderChecklistItem.isRequired') }}
+                                                            </label>
+                                                        </div>
+
+                                                    </td>
+                                                    <!-- <td class="col-itemCode">
+                                                        <input pInputText name="itemCode" class="cell-input w-full" [(ngModel)]="row.itemCode" autocomplete="off" />
+                                                    </td>
+                                                    <td class="col-itemName">
+                                                        <input pInputText name="itemName" class="cell-input w-full" [(ngModel)]="row.itemName" autocomplete="off" />
+                                                    </td> -->
+                                                    <td class="col-checkType">
+                                                        <p-select [options]="itemCheckTypeOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.checkType"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.checkType.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-unit">
+                                                        <p-select [options]="unitOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.unitId"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.unit.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-targetValue">
+                                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                       [(ngModel)]="row.targetValue"
+                                                                       mode="decimal"
+                                                                       [showButtons]="true"
+                                                                       [min]="0"
+                                                                       [minFractionDigits]="2"
+                                                                       [maxFractionDigits]="2"
+                                                                       locale="en-US" />
+                                                    </td>
+                                                    <td class="col-minValue">
+                                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                       [(ngModel)]="row.minValue"
+                                                                       mode="decimal"
+                                                                       [showButtons]="true"
+                                                                       [min]="0"
+                                                                       [minFractionDigits]="2"
+                                                                       [maxFractionDigits]="2"
+                                                                       locale="en-US" />
+                                                    </td>
+                                                    <td class="col-maxValue">
+                                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                       [(ngModel)]="row.maxValue"
+                                                                       mode="decimal"
+                                                                       [showButtons]="true"
+                                                                       [min]="0"
+                                                                       [minFractionDigits]="2"
+                                                                       [maxFractionDigits]="2"
+                                                                       locale="en-US" />
+                                                    </td>
+                                                    <td class="col-expectedResult">
+                                                        <input pInputText name="expectedResult" class="cell-input w-full" [(ngModel)]="row.expectedResult" autocomplete="off" />
+                                                    </td>
+                                                    <td class="col-actualValue">
+                                                        <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                                       [(ngModel)]="row.actualValue"
+                                                                       mode="decimal"
+                                                                       [showButtons]="true"
+                                                                       [min]="0"
+                                                                       [minFractionDigits]="2"
+                                                                       [maxFractionDigits]="2"
+                                                                       locale="en-US" />
+                                                    </td>
+                                                    <td class="col-actualText">
+                                                        <input pInputText name="actualText" class="cell-input w-full" [(ngModel)]="row.actualText" autocomplete="off" />
+                                                    </td>
+                                                    <td class="col-result">
+                                                        <p-select [options]="resultOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.result"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.result.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-completedDate">
+                                                        <p-select [options]="failureCodeOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.failureCodeId"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.failureCode.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-completedDate">
+                                                        <input pInputText type="date" name="completedDate" class="cell-input w-full" [(ngModel)]="row.completedDate" autocomplete="off" />
+                                                    </td>
+                                                    <td class="col-result">
+                                                        <p-select [options]="employeeOptions()"
+                                                                  optionLabel="label"
+                                                                  optionValue="value"
+                                                                  [(ngModel)]="row.completedBy"
+                                                                  [filter]="true"
+                                                                  filterBy="label"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.completedBy.unset')"
+                                                                  [placeholder]="i18n.t('maintenanceOrderChecklistItem.completedBy.unset')"
+                                                                  appendTo="body"
+                                                                  class="w-full">
+                                                        </p-select>
+                                                    </td>
+                                                    <td class="col-result">
+                                                        <textarea pInputTextarea name="remark" class="cell-input w-full" [(ngModel)]="row.remark" autocomplete="off" [rows]="2"></textarea>
+                                                    </td>
+                                                    <td class="col-act">
+                                                        <button type="button"
+                                                                class="row-del"
+                                                                [title]="i18n.t('maintenanceOrderChecklistItem.removeLine')"
+                                                                [attr.aria-label]="i18n.t('maintenanceOrderChecklistItem.removeLine')"
+                                                                (click)="removeChecklistItem(check,row)">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                            </svg>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template #emptymessage>
+                                                <tr>
+                                                    <td colspan="18">
+                                                        <p class="empty">{{ i18n.t('maintenanceOrderChecklistItem.emptyLine') }}</p>
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+                                        </p-table>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <ng-template #header>
+                                <span class="font-bold">{{ i18n.t('maintenanceOrderChecklist.title') }} #{{ $index + 1 }}:{{ check.checklistCode }}</span>
+                            </ng-template>
+
+                            <ng-template #footer>
+                                <button type="button" class="lines__remove" (click)="removeChecklist(check)">
+                                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M4 7h16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                        <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                                        <path d="M9 7V4h6v3" />
+                                    </svg>
+                                    <span>{{ i18n.t('maintenanceOrderChecklist.remove') }}</span>
+                                </button>
+                            </ng-template>
+                        </p-panel>
+                        }
+                    </div>
+                </section>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

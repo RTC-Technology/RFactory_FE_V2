@@ -565,6 +565,36 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//maintenance-order
+			{
+				path: 'maintenance-order',
+				loadComponent: () =>
+					import('./pages/maintenance-order/maintenance-order.component').then(m => m.MaintenanceOrderComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceOrder.view,
+						PERMISSIONS.maintenanceOrderChecklist.view,
+						PERMISSIONS.maintenanceOrderChecklistItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//failure-code
+			{
+				path: 'failure-code',
+				loadComponent: () =>
+					import('./pages/failure-code/failure-code.component').then(m => m.FailureCodeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.failureGroup.view,
+						PERMISSIONS.failureCode.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{

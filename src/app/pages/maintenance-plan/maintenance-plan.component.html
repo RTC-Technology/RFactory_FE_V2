@@ -41,6 +41,15 @@
         </button>
         }
 
+        <span class="tool__sep"></span>
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openOrder()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polygon points="6 3 20 12 6 21 6 3" />
+            </svg>
+            <span>{{ i18n.t('maintenanceOrder.title') }}</span>
+        </button>
+
         <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
                [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
     </div>
@@ -102,7 +111,7 @@
                                 <td class="col-maintenanceType">{{ maintenanceTypeLabel(row.maintenanceTypeId)|| '—' }}</td>
                                 <td class="col-workCenter">{{ workCenterLabel(row.workCenterId) || '—' }}</td>
                                 <td class="col-maintenanceChecklist">{{checklistLabel(row.maintenanceChecklistId) || '—' }}</td>
-                                <td class="col-frequency">{{row.frequency || '—' }}</td>
+                                <td class="col-frequency text-right">{{row.frequency != null ? (row.frequency | number:'1.0-2') : 0 }}</td>
                                 <td class="col-frequencyUnit">{{frequencyUnitLabel(row.frequencyUnit) || '—' }}</td>
                                 <td class="col-startDate">{{ row.startDate ? (row.startDate| date) : '—' }}</td>
                                 <td class="col-endDate">{{ row.endDate ? (row.endDate| date) : '—' }}</td>
@@ -198,7 +207,7 @@
                 </label>
                 <p-select [options]="workCenterOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.workCenterId"
-                          [filter]="true" filterBy="label" [showClear]="false"
+                          [filter]="true" filterBy="label" [showClear]="true"
                           appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.workCenter.unset')" />
             </div>
             <div class="field">
@@ -208,7 +217,7 @@
                 </label>
                 <p-select [options]="checklistOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.maintenanceChecklistId"
-                          [filter]="true" filterBy="label" [showClear]="false"
+                          [filter]="true" filterBy="label" [showClear]="true"
                           appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.maintenanceChecklist.unset')" />
             </div>
         </div>
@@ -219,7 +228,14 @@
                     {{ i18n.t('maintenancePlan.frequency') }}
                     <span class="req">*</span>
                 </label>
-                <input pInputText id="m-frequency" type="number" name="frequency" [(ngModel)]="form.frequency" autocomplete="off" />
+                <p-inputnumber class="w-full"
+                               [(ngModel)]="form.frequency"
+                               mode="decimal"
+                               [showButtons]="true"
+                               [min]="0"
+                               [minFractionDigits]="2"
+                               [maxFractionDigits]="2"
+                               locale="en-US" />
             </div>
             <div class="field">
                 <label for="m-frequencyUnit">
@@ -324,6 +340,14 @@
             <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
         </button>
     </ng-template>
+</p-dialog>
+
+
+<p-dialog [visible]="orderOpen()" (visibleChange)="orderOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: '100vw', height: '100vh', margin: '0' }"
+          [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+    <app-maintenance-order [_maintenancePlanDto]="selectedPlan()"></app-maintenance-order>
 </p-dialog>
 
 <p-confirmDialog />

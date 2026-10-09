@@ -68,6 +68,7 @@ export class MaintenanceChecklistComponent extends PermissionAwarePage implement
 	readonly split = inject(SplitStateService);
 	readonly loading = computed(() => false);
 	statusSeverity = statusOf
+
 	// ─── Lookups ────────────────────────────────────────────────────────────────
 	statusLabel(value?: number | null): string {
 		if (value == null) return '';
