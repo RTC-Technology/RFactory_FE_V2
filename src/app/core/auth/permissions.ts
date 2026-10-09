@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   unit: crud('unit'),
   unitConversion: crud('unit-conversion'),
   productType: crud('product-type'),
+  productGroup: crud('product-group'),
   product: crud('product'),
   bom: crud('bom'),
   bomDetail: crud('bom-detail'),
@@ -49,6 +50,73 @@ export const PERMISSIONS = {
   purchaseOrder: crud('purchase-order'),
   purchaseOrderDetail: crud('purchase-order-detail'),
   purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
+
+  pickingPlan: crud('picking-plan'),
+  pickingPlanSource: crud('picking-plan-source'),
+  pickingPlanItem: crud('picking-plan-item'),
+  pickingTicket: crud('picking-ticket'),
+
+  deliveryNote: crud('delivery-note'),
+  deliveryNoteItem: crud('delivery-note-item'),
+  deliveryNoteSource: crud('delivery-note-source'),
+  deliveryNoteSender: crud('delivery-note-sender'),
+  deliveryNoteReceiver: crud('delivery-note-receiver'),
+
+  packingCheck: crud('packing-check'),
+  packingCheckItem: crud('packing-check-item'),
+  packingPackage: crud('packing-package'),
+  packingPackageItem: crud('packing-package-item'),
+  packingScanLog: crud('packing-scan-log'),
+
+  company: crud('company'),
+  workshop: crud('workshop'),
+  department: crud('department'),
+  workcenter: crud('workcenter'),
+  productionTeam: crud('production-team'),
+  productionTeamEmployee: crud('production-team-employee'),
+
+  qualitySpecification: crud('quality-specification'),
+  qualitySpecificationItem: crud('quality-specification-item'),
+  qualitySpecificationProduct: crud('quality-specification-product'),
+
+  inspectionPlan: crud('inspection-plan'),
+  inspectionItem: crud('inspection-item'),
+  inspectionExecution: crud('inspection-execution'),
+  inspectionResult: crud('inspection-result'),
+
+  samplingPlan: crud('sampling-plan'),
+  samplingPlanRule: crud('sampling-plan-rule'),
+
+  defect: crud('defect'),
+  defectGroup: crud('defect-group'),
+
+  customer: crud('customer'),
+  customerContact: crud('customer-contact'),
+
+  lotRule: crud('lot-rule'),
+  lotRuleSequence: crud('lot-rule-sequence'),
+  productLotRule: crud('product-lot-rule'),
+
+  serial: crud('serial'),
+  serialRule: crud('serial-rule'),
+  serialRuleSequence: crud('serial-rule-sequence'),
+
+  traceabilityType: crud('traceability-type'),
+  traceabilityRule: crud('traceability-rule'),
+  traceabilityRuleItem: crud('traceability-rule-item'),
+
+  maintenanceType: crud('maintenance-type'),
+  maintenanceChecklist: crud('maintenance-checklist'),
+  maintenanceChecklistItem: crud('maintenance-checklist-item'),
+  maintenancePlan: crud('maintenance-plan'),
+
+  maintenanceOrder: crud('maintenance-order'),
+  maintenanceOrderChecklist: crud('maintenance-order-checklist'),
+  maintenanceOrderChecklistItem: crud('maintenance-order-checklist-item'),
+
+  failureCode: crud('failure-code'),
+  failureGroup: crud('failure-group'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

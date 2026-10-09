@@ -79,6 +79,13 @@ export const routes: Routes = [
 				data: { permissions: [PERMISSIONS.productType.view] },
 			},
 			{
+				path: 'product-groups',
+				loadComponent: () =>
+					import('./pages/product-group/product-group.component').then(m => m.ProductGroupComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.productGroup.view] },
+			},
+			{
 				// Reads types and units to label and pick, plus BOMs, routings and their operations.
 				path: 'products',
 				loadComponent: () =>
@@ -206,6 +213,48 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//customer
+			{
+				path: 'customer',
+				loadComponent: () =>
+					import('./pages/customer/customer.component').then(m => m.CustomerComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.customer.view,
+						PERMISSIONS.customerContact.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//lot rule
+			{
+				path: 'lot-rule',
+				loadComponent: () =>
+					import('./pages/lot-rule/lot-rule.component').then(m => m.LotRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.lotRule.view,
+						PERMISSIONS.productLotRule.view,
+						PERMISSIONS.lotRuleSequence.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//serial rule
+			{
+				path: 'serial-rule',
+				loadComponent: () =>
+					import('./pages/serial-rule/serial-rule.component').then(m => m.SerialRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.serialRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 			//goods issue
 			{
@@ -254,6 +303,294 @@ export const routes: Routes = [
 				data: {
 					permissions: [
 						PERMISSIONS.purchaseOrder.view, PERMISSIONS.purchaseOrderDetail.view, PERMISSIONS.purchaseDeliverySchedule.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//picking-plan
+			{
+				path: 'picking-plan',
+				loadComponent: () =>
+					import('./pages/picking-plan/picking-plan.component').then(m => m.PickingPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.pickingPlan.view,
+						PERMISSIONS.pickingPlanSource.view,
+						PERMISSIONS.pickingPlanItem.view,
+						PERMISSIONS.pickingTicket.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//delivery-note
+			{
+				path: 'delivery-note',
+				loadComponent: () =>
+					import('./pages/delivery-note/delivery-note.component').then(m => m.DeliveryNoteComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.deliveryNote.view,
+						PERMISSIONS.deliveryNoteSource.view,
+						PERMISSIONS.deliveryNoteItem.view,
+						PERMISSIONS.deliveryNoteSender.view,
+						PERMISSIONS.deliveryNoteReceiver.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//packing
+			{
+				path: 'packing',
+				loadComponent: () =>
+					import('./pages/packing/packing.component').then(m => m.PackingComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingCheck.view,
+						PERMISSIONS.packingCheckItem.view,
+						PERMISSIONS.packingPackage.view,
+						PERMISSIONS.packingPackageItem.view,
+						PERMISSIONS.packingScanLog.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			{
+				path: 'company',
+				loadComponent: () =>
+					import('./pages/company/company.component').then(m => m.CompanyComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.company.view
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//workshop
+			{
+				path: 'workshop',
+				loadComponent: () =>
+					import('./pages/workshop/workshop.component').then(m => m.WorkshopComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.workshop.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//department
+			{
+				path: 'department',
+				loadComponent: () =>
+					import('./pages/department/department.component').then(m => m.DepartmentComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.department.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//work-center
+			{
+				path: 'work-center',
+				loadComponent: () =>
+					import('./pages/work-center/work-center.component').then(m => m.WorkCenterComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.workcenter.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//production-team
+			{
+				path: 'production-team',
+				loadComponent: () =>
+					import('./pages/production-team/production-team.component').then(m => m.ProductionTeamComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.productionTeam.view
+					],
+					permissionMode: 'all',
+				},
+			},
+			//quality-specification
+			{
+				path: 'quality-spec',
+				loadComponent: () =>
+					import('./pages/quality-specification/quality-specification.component').then(m => m.QualitySpecificationComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.qualitySpecification.view,
+						PERMISSIONS.qualitySpecificationItem.view,
+						PERMISSIONS.qualitySpecificationProduct.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//inspection-plan
+			{
+				path: 'inspection-plan',
+				loadComponent: () =>
+					import('./pages/inspection-plan/inspection-plan.component').then(m => m.InspectionPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.inspectionPlan.view,
+						PERMISSIONS.inspectionItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//inspection-execution
+			{
+				path: 'inspection-execution',
+				loadComponent: () =>
+					import('./pages/inspection-execution/inspection-execution.component').then(m => m.InspectionExecutionComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.inspectionExecution.view,
+						PERMISSIONS.inspectionResult.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//defect
+			{
+				path: 'defect',
+				loadComponent: () =>
+					import('./pages/defect/defect.component').then(m => m.DefectComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.defectGroup.view,
+						PERMISSIONS.defect.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//sampling plan
+			{
+				path: 'sampling-plan',
+				loadComponent: () =>
+					import('./pages/sampling-plan/sampling-plan.component').then(m => m.SamplingPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.samplingPlan.view,
+						PERMISSIONS.samplingPlanRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//traceability-type
+			{
+				path: 'traceability-type',
+				loadComponent: () =>
+					import('./pages/traceability-type/traceability-type.component').then(m => m.TraceabilityTypeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.traceabilityType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//traceability-rule
+			{
+				path: 'traceability-rule',
+				loadComponent: () =>
+					import('./pages/traceability-rule/traceability-rule.component').then(m => m.TraceabilityRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.traceabilityRule.view,
+						PERMISSIONS.traceabilityRuleItem.view,
+						PERMISSIONS.traceabilityType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-type
+			{
+				path: 'maintenance-type',
+				loadComponent: () =>
+					import('./pages/maintenance-type/maintenance-type.component').then(m => m.MaintenanceTypeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-check-list
+			{
+				path: 'maintenance-checklist',
+				loadComponent: () =>
+					import('./pages/maintenance-checklist/maintenance-checklist.component').then(m => m.MaintenanceChecklistComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceChecklist.view,
+						PERMISSIONS.maintenanceChecklistItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-plan
+			{
+				path: 'maintenance-plan',
+				loadComponent: () =>
+					import('./pages/maintenance-plan/maintenance-plan.component').then(m => m.MaintenancePlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenancePlan.view,
+						PERMISSIONS.maintenanceType.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//maintenance-order
+			{
+				path: 'maintenance-order',
+				loadComponent: () =>
+					import('./pages/maintenance-order/maintenance-order.component').then(m => m.MaintenanceOrderComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.maintenanceOrder.view,
+						PERMISSIONS.maintenanceOrderChecklist.view,
+						PERMISSIONS.maintenanceOrderChecklistItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//failure-code
+			{
+				path: 'failure-code',
+				loadComponent: () =>
+					import('./pages/failure-code/failure-code.component').then(m => m.FailureCodeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.failureGroup.view,
+						PERMISSIONS.failureCode.view,
 					],
 					permissionMode: 'all',
 				},

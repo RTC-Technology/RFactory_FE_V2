@@ -1,0 +1,476 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('customer.title') }}</h2>
+                    <span class="panel__count">{{ customers().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'customer', perms: perms.customer, canAdd: true, hasSelection: !!selectedCustomer(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #planTable [value]="customers()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.customer"
+                             (onFilter)="onFiltered('customer', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('customer.customerCode') }}</th>
+                                <th class="col-customerName">{{ i18n.t('customer.customerName') }}</th>
+                                <th class="col-shortName">{{ i18n.t('customer.shortName') }}</th>
+                                <th class="col-englishName">{{ i18n.t('customer.englishName') }}</th>
+                                <th class="col-customerType">{{ i18n.t('customer.customerType') }}</th>
+                                <th class="col-taxCode">{{ i18n.t('customer.taxCode') }}</th>
+                                <th class="col-contactPerson">{{ i18n.t('customer.contactPerson') }}</th>
+                                <th class="col-phone">{{ i18n.t('customer.phone') }}</th>
+                                <th class="col-email">{{ i18n.t('customer.email') }}</th>
+                                <th class="col-country">{{ i18n.t('customer.country') }}</th>
+                                <th class="col-province">{{ i18n.t('customer.province') }}</th>
+                                <th class="col-district">{{ i18n.t('customer.district') }}</th>
+                                <th class="col-address">{{ i18n.t('customer.address') }}</th>
+                                <th class="col-paymentTerm">{{ i18n.t('customer.paymentTerm') }}</th>
+                                <th class="col-currency">{{ i18n.t('customer.currency') }}</th>
+                                <th class="col-warehouse">{{ i18n.t('customer.defaultWarehouse') }}</th>
+                                <th class="col-remark">{{ i18n.t('customer.remark') }}</th>
+                                <th class="col-status">{{ i18n.t('customer.isActive') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedCustomer()?.id === row.id"
+                                (click)="selectCustomer(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.customerCode || '—' }}</td>
+                                <td class="col-customerName">{{ row.customerName || '—' }}</td>
+                                <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                                <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                                <td class="col-customerType">{{ customerTypeLabel(row.customerType) || '—' }}</td>
+                                <td class="col-taxCode">{{ row.taxCode || '—' }}</td>
+                                <td class="col-contactPerson">{{ row.contactPerson || '—' }}</td>
+                                <td class="col-phone">{{ row.phone || '—' }}</td>
+                                <td class="col-email">{{ row.email || '—' }}</td>
+                                <td class="col-country">{{ countryLabel(row.countryId) || '—' }}</td>
+                                <td class="col-province">{{ provinceLabel(row.provinceId) || '—' }}</td>
+                                <td class="col-district">{{ districtLabel(row.districtId) || '—' }}</td>
+                                <td class="col-address">{{ row.address || '—' }}</td>
+                                <td class="col-paymentTerm">{{ row.paymentTerm || '—' }}</td>
+                                <td class="col-currency">{{ currencyLabel(row.currencyId) || '—' }}</td>
+                                <td class="col-warehouse">{{ warehouseLabel(row.defaultWarehouseId) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('customer.active')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('customer.inactive')" [rounded]="true" />
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="18">
+                                    <p class="empty">
+                                        {{ selectedCustomer() ? i18n.t('customer.empty') :
+                                        i18n.t('customer.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('customerContact.title') }}</h2>
+                    @if (selectedCustomer(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('customerContact.scopeOf', { name: t.customerCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ contacts().length }}</span>
+                    }
+                </div>
+
+                <div class="table-scroll">
+                    <p-table #contactTable [value]="contacts()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.customerContact"
+                             (onFilter)="onFiltered('customerContact', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-contactName">{{ i18n.t('customerContact.contactName') }}</th>
+                                <th class="col-contactType">{{ i18n.t('customerContact.contactType') }}</th>
+                                <th class="col-position">{{ i18n.t('customerContact.position') }}</th>
+                                <th class="col-phone">{{ i18n.t('customerContact.phone') }}</th>
+                                <th class="col-email">{{ i18n.t('customerContact.email') }}</th>
+                                <th class="col-remark">{{ i18n.t('customerContact.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedContact()?.id === row.id"
+                                (click)="selectContact(row)" (dblclick)="openEdit()">
+                                <td class="col-contactName"
+                                    [ngStyle]="{'display': 'flex', 'justify-content': 'space-between', 'align-items': 'center'}">
+                                    {{ row.contactName || '—' }}
+                                    @if (row.isPrimary) {
+                                    <p-tag severity="success" [value]="i18n.t('customerContact.isPrimary')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-contactType">{{ contactTypeLabel(row.contactType) || '—' }}</td>
+                                <td class="col-position">{{ row.position || '—' }}</td>
+                                <td class="col-phone">{{ row.phone || '—' }}</td>
+                                <td class="col-email">{{ row.email || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="8">
+                                    <p class="empty">
+                                        {{ selectedCustomer() ? i18n.t('customerContact.empty') :
+                                        i18n.t('customerContact.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw',height:'90vh' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="c-customerCode">
+                    {{ i18n.t('customer.customerCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-customerCode" name="customerCode" [(ngModel)]="form.customerCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-customerName">
+                    {{ i18n.t('customer.customerName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-customerName" name="customerName" [(ngModel)]="form.customerName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-shortName">
+                    {{ i18n.t('customer.shortName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="s-samplingMethod">
+                    {{ i18n.t('customer.phoneNumber') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="customerTypeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.customerType" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.customerType.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="c-englishName">
+                    {{ i18n.t('customer.englishName') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-taxCode">
+                    {{ i18n.t('customer.taxCode') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-taxCode" name="taxCode" [(ngModel)]="form.taxCode" autocomplete="off" />
+            </div>
+
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="c-contactPerson">
+                    {{ i18n.t('customer.contactPerson') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-contactPerson" name="contactPerson" [(ngModel)]="form.contactPerson" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-phone">
+                    {{ i18n.t('customer.phone') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-phone" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-email">
+                    {{ i18n.t('customer.email') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-email" name="email" [(ngModel)]="form.email" autocomplete="off" />
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="c-countryId">
+                    {{ i18n.t('customer.country') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="countryOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.countryId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.country.unset')" />
+            </div>
+            <div class="field">
+                <label for="c-provinceId">
+                    {{ i18n.t('customer.province') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="provinceOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.provinceId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.province.unset')" />
+            </div>
+            <div class="field">
+                <label for="c-districtId">
+                    {{ i18n.t('customer.district') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="districtOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.districtId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.district.unset')" />
+            </div>
+        </div>
+        <div class="field">
+            <label for="c-address">
+                {{ i18n.t('customer.address') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="c-address" name="address" [(ngModel)]="form.address" autocomplete="off" />
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="c-paymentTerm">
+                    {{ i18n.t('customer.paymentTerm') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="c-paymentTerm" name="paymentTerm" [(ngModel)]="form.paymentTerm" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-currencyId">
+                    {{ i18n.t('customer.currency') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="currencyOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.currencyId" [filter]="true" filterBy="label" [showClear]="true"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.currency.unset')" />
+            </div>
+            <div class="field">
+                <label for="c-defaultWarehouseId">
+                    {{ i18n.t('customer.defaultWarehouse') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="warehouseOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.defaultWarehouseId" [filter]="true" filterBy="label" [showClear]="true"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('customer.defaultWarehouse.unset')" />
+            </div>
+        </div>
+
+        <div class="field field--inline">
+            <p-toggleswitch inputId="c-isActive" [(ngModel)]="form.isActive" />
+            <label for="c-isActive">{{ i18n.t('customer.isActive') }}</label>
+        </div>
+        <div class="field">
+            <label for="c-remark">
+                {{ i18n.t('customer.remark') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <textarea pInputTextarea id="c-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('customerContact.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('customerContact.lineCount', { count: contactRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addContactRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('customerContact.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="contactRows()"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <th class="col-contactName" colspan="2">
+                                {{ i18n.t('customerContact.contactName') }}
+                                <span class="req">*</span>
+                            </th>
+                            <th class="col-contactType">{{ i18n.t('customerContact.contactType') }}</th>
+                            <th class="col-position">{{ i18n.t('customerContact.position') }}</th>
+                            <th class="col-phone">
+                                {{ i18n.t('customerContact.phone') }}
+                                <span class="req">*</span>
+                            </th>
+                            <th class="col-email">{{ i18n.t('customerContact.email') }}</th>
+                            <!-- <th class="col-isPrimary">{{ i18n.t('customerContact.isPrimary') }}</th>
+                            <th class="col-isActive">{{ i18n.t('customerContact.isActive') }}</th> -->
+                            <th class="col-remark">{{ i18n.t('customerContact.remark') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+                            <td class="col-contactName">
+                                <input pInputText id="c-contactName" name="contactName" [(ngModel)]="row.contactName" autocomplete="off" />
+                            </td>
+                            <td class="col-isPrimary">
+                                <div class="flex items-center">
+                                    <p-checkbox [inputId]="'i-isPrimary-' + i" name="i-isPrimary" binary="true" [(ngModel)]="row.isPrimary" />
+                                    <label [for]="'i-isPrimary-' + i" class="ml-2"
+                                           [ngStyle]="{'text-wrap':'nowrap'}">
+                                        {{ i18n.t('customerContact.isPrimary') }}
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="col-contactType">
+                                <p-select [options]="contactTypeOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.contactType"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('customerContact.contactType.unset')" />
+                            </td>
+                            <td class="col-position">
+                                <input pInputText id="c-position" name="position" [(ngModel)]="row.position" autocomplete="off" />
+                            </td>
+                            <td class="col-phone">
+                                <input pInputText id="c-phone" name="phone" [(ngModel)]="row.phone" autocomplete="off" />
+                            </td>
+                            <td class="col-email">
+                                <input pInputText id="c-email" name="email" [(ngModel)]="row.email" autocomplete="off" />
+                            </td>
+
+                            <!-- <td class="col-isActive">
+                                <input pInputText id="c-isActive" name="isActive" [(ngModel)]="row.isActive" autocomplete="off" />
+                            </td> -->
+                            <td class="col-remark">
+                                <textarea pInputTextarea name="remark" class="cell-input cell-input--text" [(ngModel)]="row.remark" autocomplete="off"
+                                          [rows]="2"></textarea>
+                            </td>
+
+
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('customerContact.removeLine')"
+                                        [attr.aria-label]="i18n.t('customerContact.removeLine')"
+                                        (click)="removeContactRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="10">
+                                <p class="empty">{{ i18n.t('customerContact.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

@@ -1,0 +1,71 @@
+@use '../../shared/styles/master-detail';
+
+:host ::ng-deep {
+	.delivery-tabs {
+
+		p-tabpanels,
+		.p-tabpanels {
+			display: grid;
+
+			>p-tabpanel,
+			>.p-tabpanel {
+				grid-area: 1 / 1;
+				min-height: 100%;
+
+				&[hidden] {
+					display: block !important;
+					visibility: hidden;
+					pointer-events: none;
+				}
+			}
+		}
+	}
+
+	.lines-tabs {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+
+		p-tabpanels,
+		.p-tabpanels {
+			flex: 1;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+			padding: 0.5rem 0 0 0;
+			overflow: hidden;
+		}
+
+		p-tabpanel,
+		.p-tabpanel {
+			flex: 1;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+
+			&[hidden] {
+				display: none !important;
+			}
+		}
+
+		.panel.lines {
+			flex: 1;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		.lines__scroll {
+			max-height: 22vh;
+			overflow-y: auto;
+			overflow-x: auto;
+		}
+
+		// Fix frozen column transparency — cells must have an opaque background
+		// so they sit on top of scrolling columns instead of being see-through.
+
+	}
+}

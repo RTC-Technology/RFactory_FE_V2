@@ -1,0 +1,387 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <section class="panel">
+        <div class="panel__head">
+            <h2 class="panel__title">{{ i18n.t('company.title') }}</h2>
+            <span class="panel__count">{{ companies().length }}</span>
+        </div>
+        <ng-container
+                      *ngTemplateOutlet="toolbar; context: { kind: 'company', perms: perms.company, canAdd: true, hasSelection: !!selectedCompany(), showReload: true }" />
+
+        <div class="table-scroll">
+            <p-table #companyTable [value]="companies()" [showGridlines]="true"
+                     class="grid" [globalFilterFields]="filterFields.company"
+                     (onFilter)="onFiltered('company', $event.filteredValue)"
+                     [scrollable]="true" scrollHeight="flex">
+                <ng-template #header>
+                    <tr>
+                        <th class="col-companyCode">{{ i18n.t('company.companyCode') }}</th>
+                        <th class="col-companyName">{{ i18n.t('company.companyName') }}</th>
+                        <th class="col-shortName">{{ i18n.t('company.shortName') }}</th>
+                        <th class="col-englishName">{{ i18n.t('company.englishName') }}</th>
+                        <th class="col-taxCode">{{ i18n.t('company.taxCode') }}</th>
+                        <th class="col-logoUrl">{{ i18n.t('company.logoUrl') }}</th>
+                        <th class="col-website">{{ i18n.t('company.website') }}</th>
+                        <th class="col-phone">{{ i18n.t('company.phone') }}</th>
+                        <th class="col-fax">{{ i18n.t('company.fax') }}</th>
+                        <th class="col-email">{{ i18n.t('company.email') }}</th>
+
+                        <th class="col-representativeName">{{ i18n.t('company.representativeName') }}</th>
+                        <th class="col-representativePosition">{{ i18n.t('company.representativePosition') }}</th>
+                        <th class="col-businessRegistrationNo">{{ i18n.t('company.businessRegistrationNo') }}</th>
+                        <th class="col-businessRegistrationDate">{{ i18n.t('company.businessRegistrationDate') }}</th>
+                        <th class="col-businessRegistrationPlace">{{ i18n.t('company.businessRegistrationPlace') }}</th>
+
+                        <th class="col-province">{{ i18n.t('company.province') }}</th>
+                        <th class="col-district">{{ i18n.t('company.district') }}</th>
+                        <th class="col-ward">{{ i18n.t('company.ward') }}</th>
+                        <th class="col-address">{{ i18n.t('company.address') }}</th>
+
+                        <th class="col-contactName">{{ i18n.t('company.contactName') }}</th>
+                        <th class="col-contactPhone">{{ i18n.t('company.contactPhone') }}</th>
+                        <th class="col-contactEmail">{{ i18n.t('company.contactEmail') }}</th>
+
+                        <th class="col-isActive">{{ i18n.t('company.isActive') }}</th>
+                        <th class="col-remark">{{ i18n.t('company.remark') }}</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template #body let-row>
+                    <tr class="row" [class.row--selected]="selectedCompany()?.id === row.id"
+                        (click)="selectCompany(row)" (dblclick)="openEdit()">
+                        <td class="col-companyCode">{{ row.companyCode || '—' }}</td>
+                        <td class="col-companyName">{{ row.companyName || '—' }}</td>
+                        <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                        <td class="col-taxCode">{{ row.taxCode || '—' }}</td>
+                        <td class="col-logoUrl">{{ row.logoUrl || '—' }}</td>
+                        <td class="col-website">{{ row.website || '—' }}</td>
+                        <td class="col-phone">{{ row.phone || '—' }}</td>
+                        <td class="col-fax">{{ row.fax || '—' }}</td>
+                        <td class="col-email">{{ row.email || '—' }}</td>
+
+                        <td class="col-representativeName">{{ row.representativeName || '—' }}</td>
+                        <td class="col-representativePosition">{{ row.representativePosition || '—' }}</td>
+                        <td class="col-businessRegistrationNo">{{ row.businessRegistrationNo || '—' }}</td>
+                        <td class="col-businessRegistrationDate">{{ row.businessRegistrationDate ? (row.businessRegistrationDate | date) : '—' }}</td>
+                        <td class="col-businessRegistrationPlace">{{ row.businessRegistrationPlace || '—' }}</td>
+
+                        <td class="col-province">{{ provinceLabel(row.provinceId) || '—' }}</td>
+                        <td class="col-district">{{ districtLabel(row.districtId) || '—'}}</td>
+                        <td class="col-ward">{{ wardLabel(row.wardId) || '—'}}</td>
+                        <td class="col-address">{{ row.address || '—' }}</td>
+
+                        <td class="col-contactName">{{ row.contactName || '—' }}</td>
+                        <td class="col-contactPhone">{{ row.contactPhone || '—' }}</td>
+                        <td class="col-contactEmail">{{ row.contactEmail || '—' }}</td>
+
+                        <td class="col-isActive">
+                            @if (row.isActive) {
+                            <p-tag severity="success" [value]="i18n.t('company.active')" [rounded]="true" />
+                            } @else {
+                            <span class="muted">{{ i18n.t('company.inactive') }}</span>
+                            }
+                        </td>
+                        <td class="col-remark">{{ row.remark || '—' }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="25">
+                            <p class="empty">
+                                {{ selectedCompany() ? i18n.t('company.empty') :
+                                i18n.t('company.emptyHint') }}
+                            </p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </section>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'100vh' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <p-fieldset [legend]="i18n.t('company.basicInfo')">
+            <div class="field field--inline">
+                <div class="form">
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="c-code">
+                                {{ i18n.t('company.code') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-code" name="code" [(ngModel)]="form.companyCode" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="c-name">
+                                {{ i18n.t('company.name') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-name" name="name" [(ngModel)]="form.companyName" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="c-shortName">
+                                {{ i18n.t('company.shortName') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+                        </div>
+
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="c-englishName">
+                                {{ i18n.t('company.englishName') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="c-taxCode">
+                                {{ i18n.t('company.taxCode') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-taxCode" name="taxCode" [(ngModel)]="form.taxCode" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+
+                        <div class="field">
+                            <label for="c-website">
+                                {{ i18n.t('company.website') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-website" name="website" [(ngModel)]="form.website" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="c-phone">
+                                {{ i18n.t('company.phone') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-phone" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="c-email">
+                                {{ i18n.t('company.email') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="c-email" name="email" [(ngModel)]="form.email" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="field field--inline">
+                        <p-toggleswitch inputId="c-active" [(ngModel)]="form.isActive" />
+                        <label for="c-active">{{ i18n.t('company.active') }}</label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <!-- <p-image [src]="'/logo/icon-512.png'" alt="Image" width="150" [ngStyle]="{'text-align':'center'}" />
+                    <label for="c-logoUrl">
+                        {{ i18n.t('company.logoUrl') }}
+                        <span class="req">*</span>
+                    </label>
+                    <input pInputText id="c-logoUrl" name="logoUrl" [(ngModel)]="form.logoUrl" autocomplete="off" /> -->
+                    <!-- <p-image [src]="form.logoUrl ?? ''" alt="Image" width="150" [ngStyle]="{'text-align':'center'}" /> -->
+                    <p-fileupload name="demo[]" url="" (onSelect)="onSelect($event)"
+                                  [multiple]="false" accept="image/*" maxFileSize="1000000" mode="advanced"
+
+                                  [ngStyle]="{'height':'192px'}  ">
+                        <ng-template #empty>
+                            <div>{{ i18n.t('company.emptyLogo') }}</div>
+                            <!-- <p-image [src]="'https://khodohoa.vn/wp-content/uploads/2019/09/43087481675_3969d2e92c_o.jpg'" alt="Image" width="100" [ngStyle]="{'text-align':'center'}" /> -->
+                        </ng-template>
+                    </p-fileupload>
+
+                </div>
+            </div>
+        </p-fieldset>
+
+        <p-fieldset [legend]="i18n.t('company.representativeInfo')">
+            <div class="form">
+                <div class="field-row">
+                    <div class="field">
+                        <label for="c-representativeName">
+                            {{ i18n.t('company.representativeName') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-representativeName" name="representativeName" [(ngModel)]="form.representativeName" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="c-representativePosition">
+                            {{ i18n.t('company.representativePosition') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-representativePosition" name="representativePosition" [(ngModel)]="form.representativePosition" autocomplete="off" />
+                    </div>
+
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="c-businessRegistrationNo">
+                            {{ i18n.t('company.businessRegistrationNo') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-businessRegistrationNo" name="businessRegistrationNo" [(ngModel)]="form.businessRegistrationNo" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="c-businessRegistrationDate">
+                            {{ i18n.t('company.businessRegistrationDate') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-businessRegistrationDate" type="date" name="businessRegistrationDate" [(ngModel)]="form.businessRegistrationDate" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="c-businessRegistrationPlace">
+                            {{ i18n.t('company.businessRegistrationPlace') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-businessRegistrationPlace" name="businessRegistrationPlace" [(ngModel)]="form.businessRegistrationPlace" autocomplete="off" />
+                    </div>
+                </div>
+            </div>
+        </p-fieldset>
+
+
+        <p-fieldset [legend]="i18n.t('company.addressInfo')">
+            <div class="form">
+                <div class="field-row">
+
+                    <div class="field">
+                        <label for="c-province">
+                            {{ i18n.t('company.province') }}
+                            <span class="req">*</span>
+                        </label>
+                        <p-select [options]="provinceOptions()" optionLabel="label" optionValue="value"
+                                  [(ngModel)]="form.provinceId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                  [placeholder]="i18n.t('company.province.unset')" />
+                    </div>
+                    <div class="field">
+                        <label for="c-district">
+                            {{ i18n.t('company.district') }}
+                            <span class="req">*</span>
+                        </label>
+                        <p-select [options]="districtOptions()" optionLabel="label" optionValue="value"
+                                  [(ngModel)]="form.districtId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                  [placeholder]="i18n.t('company.district.unset')" />
+                    </div>
+                    <div class="field">
+                        <label for="c-ward">
+                            {{ i18n.t('company.ward') }}
+                            <span class="req">*</span>
+                        </label>
+                        <p-select [options]="wardOptions()" optionLabel="label" optionValue="value"
+                                  [(ngModel)]="form.wardId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
+                                  [placeholder]="i18n.t('company.ward.unset')" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="c-address">
+                        {{ i18n.t('company.address') }}
+                        <span class="req">*</span>
+                    </label>
+                    <input pInputText id="c-address" name="address" [(ngModel)]="form.address" autocomplete="off" />
+                </div>
+            </div>
+        </p-fieldset>
+
+        <p-fieldset [legend]="i18n.t('company.contactInfo')">
+            <div class="form">
+                <div class="field-row">
+                    <div class="field">
+                        <label for="c-contactName">
+                            {{ i18n.t('company.contactName') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-contactName" name="contactName" [(ngModel)]="form.contactName" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="c-contactPhone">
+                            {{ i18n.t('company.contactPhone') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-contactPhone" name="contactPhone" [(ngModel)]="form.contactPhone" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="c-contactEmail">
+                            {{ i18n.t('company.contactEmail') }}
+                            <span class="req">*</span>
+                        </label>
+                        <input pInputText id="c-contactEmail" name="contactEmail" [(ngModel)]="form.contactEmail" autocomplete="off" />
+                    </div>
+                </div>
+            </div>
+        </p-fieldset>
+
+        <div class="field">
+            <label for="c-remark">{{ i18n.t('company.remark') }}</label>
+            <textarea pInputTextarea id="c-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

@@ -1,0 +1,282 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('failureGroup.title') }}</h2>
+                    <span class="panel__count">{{ groups().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'failureGroup', perms: perms.failureGroup, canAdd: true, hasSelection: !!selectedGroup(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #groupTable [value]="groups()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.failureGroup"
+                             (onFilter)="onFiltered('failureGroup', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('failureGroup.sortOrder') }}</th>
+                                <th class="col-code">{{ i18n.t('failureGroup.groupCode') }}</th>
+                                <th class="col-name">{{ i18n.t('failureGroup.groupName') }}</th>
+                                <th class="col-shortName">{{ i18n.t('failureGroup.shortName') }}</th>
+                                <th class="col-status">{{ i18n.t('failureGroup.isActive') }}</th>
+                                <th class="col-description">{{ i18n.t('failureGroup.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedGroup()?.id === row.id"
+                                (click)="selectGroup(row)" (dblclick)="openEdit('failureGroup')">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-code">{{ row.groupCode || '—' }}</td>
+                                <td class="col-name">{{ row.groupName || '—' }}</td>
+                                <td class="col-shortname">{{ row.shortName || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('failureGroup.active')" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">{{ i18n.t('failureGroup.inactive') }}</span>
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">
+                                    <p class="empty">
+                                        {{ selectedGroup() ? i18n.t('failureGroup.empty') :
+                                        i18n.t('failureGroup.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('failureCode.title') }}</h2>
+                    @if (selectedGroup(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('failureCode.scopeOf', { name: t.groupCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ codes().length }}</span>
+                    }
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'failureCode', perms: perms.failureCode, canAdd: true, hasSelection: !!selectedCode(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #codeTable [value]="codes()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.failureCode"
+                             (onFilter)="onFiltered('failureCode', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('failureCode.code') }}</th>
+                                <th class="col-name">{{ i18n.t('failureCode.name') }}</th>
+                                <th class="col-shortname">{{ i18n.t('failureCode.shortName') }}</th>
+                                <th class="col-status">{{ i18n.t('failureCode.severity') }}</th>
+                                <th class="col-status">{{ i18n.t('failureCode.isActive') }}</th>
+                                <th class="col-description">{{ i18n.t('failureCode.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedCode()?.id === row.id"
+                                (click)="selectCode(row)" (dblclick)="openEdit('failureCode')">
+                                <td class="col-code">{{ row.code || '—' }}</td>
+                                <td class="col-name">{{ row.name || '—' }}</td>
+                                <td class="col-shortname">{{ row.shortName || '—' }}</td>
+                                <td class="col-status">
+                                    @if (severityOf(row.severity); as s) {
+                                    <p-tag [severity]="s.severity" [value]="i18n.t(s.labelKey)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-status text-center">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('failureCode.active')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('failureCode.inactive')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">
+                                    <p class="empty">
+                                        {{ selectedGroup() ? i18n.t('failureCode.empty') :
+                                        i18n.t('failureCode.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: dialogKind() === 'failureGroup' ? '40vw' : '60vw', maxWidth: '1280px' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        @if (dialogKind() === 'failureGroup'){
+        <div class="field">
+            <label for="f-sortOrder">
+                {{ i18n.t('failureGroup.sortOrder') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText type="number" min="0" id="f-sortOrder" name="sortOrder" [(ngModel)]="form.sortOrder" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="f-groupCode">
+                {{ i18n.t('failureGroup.groupCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="f-groupCode" name="groupCode" [(ngModel)]="form.groupCode" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="f-groupName">
+                {{ i18n.t('failureGroup.name') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="f-groupName" name="groupName" [(ngModel)]="form.groupName" autocomplete="off" />
+        </div>
+
+        }
+        @if (dialogKind() === 'failureCode'){
+        <div class="field-row">
+            <div class="field">
+                <label for="f-failureGroup">
+                    {{ i18n.t('failureCode.failureGroup') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="groupOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.failureGroupId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('failureCode.failureGroup.unset')" />
+            </div>
+
+            <div class="field">
+                <label for="f-code">
+                    {{ i18n.t('failureCode.code') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="f-code" name="code" [(ngModel)]="form.code" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="f-severity">
+                    {{ i18n.t('failureCode.severity') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="severityOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.severity"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('failureCode.severity.unset')" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="f-name">
+                {{ i18n.t('failureCode.name') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="f-name" name="name" [(ngModel)]="form.name" autocomplete="off" />
+        </div>
+        }
+        <div class="field">
+            <label for="f-shortName">
+                {{ i18n.t('failureCode.shortName') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <input pInputText id="f-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+        </div>
+        <div class="field field--inline">
+            <p-toggleswitch inputId="f-active" [(ngModel)]="form.isActive" />
+            <label for="f-active">{{ i18n.t('failureCode.active') }}</label>
+        </div>
+        <div class="field">
+            <label for="f-description">{{ i18n.t('failureCode.description') }}</label>
+            <textarea pInputTextarea id="f-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+    </div>
+
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
