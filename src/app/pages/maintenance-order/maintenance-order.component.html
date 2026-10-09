@@ -144,67 +144,154 @@
         </ng-template>
 
         <ng-template #panel>
-            <section class="panel">
-                <div class="panel__head">
-                    <h2 class="panel__title">{{ i18n.t('maintenanceOrderChecklist.title') }}</h2>
-                    @if (selectedOrder(); as t) {
-                    <span class="panel__scope">
-                        {{ i18n.t('maintenanceOrder.scopeOf', { name: t.orderNo || '—' })}}
-                    </span>
-                    <span class="panel__count">{{ maintenanceOrderChecklists().length }}</span>
-                    }
-                </div>
-                <div class="table-scroll">
-                    <p-table #itemTable [value]="maintenanceOrderChecklists()" [showGridlines]="true"
-                             class="grid" [globalFilterFields]="filterFields.maintenanceOrderChecklist"
-                             (onFilter)="onFiltered('maintenanceOrderChecklist', $event.filteredValue)"
-                             [scrollable]="true" scrollHeight="flex">
-                        <ng-template #header>
-                            <tr>
-                                <th class="col-maintenanceChecklist">{{ i18n.t('maintenanceOrderChecklist.maintenanceChecklist') }}</th>
-                                <!-- <th class="col-checklistCode">{{ i18n.t('maintenanceOrderChecklist.checklistCode') }}</th>
-                                <th class="col-checklistName">{{ i18n.t('maintenanceOrderChecklist.checklistName') }}</th> -->
-                                <th class="col-checklistVersion">{{ i18n.t('maintenanceOrderChecklist.checklistVersion') }}</th>
-                                <th class="col-status">{{ i18n.t('maintenanceOrderChecklist.status') }}</th>
-                                <th class="col-startedDate">{{ i18n.t('maintenanceOrderChecklist.startedDate') }}</th>
-                                <th class="col-completedDate">{{ i18n.t('maintenanceOrderChecklist.completedDate') }}</th>
-                                <th class="col-completedBy">{{ i18n.t('maintenanceOrderChecklist.completedBy') }}</th>
-                                <th class="col-remark">{{ i18n.t('maintenanceOrderChecklist.remark') }}</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template #body let-row>
-                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
-                                (click)="selectItem(row)" (dblclick)="openEdit()">
-                                <td class="col-maintenanceChecklist">{{ maintenanceChecklistLabel(row.maintenanceChecklistId) || '—' }}</td>
-                                <!-- <td class="col-checklistCode">{{ row.checklistCode || '—' }}</td>
-                                <td class="col-checklistName">{{row.checklistName || '—' }}</td> -->
-                                <td class="col-checklistVersion">{{row.checklistVersion || '—' }}</td>
-                                <td class="col-status">
-                                    @if (row.status) {
-                                    <p-tag [severity]="checklistStatusSeverity(row.status)?.severity" [value]="checklistStatusLabel(row.status)" [rounded]="true" />
-                                    } @else {
-                                    <span class="muted">—</span>
-                                    }
-                                </td>
-                                <td class="col-startedDate">{{ row.startedDate ? (row.startedDate | date) : '—' }}</td>
-                                <td class="col-completedDate">{{ row.completedDate ? (row.completedDate | date) : '—' }}</td>
-                                <td class="col-completedBy">{{ employeeLabel(row.completedBy) || '—' }}</td>
-                                <td class="col-remark">{{ row.remark || '—' }}</td>
-                            </tr>
-                        </ng-template>
-                        <ng-template #emptymessage>
-                            <tr>
-                                <td colspan="9">
-                                    <p class="empty">
-                                        {{ selectedOrder() ? i18n.t('maintenanceOrderChecklist.empty') :
-                                        i18n.t('maintenanceOrderChecklist.emptyHint') }}
-                                    </p>
-                                </td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
-                </div>
-            </section>
+            <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                        [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('maintenanceOrderChecklist.title') }}</h2>
+                            @if (selectedOrder(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('maintenanceOrderChecklist.scopeOf', { name: t.orderNo || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ maintenanceOrderChecklists().length }}</span>
+                            }
+                        </div>
+                        <div class="table-scroll">
+                            <p-table #itemTable [value]="maintenanceOrderChecklists()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.maintenanceOrderChecklist"
+                                     (onFilter)="onFiltered('maintenanceOrderChecklist', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-maintenanceChecklist">{{ i18n.t('maintenanceOrderChecklist.maintenanceChecklist') }}</th>
+                                        <!-- <th class="col-checklistCode">{{ i18n.t('maintenanceOrderChecklist.checklistCode') }}</th>
+                                                    <th class="col-checklistName">{{ i18n.t('maintenanceOrderChecklist.checklistName') }}</th> -->
+                                        <th class="col-checklistVersion">{{ i18n.t('maintenanceOrderChecklist.checklistVersion') }}</th>
+                                        <th class="col-status">{{ i18n.t('maintenanceOrderChecklist.status') }}</th>
+                                        <th class="col-startedDate">{{ i18n.t('maintenanceOrderChecklist.startedDate') }}</th>
+                                        <th class="col-completedDate">{{ i18n.t('maintenanceOrderChecklist.completedDate') }}</th>
+                                        <th class="col-completedBy">{{ i18n.t('maintenanceOrderChecklist.completedBy') }}</th>
+                                        <th class="col-remark">{{ i18n.t('maintenanceOrderChecklist.remark') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedChecklist()?.id === row.id"
+                                        (click)="selectChecklist(row)" (dblclick)="openEdit()">
+                                        <td class="col-maintenanceChecklist">{{ maintenanceChecklistLabel(row.maintenanceChecklistId) || '—' }}</td>
+                                        <!-- <td class="col-checklistCode">{{ row.checklistCode || '—' }}</td>
+                                                    <td class="col-checklistName">{{row.checklistName || '—' }}</td> -->
+                                        <td class="col-checklistVersion">{{row.checklistVersion || '—' }}</td>
+                                        <td class="col-status">
+                                            @if (row.status) {
+                                            <p-tag [severity]="checklistStatusSeverity(row.status)?.severity" [value]="checklistStatusLabel(row.status)" [rounded]="true" />
+                                            } @else {
+                                            <span class="muted">—</span>
+                                            }
+                                        </td>
+                                        <td class="col-startedDate">{{ row.startedDate ? (row.startedDate | date) : '—' }}</td>
+                                        <td class="col-completedDate">{{ row.completedDate ? (row.completedDate | date) : '—' }}</td>
+                                        <td class="col-completedBy">{{ employeeLabel(row.completedBy) || '—' }}</td>
+                                        <td class="col-remark">{{ row.remark || '—' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="9">
+                                            <p class="empty">
+                                                {{ selectedOrder() ? i18n.t('maintenanceOrderChecklist.empty') :
+                                                i18n.t('maintenanceOrderChecklist.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('maintenanceOrderChecklistItem.title') }}</h2>
+                            @if (selectedChecklist(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('maintenanceOrderChecklistItem.scopeOf', { name: t.checklistCode || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ maintenanceOrderChecklistItems().length }}</span>
+                            }
+                        </div>
+                        <div class="table-scroll">
+                            <p-table #itemTable [value]="maintenanceOrderChecklistItems()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.maintenanceOrderChecklistItem"
+                                     (onFilter)="onFiltered('maintenanceOrderChecklistItem', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('maintenanceOrderChecklistItem.sequenceNo') }}</th>
+                                        <th class="col-maintenanceChecklistItem">{{ i18n.t('maintenanceOrderChecklistItem.maintenanceChecklistItem') }}</th>
+                                        <th class="col-checkType">{{ i18n.t('maintenanceOrderChecklistItem.checkType') }}</th>
+                                        <th class="col-unit">{{ i18n.t('maintenanceOrderChecklistItem.unit') }}</th>
+                                        <th class="col-targetValue">{{ i18n.t('maintenanceOrderChecklistItem.targetValue') }}</th>
+                                        <th class="col-minValue">{{ i18n.t('maintenanceOrderChecklistItem.minValue') }}</th>
+                                        <th class="col-maxValue">{{ i18n.t('maintenanceOrderChecklistItem.maxValue') }}</th>
+                                        <th class="col-expectedResult">{{ i18n.t('maintenanceOrderChecklistItem.expectedResult') }}</th>
+                                        <th class="col-actualValue">{{ i18n.t('maintenanceOrderChecklistItem.actualValue') }}</th>
+                                        <th class="col-actualText">{{ i18n.t('maintenanceOrderChecklistItem.actualText') }}</th>
+                                        <th class="col-result">{{ i18n.t('maintenanceOrderChecklistItem.result') }}</th>
+                                        <th class="col-failureCode">{{ i18n.t('maintenanceOrderChecklistItem.failureCode') }}</th>
+                                        <th class="col-completedDate">{{ i18n.t('maintenanceOrderChecklistItem.completedDate') }}</th>
+                                        <th class="col-completedBy">{{ i18n.t('maintenanceOrderChecklistItem.completedBy') }}</th>
+                                        <th class="col-remark">{{ i18n.t('maintenanceOrderChecklistItem.remark') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                        (click)="selectItem(row)" (dblclick)="openEdit()">
+                                        <td class="col-code">{{row.sequenceNo || '—' }}</td>
+                                        <td class="col-maintenanceChecklistItem">
+                                            <p-tag [severity]="row.isRequired ? 'warn':'secondary'"
+                                                   [value]="maintenanceChecklistItemLabel(row.maintenanceChecklistItemId) || '—' "
+                                                   [rounded]="true" [title]="row.isRequired ? i18n.t('maintenanceOrderChecklistItem.required') : i18n.t('maintenanceOrderChecklistItem.unRequired') " />
+                                        </td>
+                                        <td class="col-checkType">{{ itemCheckTypeLabel(row.checkType) || '—' }}</td>
+                                        <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+                                        <td class="col-targetValue">{{ row.targetValue != null ? (row.targetValue | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-minValue">{{ row.minValue != null ? (row.minValue | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-maxValue">{{ row.maxValue != null ? (row.maxValue | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-expectedResult">{{ row.expectedResult || '—' }}</td>
+                                        <td class="col-actualValue">{{ row.actualValue != null ? (row.actualValue | number:'1.0-2') : 0 }}</td>
+                                        <td class="col-actualText">{{ row.actualText || '—' }}</td>
+                                        <td class="col-result">
+                                            @if (row.result) {
+                                            <p-tag [severity]="checklistResultSeverity(row.result)?.severity" [value]="resultLabel(row.result)" [rounded]="true" />
+                                            } @else {
+                                            <span class="muted">—</span>
+                                            }
+                                        </td>
+                                        <td class="col-failureCode">{{ failureCodeLabel(row.failureCodeId) || '—' }}</td>
+                                        <td class="col-completedDate">{{ row.completedDate ? (row.completedDate | date) : '—' }}</td>
+                                        <td class="col-completedBy">{{ employeeLabel(row.completedBy) || '—' }}</td>
+                                        <td class="col-remark">{{ row.remark || '—' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="9">
+                                            <p class="empty">
+                                                {{ selectedChecklist() ? i18n.t('maintenanceOrderChecklistItem.empty') :
+                                                i18n.t('maintenanceOrderChecklistItem.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+
         </ng-template>
     </p-splitter>
 </div>
@@ -241,6 +328,16 @@
                                       (ngModelChange)="onMaintenancePlanChange($event)"
                                       [filter]="true" filterBy="label" [showClear]="false"
                                       appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.maintenancePlan.unset')" />
+                        </div>
+                        <div class="field">
+                            <label for="mo-machineId">
+                                {{ i18n.t('maintenanceOrder.machine') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="machineOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.machineId"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceOrder.machine.unset')" />
                         </div>
                         <div class="field">
                             <label for="mo-maintenanceTypeId">

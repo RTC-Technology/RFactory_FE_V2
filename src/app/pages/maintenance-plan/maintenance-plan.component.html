@@ -347,7 +347,9 @@
           [draggable]="false" [resizable]="false"
           [style]="{ width: '100vw', height: '100vh', margin: '0' }"
           [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+    @if (orderOpen()) {
     <app-maintenance-order [_maintenancePlanDto]="selectedPlan()"></app-maintenance-order>
+    }
 </p-dialog>
 
 <p-confirmDialog />

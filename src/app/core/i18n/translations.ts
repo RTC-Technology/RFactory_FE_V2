@@ -3885,8 +3885,9 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'maintenanceOrder.err.orderNoTaken': { vi: 'Số phiếu "{orderNo}" đã tồn tại.', en: 'Order number "{orderNo}" already exists.' },
 
 	// ─── Maintenance Order Checklist ──────────────────────────────────────────
-	'maintenanceOrderChecklist.title': { vi: 'Danh mục kiểm tra phiếu bảo trì', en: 'Order Checklists' },
+	'maintenanceOrderChecklist.title': { vi: 'Danh mục kiểm tra', en: 'Order Checklists' },
 	'maintenanceOrderChecklist.lower': { vi: 'danh mục kiểm tra', en: 'order checklist' },
+	'maintenanceOrderChecklist.scopeOf': { vi: 'của {name}', en: 'of {name}' },
 	'maintenanceOrderChecklist.addLine': { vi: 'Thêm danh mục', en: 'Add Checklist' },
 	'maintenanceOrderChecklist.remove': { vi: 'Xoá danh mục', en: 'Remove Checklist' },
 	'maintenanceOrderChecklist.maintenanceChecklist': { vi: 'Danh mục kiểm tra', en: 'Maintenance Checklist' },
@@ -3947,6 +3948,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'maintenanceOrderChecklistItem.failureCode.unset': { vi: '— Chọn mã hỏng hóc —', en: '— Select Failure Code —' },
 	'maintenanceOrderChecklistItem.isRequired': { vi: 'Bắt buộc', en: 'Required' },
 	'maintenanceOrderChecklistItem.required': { vi: 'Bắt buộc', en: 'Required' },
+	'maintenanceOrderChecklistItem.unRequired': { vi: 'Không bắt buộc', en: 'Un Required' },
 	'maintenanceOrderChecklistItem.completedDate': { vi: 'Ngày thực hiện', en: 'Completed Date' },
 	'maintenanceOrderChecklistItem.completedBy': { vi: 'Người thực hiện', en: 'Completed By' },
 	'maintenanceOrderChecklistItem.completedBy.unset': { vi: '— Chọn người thực hiện —', en: '— Select Person —' },

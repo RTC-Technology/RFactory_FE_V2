@@ -289,6 +289,13 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 		super(PERMISSIONS.maintenanceOrder);
 
 		effect(() => {
+			const plan = this._maintenancePlanDto();
+			if (plan?.id) {
+				untracked(() => this.openCreate());
+			}
+		});
+
+		effect(() => {
 			const orders = this.maintenanceOrders();
 			untracked(() => this.selectedOrder.set(this._reconcile(this.selectedOrder(), orders)));
 		});
@@ -307,12 +314,6 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 
 	ngOnInit(): void {
 		this.reload();
-
-	}
-
-	ngAfterViewInit(): void {
-
-		if (this._maintenancePlanDto()?.id) this.openCreate();
 	}
 
 	reload(): void {
@@ -336,8 +337,8 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 	}
 
 	// ─── Dialog ─────────────────────────────────────────────────────────────────
-	readonly dialogOpen = signal(false);
-	readonly resultOpen = signal(false);
+	readonly dialogOpen = signal((this._maintenancePlanDto()?.id ?? 0) > 0);
+	// readonly resultOpen = signal(false);
 
 	readonly editingId = signal<number | null>(null);
 	readonly saving = signal(false);
