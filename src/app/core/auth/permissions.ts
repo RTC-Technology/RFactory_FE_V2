@@ -56,6 +56,7 @@ export const PERMISSIONS = {
   qrCode: crud('qrcode'),
   labelTemplate: crud('label-template'),
   packingSpecification: crud('packing-specification'),
+  packingNumberingRule: crud('packing-numbering-rule'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

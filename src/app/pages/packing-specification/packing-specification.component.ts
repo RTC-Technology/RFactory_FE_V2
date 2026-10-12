@@ -166,6 +166,10 @@ export class PackingSpecificationComponent extends PermissionAwarePage implement
     }
   }
 
+  goToNumberingRules(): void {
+    this.router.navigate(['/packing-numbering-rules']);
+  }
+
   openCreate(): void {
     this.editingId.set(null);
     this.formError.set('');

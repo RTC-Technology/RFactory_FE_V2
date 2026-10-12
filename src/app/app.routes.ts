@@ -357,6 +357,20 @@ export const routes: Routes = [
 				},
 			},
 
+			//packing-numbering-rules
+			{
+				path: 'packing-numbering-rules',
+				loadComponent: () =>
+					import('./pages/packing-numbering-rule/packing-numbering-rule.component').then(m => m.PackingNumberingRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingNumberingRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			{
 				path: 'forbidden',
 				loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
