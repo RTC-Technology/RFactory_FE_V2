@@ -1,0 +1,190 @@
+<div class="page">
+    <section class="panel">
+        <div class="toolbar">
+            @if (canAdd()) {
+            <button type="button" class="tool" (click)="openCreate()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                    <line x1="19" y1="9" x2="19" y2="17" />
+                    <line x1="15" y1="13" x2="23" y2="13" />
+                </svg>
+                <span>{{ i18n.t('common.add') }}</span>
+            </button>
+            }
+            @if (canEdit()) {
+            <button type="button" class="tool" [disabled]="!selected()" (click)="openEdit()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 3h9l4 4v3" />
+                    <path d="M4 3v18h13v-6" />
+                    <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+                </svg>
+                <span>{{ i18n.t('common.edit') }}</span>
+            </button>
+            }
+            @if (canDelete()) {
+            <button type="button" class="tool tool--danger" [disabled]="!selected()" (click)="askDelete()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+                <span>{{ i18n.t('common.delete') }}</span>
+            </button>
+            }
+
+            <span class="tool__sep"></span>
+            <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                <span>{{ i18n.t('common.reload') }}</span>
+            </button>
+
+            <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+                [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter($any($event.target).value)" />
+        </div>
+
+        <div class="table-scroll">
+            <p-table #employeeTable [value]="employees()" [showGridlines]="true" class="grid"
+                [globalFilterFields]="filterFields" (onFilter)="onFiltered($event.filteredValue)">
+                <ng-template #header>
+                    <tr>
+                        <th class="col-code">{{ i18n.t('employee.employeeCode') }}</th>
+                        <th class="col-full-name">{{ i18n.t('employee.fullName') }}</th>
+                        <th class="col-nick-name">{{ i18n.t('employee.nickName') }}</th>
+                        <th class="col-position">{{ i18n.t('employee.position') }}</th>
+                        <th class="col-gender">{{ i18n.t('employee.gender') }}</th>
+                        <th class="col-phone">{{ i18n.t('employee.phone') }}</th>
+                        <th class="col-email">{{ i18n.t('employee.email') }}</th>
+                        <th class="col-hire-date">{{ i18n.t('employee.hireDate') }}</th>
+                        <th class="col-status">{{ i18n.t('employee.status') }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template #body let-row>
+                    <tr class="row" [class.row--selected]="selected()?.id === row.id" (click)="select(row)"
+                        (dblclick)="openEdit()">
+                        <td class="col-code">{{ row.employeeCode ?? '—' }}</td>
+                        <td class="col-full-name">{{ row.fullName ?? '—' }}</td>
+                        <td class="col-nick-name">{{ row.nickName ?? '—' }}</td>
+                        <td class="col-position">{{ row.position ?? '—' }}</td>
+                        <td class="col-gender">{{ genderLabel(row.gender) || '—' }}</td>
+                        <td class="col-phone">{{ row.phone ?? '—' }}</td>
+                        <td class="col-email">{{ row.email ?? '—' }}</td>
+                        <td class="col-hire-date">{{ row.hireDate ? (row.hireDate | date: 'dd/MM/yyyy') : '—' }}</td>
+                        <td class="col-status">
+                            @if (statusOf(row.status); as status) {
+                            <p-tag [severity]="status.severity" [value]="i18n.t(status.labelKey)" [rounded]="true" />
+                            } @else {
+                            <span class="muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="9">
+                            <p class="empty">{{ i18n.t('employee.empty') }}</p>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </section>
+</div>
+
+<p-dialog [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [header]="dialogTitle()" [modal]="true"
+    [draggable]="false" [resizable]="false" [style]="{ width: '50rem' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="emp-code">{{ i18n.t('employee.employeeCode') }} <span class="req">*</span></label>
+                <input pInputText id="emp-code" name="employeeCode" [(ngModel)]="form.employeeCode"
+                    autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="emp-full-name">{{ i18n.t('employee.fullName') }} <span class="req">*</span></label>
+                <input pInputText id="emp-full-name" name="fullName" [(ngModel)]="form.fullName" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="emp-nick-name">{{ i18n.t('employee.nickName') }}</label>
+                <input pInputText id="emp-nick-name" name="nickName" [(ngModel)]="form.nickName" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="emp-position">{{ i18n.t('employee.position') }}</label>
+                <input pInputText id="emp-position" name="position" [(ngModel)]="form.position" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="emp-gender">{{ i18n.t('employee.gender') }}</label>
+                <p-select inputId="emp-gender" [options]="genderOptions()" optionLabel="label" optionValue="value"
+                    [(ngModel)]="form.gender" [showClear]="true" [placeholder]="i18n.t('employee.gender.unset')"
+                    appendTo="body" class="w-full" />
+            </div>
+
+            <div class="field">
+                <label for="emp-status">{{ i18n.t('employee.status') }}</label>
+                <p-select inputId="emp-status" [options]="statusOptions()" optionLabel="label" optionValue="value"
+                    [(ngModel)]="form.status" appendTo="body" class="w-full" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="emp-phone">{{ i18n.t('employee.phone') }}</label>
+                <input pInputText id="emp-phone" name="phone" [(ngModel)]="form.phone" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="emp-email">{{ i18n.t('employee.email') }}</label>
+                <input pInputText id="emp-email" name="email" type="email" [(ngModel)]="form.email"
+                    autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="emp-birth-date">{{ i18n.t('employee.birthDate') }}</label>
+                <input pInputText id="emp-birth-date" name="birthDate" type="date" [(ngModel)]="form.birthDate" />
+            </div>
+
+            <div class="field">
+                <label for="emp-hire-date">{{ i18n.t('employee.hireDate') }}</label>
+                <input pInputText id="emp-hire-date" name="hireDate" type="date" [(ngModel)]="form.hireDate" />
+            </div>
+
+            <div class="field">
+                <label for="emp-termination-date">{{ i18n.t('employee.terminationDate') }}</label>
+                <input pInputText id="emp-termination-date" name="terminationDate" type="date"
+                    [(ngModel)]="form.terminationDate" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="emp-remark">{{ i18n.t('employee.remark') }}</label>
+            <textarea pTextarea id="emp-remark" name="remark" rows="3" [(ngModel)]="form.remark"></textarea>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
+

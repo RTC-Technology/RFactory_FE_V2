@@ -1,0 +1,415 @@
+<p-toast></p-toast>
+
+<div class="qr-page-container">
+  <!-- Page Header -->
+  <header class="page-header no-print">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-qrcode"></i>
+      </div>
+      <div>
+        <h1 class="page-title">{{ i18n.t('qr.title') || 'QR Code & Label Management' }}</h1>
+        <p class="page-subtitle">{{ i18n.t('qr.subtitle') || 'Generate industrial QR labels, batch print sticker tags, and perform instant entity lookups.' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button pButton label="Label Templates" icon="pi pi-palette" class="p-button-outlined p-button-sm" (click)="navigateToAction('/label-templates')"></button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="tab-bar no-print">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'single'"
+      (click)="activeTab.set('single')"
+    >
+      <i class="pi pi-sliders-h"></i>
+      Single Label Generator
+    </button>
+
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'batch'"
+      (click)="activeTab.set('batch'); onBatchEntityTypeChange('PRODUCT')"
+    >
+      <i class="pi pi-clone"></i>
+      Batch Sticker Print
+    </button>
+
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'scan'"
+      (click)="activeTab.set('scan')"
+    >
+      <i class="pi pi-search-plus"></i>
+      QR Scanner & Lookup
+    </button>
+  </div>
+
+  <!-- TAB 1: Single Label Generator -->
+  <section *ngIf="activeTab() === 'single'" class="tab-content no-print">
+    <div class="generator-grid">
+      <!-- Config Panel -->
+      <div class="config-card">
+        <h3 class="card-heading">
+          <i class="pi pi-cog"></i> Label Configuration
+        </h3>
+
+        <div class="form-field">
+          <label class="field-label">Entity Category</label>
+          <p-select
+            [options]="entityTypes"
+            optionLabel="value"
+            optionValue="value"
+            [ngModel]="selectedEntityType()"
+            (ngModelChange)="onEntityTypeChange($event)"
+            styleClass="w-full"
+          >
+            <ng-template pTemplate="selectedItem" let-selected>
+              <div class="flex-align">
+                <span class="font-semibold">{{ selected.value }}</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-item>
+              <div>{{ item.value }}</div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Dropdown for entity selection if not CUSTOM -->
+        <div class="form-field" *ngIf="selectedEntityType() !== 'CUSTOM'">
+          <label class="field-label">Select {{ selectedEntityType() }} Item</label>
+          <p-select
+            [options]="availableItems()"
+            optionLabel="name"
+            [ngModel]="selectedItem()"
+            (ngModelChange)="selectedItem.set($event)"
+            [filter]="true"
+            filterBy="name,code"
+            placeholder="Search or pick an item..."
+            styleClass="w-full"
+          >
+            <ng-template pTemplate="item" let-item>
+              <div class="item-option">
+                <span class="item-code">{{ item.code }}</span>
+                <span class="item-name">{{ item.name }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Custom Fields if CUSTOM -->
+        <div *ngIf="selectedEntityType() === 'CUSTOM'" class="custom-fields">
+          <div class="form-field">
+            <label class="field-label">QR Payload String</label>
+            <input
+              pInputText
+              [ngModel]="customCode()"
+              (ngModelChange)="customCode.set($event)"
+              placeholder="e.g. RF:CUSTOM:100:PROD-X99"
+              class="w-full"
+            />
+          </div>
+          <div class="form-field">
+            <label class="field-label">Label Header Title</label>
+            <input
+              pInputText
+              [ngModel]="customTitle()"
+              (ngModelChange)="customTitle.set($event)"
+              placeholder="e.g. HIGH-PRECISION CNC COMPONENT"
+              class="w-full"
+            />
+          </div>
+          <div class="form-field">
+            <label class="field-label">Label Subtitle / Spec</label>
+            <input
+              pInputText
+              [ngModel]="customSubtitle()"
+              (ngModelChange)="customSubtitle.set($event)"
+              placeholder="e.g. Batch #2026-A1 | Weight: 4.5kg"
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Label Size Selector -->
+        <div class="form-field">
+          <label class="field-label">Sticker Label Size</label>
+          <div class="size-picker">
+            <button
+              class="size-btn"
+              [class.selected]="labelSize() === 'sm'"
+              (click)="labelSize.set('sm')"
+            >
+              Small (120px)
+            </button>
+            <button
+              class="size-btn"
+              [class.selected]="labelSize() === 'md'"
+              (click)="labelSize.set('md')"
+            >
+              Medium (180px)
+            </button>
+            <button
+              class="size-btn"
+              [class.selected]="labelSize() === 'lg'"
+              (click)="labelSize.set('lg')"
+            >
+              Large (240px)
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="config-actions">
+          <button pButton label="Print Label Tag" icon="pi pi-print" class="p-button-primary" (click)="printLabel()"></button>
+          <button pButton label="Copy Payload" icon="pi pi-copy" class="p-button-outlined p-button-secondary" (click)="copyPayload(currentPayload())"></button>
+        </div>
+      </div>
+
+      <!-- Live Preview Tag -->
+      <div class="preview-card-wrapper">
+        <h3 class="card-heading">
+          <i class="pi pi-eye"></i> Industrial Label Live Preview
+        </h3>
+
+        <div class="label-sticker-card" [class]="'size-' + labelSize()">
+          <div class="label-header">
+            <span class="company-badge">R-FACTORY MES</span>
+            <span class="tag-type">{{ selectedEntityType() }}</span>
+          </div>
+
+          <div class="label-body">
+            <div class="qr-box">
+              <app-qr-generator
+                [value]="currentPayload()"
+                [size]="labelSize() === 'sm' ? 120 : labelSize() === 'md' ? 180 : 230"
+                logoText="RF"
+              ></app-qr-generator>
+            </div>
+
+            <div class="label-details">
+              <h4 class="tag-title">{{ currentTitle() }}</h4>
+              <p class="tag-subtitle">{{ currentSubtitle() }}</p>
+              <div class="payload-box">
+                <code>{{ currentPayload() }}</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="label-footer">
+            <span>RFACTORY DIGITAL TWIN & OPTIMIZATION</span>
+            <span>SECURE MES TAG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: Batch Sticker Print -->
+  <section *ngIf="activeTab() === 'batch'" class="tab-content no-print">
+    <div class="batch-container">
+      <div class="batch-header-bar">
+        <div class="flex-align gap-3">
+          <label class="font-bold">Select Category:</label>
+          <p-select
+            [options]="entityTypes"
+            optionLabel="value"
+            optionValue="value"
+            [ngModel]="batchEntityType()"
+            (ngModelChange)="onBatchEntityTypeChange($event)"
+          ></p-select>
+        </div>
+
+        <div class="flex-align gap-2">
+          <button
+            pButton
+            label="Generate Batch Labels"
+            icon="pi pi-sparkles"
+            class="p-button-primary"
+            [loading]="batchLoading()"
+            (click)="generateBatch()"
+          ></button>
+          <button
+            *ngIf="batchQrCodes().length > 0"
+            pButton
+            label="Print All Labels"
+            icon="pi pi-print"
+            class="p-button-success"
+            (click)="printLabel()"
+          ></button>
+        </div>
+      </div>
+
+      <div class="batch-grid">
+        <!-- Item Selection Table -->
+        <div class="table-card">
+          <h4 class="card-subheading">Items Available for Labeling ({{ batchItems().length }})</h4>
+          <p-table
+            [value]="batchItems()"
+            [(selection)]="selectedBatchItems"
+            dataKey="id"
+            [rows]="10"
+            [paginator]="true"
+            styleClass="p-datatable-sm p-datatable-striped"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 3rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+                <th>Code</th>
+                <th>Name / Label</th>
+                <th>Description</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td><p-tableCheckbox [value]="item"></p-tableCheckbox></td>
+                <td><span class="font-semibold text-primary">{{ item.code }}</span></td>
+                <td>{{ item.name }}</td>
+                <td class="text-secondary">{{ item.description }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Generated Batch Preview Grid -->
+        <div class="batch-preview-panel">
+          <h4 class="card-subheading">Batch Sticker Sheet Preview ({{ batchQrCodes().length }})</h4>
+          <div *ngIf="batchQrCodes().length === 0" class="empty-batch-box">
+            <i class="pi pi-qr-code text-4xl text-slate-400"></i>
+            <p>Select items and click <strong>Generate Batch Labels</strong> to preview stickers here.</p>
+          </div>
+
+          <div *ngIf="batchQrCodes().length > 0" class="sticker-grid">
+            <div *ngFor="let item of batchQrCodes()" class="mini-sticker-card">
+              <div class="mini-header">
+                <span>{{ item.entityType }}</span>
+                <span>#{{ item.code }}</span>
+              </div>
+              <div class="mini-body">
+                <app-qr-generator [value]="item.payload" [size]="90" logoText="RF"></app-qr-generator>
+                <div class="mini-info">
+                  <div class="mini-title">{{ item.labelTitle }}</div>
+                  <div class="mini-sub">{{ item.labelSubtitle }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: QR Scanner & Lookup -->
+  <section *ngIf="activeTab() === 'scan'" class="tab-content no-print">
+    <div class="scanner-container">
+      <div class="scanner-card">
+        <h3 class="card-heading"><i class="pi pi-search"></i> QR Payload Scanner & Lookup</h3>
+        <p class="text-secondary mb-4">Type, paste, or scan any barcode/QR string (e.g. <code>RF:PRODUCT:1:PROD-0001</code>) to fetch its real-time MES entity details.</p>
+
+        <div class="search-input-group">
+          <input
+            pInputText
+            [ngModel]="scanInput()"
+            (ngModelChange)="scanInput.set($event)"
+            placeholder="Paste scanned QR payload string..."
+            class="scan-input"
+            (keyup.enter)="lookupScan()"
+          />
+          <button pButton label="Decode & Lookup" icon="pi pi-search" class="p-button-primary" [loading]="scanning()" (click)="lookupScan()"></button>
+        </div>
+      </div>
+
+      <!-- Result Display Card -->
+      <div *ngIf="scanResult()" class="scan-result-card" [class.found]="scanResult()?.found">
+        <div class="result-header">
+          <div class="result-badge" [class.badge-success]="scanResult()?.found" [class.badge-warn]="!scanResult()?.found">
+            <i [class]="scanResult()?.found ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i>
+            {{ scanResult()?.found ? 'MATCH FOUND' : 'NOT FOUND IN DATABASE' }}
+          </div>
+          <span class="entity-chip">{{ scanResult()?.entityType }}</span>
+        </div>
+
+        <div class="result-body">
+          <h2 class="result-title">{{ scanResult()?.title }}</h2>
+          <p class="result-subtitle">{{ scanResult()?.subtitle }}</p>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Entity Code</span>
+              <span class="info-value font-mono">{{ scanResult()?.code || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Status</span>
+              <span class="info-value">{{ scanResult()?.status || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Location / Context</span>
+              <span class="info-value">{{ scanResult()?.location || 'N/A' }}</span>
+            </div>
+          </div>
+
+          <!-- Attributes Table -->
+          <div *ngIf="scanResult()?.attributes && (scanResult()?.attributes | keyvalue)?.length" class="attributes-section">
+            <h4 class="attributes-heading">Detailed Attributes</h4>
+            <div class="attr-pills">
+              <div *ngFor="let attr of scanResult()?.attributes | keyvalue" class="attr-pill">
+                <span class="attr-key">{{ attr.key }}:</span>
+                <span class="attr-val">{{ attr.value }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="scanResult()?.actionRoute" class="result-actions">
+            <button
+              pButton
+              label="Go to Entity Page"
+              icon="pi pi-external-link"
+              class="p-button-outlined p-button-primary"
+              (click)="navigateToAction(scanResult()!.actionRoute)"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINT ONLY SECTION -->
+  <div class="print-only">
+    <div *ngIf="activeTab() === 'single'" class="printable-single">
+      <div class="label-sticker-card size-lg">
+        <div class="label-header">
+          <span class="company-badge">R-FACTORY MES</span>
+          <span class="tag-type">{{ selectedEntityType() }}</span>
+        </div>
+        <div class="label-body">
+          <app-qr-generator [value]="currentPayload()" [size]="200" logoText="RF"></app-qr-generator>
+          <div class="label-details">
+            <h4 class="tag-title">{{ currentTitle() }}</h4>
+            <p class="tag-subtitle">{{ currentSubtitle() }}</p>
+            <div class="payload-box"><code>{{ currentPayload() }}</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab() === 'batch'" class="printable-batch">
+      <div *ngFor="let item of batchQrCodes()" class="label-sticker-card size-md mb-4">
+        <div class="label-header">
+          <span class="company-badge">R-FACTORY MES</span>
+          <span class="tag-type">{{ item.entityType }}</span>
+        </div>
+        <div class="label-body">
+          <app-qr-generator [value]="item.payload" [size]="150" logoText="RF"></app-qr-generator>
+          <div class="label-details">
+            <h4 class="tag-title">{{ item.labelTitle }}</h4>
+            <p class="tag-subtitle">{{ item.labelSubtitle }}</p>
+            <div class="payload-box"><code>{{ item.payload }}</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

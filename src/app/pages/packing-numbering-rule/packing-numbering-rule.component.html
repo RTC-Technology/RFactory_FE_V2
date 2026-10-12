@@ -1,0 +1,560 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="packing-rules-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-sliders-h"></i>
+      </div>
+      <div>
+        <h1 class="page-title">{{ i18n.t('packingNumberingRule.title') }}</h1>
+        <p class="page-subtitle">{{ i18n.t('packingNumberingRule.subtitle') }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="Packing Specifications"
+        icon="pi pi-box"
+        class="p-button-outlined p-button-secondary"
+        (click)="goToPackingSpecifications()"
+      ></button>
+      <button
+        pButton
+        label="New Numbering Rule"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        (click)="openCreate()"
+      ></button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- Rules Data Table Card -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            placeholder="Search code, name, scope, prefix..."
+            (input)="applyFilter($any($event.target).value)"
+            class="p-inputtext-sm"
+          />
+        </div>
+        <button
+          pButton
+          icon="pi pi-refresh"
+          class="p-button-outlined p-button-secondary p-button-sm"
+          (click)="reload()"
+          pTooltip="Reload rules"
+        ></button>
+      </div>
+
+      <p-table
+        #dt
+        [value]="rules()"
+        [loading]="loading()"
+        [globalFilterFields]="filterFields"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        dataKey="id"
+        selectionMode="single"
+        [selection]="selected()"
+        (onRowSelect)="select($event.data)"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 140px">Scope</th>
+            <th>Rule Code / Name</th>
+            <th>Sample Format</th>
+            <th style="width: 120px">Counter</th>
+            <th style="width: 130px">Reset Period</th>
+            <th style="width: 90px; text-align: center">Status</th>
+            <th style="width: 160px; text-align: center">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-r>
+          <tr [class.selected-row]="selected()?.id === r.id" (click)="select(r)">
+            <td>
+              <p-tag
+                [icon]="getScopeBadge(r.targetScope).icon"
+                [value]="getScopeBadge(r.targetScope).label"
+                [severity]="getScopeBadge(r.targetScope).severity"
+              ></p-tag>
+            </td>
+            <td>
+              <div class="rule-name-cell">
+                <span class="rule-code">{{ r.ruleCode }}</span>
+                <span class="rule-title">{{ r.ruleName }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="sample-code-pill">
+                <code>{{ r.samplePreview }}</code>
+                <span *ngIf="r.includeCheckDigit" class="cd-badge" pTooltip="Includes GS1 Modulo 10 Check Digit">+CD</span>
+              </div>
+            </td>
+            <td>
+              <div class="counter-display">
+                <span class="counter-val">#{{ r.currentSequence }}</span>
+                <span class="counter-len">{{ r.sequenceLength }} digits</span>
+              </div>
+            </td>
+            <td>
+              <span class="reset-period-tag">{{ getResetPeriodLabel(r.resetPeriod) }}</span>
+            </td>
+            <td style="text-align: center">
+              <span *ngIf="r.isDefault" class="default-badge" pTooltip="Default numbering rule for this packaging scope">
+                <i class="pi pi-star-fill"></i> Default
+              </span>
+              <span *ngIf="!r.isDefault && r.isActive" class="active-dot" pTooltip="Active">Active</span>
+              <span *ngIf="!r.isActive" class="inactive-dot" pTooltip="Inactive">Inactive</span>
+            </td>
+            <td>
+              <div class="row-actions" (click)="$event.stopPropagation()">
+                <button
+                  pButton
+                  icon="pi pi-bolt"
+                  class="p-button-text p-button-warning p-button-sm"
+                  pTooltip="Test & Generate Code"
+                  tooltipPosition="top"
+                  (click)="openGenerator(r)"
+                ></button>
+                <button
+                  *ngIf="!r.isDefault"
+                  pButton
+                  icon="pi pi-star"
+                  class="p-button-text p-button-secondary p-button-sm"
+                  pTooltip="Set as Default Rule"
+                  tooltipPosition="top"
+                  (click)="confirmSetDefault(r)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-info p-button-sm"
+                  pTooltip="Edit Rule"
+                  tooltipPosition="top"
+                  (click)="openEdit(r)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm"
+                  pTooltip="Delete Rule"
+                  tooltipPosition="top"
+                  (click)="confirmDelete(r)"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="empty-message-cell">
+              <i class="pi pi-inbox"></i>
+              <p>No packing numbering rules found.</p>
+              <button pButton label="Create Standard Carton Rule" icon="pi pi-plus" class="p-button-sm" (click)="openCreate()"></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Rule Detail Panel (Right Side) -->
+    <div class="detail-card">
+      <div *ngIf="selected() as sel; else noSelection">
+        <div class="detail-header">
+          <div>
+            <div class="detail-scope-tag">
+              <p-tag
+                [icon]="getScopeBadge(sel.targetScope).icon"
+                [value]="getScopeBadge(sel.targetScope).label"
+                [severity]="getScopeBadge(sel.targetScope).severity"
+              ></p-tag>
+              <span *ngIf="sel.isDefault" class="default-badge-mini"><i class="pi pi-star-fill"></i> Default</span>
+            </div>
+            <h3 class="detail-title">{{ sel.ruleName }}</h3>
+            <span class="detail-code font-mono">{{ sel.ruleCode }}</span>
+          </div>
+          <button
+            pButton
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text p-button-secondary"
+            (click)="openEdit(sel)"
+            pTooltip="Edit rule"
+          ></button>
+        </div>
+
+        <!-- Live Sample Card -->
+        <div class="preview-hero">
+          <div class="preview-hero-label">LIVE GENERATED PREVIEW</div>
+          <div class="preview-hero-code font-mono">{{ sel.samplePreview }}</div>
+          <div class="preview-hero-meta">
+            <span>Prefix: <b>{{ sel.prefix || '(None)' }}</b></span>
+            <span>Date: <b>{{ sel.dateFormat }}</b></span>
+            <span>Digits: <b>{{ sel.sequenceLength }}</b></span>
+            <span *ngIf="sel.suffix">Suffix: <b>{{ sel.suffix }}</b></span>
+            <span *ngIf="sel.includeCheckDigit">GS1 Mod 10: <b>Yes</b></span>
+          </div>
+        </div>
+
+        <!-- Rule Properties Grid -->
+        <div class="rule-properties-list">
+          <div class="prop-item">
+            <span class="prop-label">Current Counter</span>
+            <span class="prop-value font-mono highlight">#{{ sel.currentSequence }}</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Reset Trigger</span>
+            <span class="prop-value">{{ getResetPeriodLabel(sel.resetPeriod) }}</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Last Reset Date</span>
+            <span class="prop-value">{{ sel.lastResetDate ? (sel.lastResetDate | date: 'mediumDate') : 'Never reset' }}</span>
+          </div>
+          <div class="prop-item">
+            <span class="prop-label">Check Digit</span>
+            <span class="prop-value">{{ sel.includeCheckDigit ? 'GS1 Modulo 10 Enabled' : 'Disabled' }}</span>
+          </div>
+          <div class="prop-item" *ngIf="sel.description">
+            <span class="prop-label">Description</span>
+            <span class="prop-value text-desc">{{ sel.description }}</span>
+          </div>
+        </div>
+
+        <!-- Action Card -->
+        <div class="detail-quick-actions">
+          <button
+            pButton
+            label="Generate Next Codes"
+            icon="pi pi-bolt"
+            class="p-button-warning w-full"
+            (click)="openGenerator(sel)"
+          ></button>
+        </div>
+      </div>
+
+      <ng-template #noSelection>
+        <div class="no-selection-placeholder">
+          <i class="pi pi-sliders-h"></i>
+          <h4>Select a Numbering Rule</h4>
+          <p>Click on any rule row on the left to inspect its parameters, preview sequence formatting, and test code generation.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT NUMBERING RULE DIALOG -->
+  <p-dialog
+    [(visible)]="dialogOpen"
+    [modal]="true"
+    [style]="{ width: '780px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="{{ editingId() ? 'Edit Numbering Rule: ' + formRuleName() : 'Create New Packing Numbering Rule' }}"
+  >
+    <div class="dialog-form-content">
+      <div *ngIf="formError()" class="form-error-banner mb-3">
+        <i class="pi pi-exclamation-triangle"></i> {{ formError() }}
+      </div>
+
+      <!-- Scope & Identification -->
+      <div class="form-section">
+        <h4 class="form-section-title"><i class="pi pi-tag"></i> Identification &amp; Scope</h4>
+        <div class="form-grid-2">
+          <div class="field-item">
+            <label class="field-label">Target Packaging Scope *</label>
+            <p-select
+              [options]="scopes"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="formTargetScope()"
+              (ngModelChange)="onScopeChanged($event)"
+              styleClass="w-full"
+            >
+              <ng-template pTemplate="item" let-s>
+                <div class="scope-dropdown-item">
+                  <i [class]="'pi ' + s.icon"></i>
+                  <span>{{ s.label }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Rule Code *</label>
+            <input
+              pInputText
+              [ngModel]="formRuleCode()"
+              (ngModelChange)="formRuleCode.set($event)"
+              placeholder="e.g. NR-CARTON-DAILY"
+              class="w-full font-mono"
+            />
+          </div>
+        </div>
+
+        <div class="field-item mt-3">
+          <label class="field-label">Rule Name *</label>
+          <input
+            pInputText
+            [ngModel]="formRuleName()"
+            (ngModelChange)="formRuleName.set($event)"
+            placeholder="e.g. Master Carton Daily Sequence (CTN-YYYYMMDD-####)"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Pattern Configuration -->
+      <div class="form-section mt-4">
+        <h4 class="form-section-title"><i class="pi pi-code"></i> Sequence Pattern Configuration</h4>
+        <div class="form-grid-3">
+          <div class="field-item">
+            <label class="field-label">Prefix</label>
+            <input
+              pInputText
+              [ngModel]="formPrefix()"
+              (ngModelChange)="formPrefix.set($event)"
+              placeholder="e.g. CTN-, PLT-"
+              class="w-full font-mono"
+            />
+          </div>
+          <div class="field-item">
+            <label class="field-label">Date Stamping Format</label>
+            <p-select
+              [options]="dateFormats"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="formDateFormat()"
+              (ngModelChange)="formDateFormat.set($event)"
+              styleClass="w-full"
+            ></p-select>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Suffix (Optional)</label>
+            <input
+              pInputText
+              [ngModel]="formSuffix()"
+              (ngModelChange)="formSuffix.set($event)"
+              placeholder="e.g. -VN"
+              class="w-full font-mono"
+            />
+          </div>
+        </div>
+
+        <div class="form-grid-3 mt-3">
+          <div class="field-item">
+            <label class="field-label">Sequence Length (Digits)</label>
+            <p-inputNumber
+              [ngModel]="formSequenceLength()"
+              (ngModelChange)="formSequenceLength.set($event)"
+              [min]="1"
+              [max]="10"
+              styleClass="w-full"
+            ></p-inputNumber>
+            <small class="helper-text">Padded with leading zeros (e.g. 4 -> 0001)</small>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Starting / Current Counter</label>
+            <p-inputNumber
+              [ngModel]="formCurrentSequence()"
+              (ngModelChange)="formCurrentSequence.set($event)"
+              [min]="0"
+              styleClass="w-full"
+            ></p-inputNumber>
+            <small class="helper-text">Increments upon code generation</small>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Reset Trigger</label>
+            <p-select
+              [options]="resetPeriods"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="formResetPeriod()"
+              (ngModelChange)="formResetPeriod.set($event)"
+              styleClass="w-full"
+            ></p-select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Interactive Preview Box -->
+      <div class="interactive-preview-box mt-4">
+        <div class="preview-title">
+          <i class="pi pi-eye"></i> LIVE PREVIEW PATTERN
+        </div>
+        <div class="preview-code-display font-mono">
+          {{ liveFormPreview() }}
+        </div>
+        <div class="preview-breakdown">
+          <span>Prefix: <b>{{ formPrefix() || 'None' }}</b></span>
+          <span>Date: <b>{{ formDateFormat() }}</b></span>
+          <span>Sequence Length: <b>{{ formSequenceLength() }} digits</b></span>
+          <span *ngIf="formIncludeCheckDigit()">Check Digit: <b>GS1 Mod 10</b></span>
+        </div>
+      </div>
+
+      <!-- Options & Toggles -->
+      <div class="form-section mt-4">
+        <h4 class="form-section-title"><i class="pi pi-cog"></i> Settings &amp; Check Digit</h4>
+        <div class="checkbox-options-grid">
+          <div class="checkbox-item">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="formIncludeCheckDigit()"
+              (ngModelChange)="formIncludeCheckDigit.set($event)"
+              inputId="chkCd"
+            ></p-checkbox>
+            <label for="chkCd" class="chk-label">
+              <b>Include GS1 Modulo 10 Check Digit</b>
+              <span>Appends an error-detecting checksum digit to barcode (standard for SSCC &amp; GS1-128).</span>
+            </label>
+          </div>
+
+          <div class="checkbox-item">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="formIsDefault()"
+              (ngModelChange)="formIsDefault.set($event)"
+              inputId="chkDef"
+            ></p-checkbox>
+            <label for="chkDef" class="chk-label">
+              <b>Set as Default for {{ formTargetScope() }}</b>
+              <span>Automatically applied when packing operations create new {{ formTargetScope() }} codes.</span>
+            </label>
+          </div>
+
+          <div class="checkbox-item">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="formIsActive()"
+              (ngModelChange)="formIsActive.set($event)"
+              inputId="chkAct"
+            ></p-checkbox>
+            <label for="chkAct" class="chk-label">
+              <b>Rule is Active</b>
+              <span>Enable code generation for operators on factory lines.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-item mt-3">
+          <label class="field-label">Description / Printing Guidelines</label>
+          <textarea
+            pTextarea
+            [ngModel]="formDescription()"
+            (ngModelChange)="formDescription.set($event)"
+            rows="2"
+            placeholder="Operational notes on when and where this numbering rule is used..."
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-actions">
+        <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="dialogOpen.set(false)"></button>
+        <button
+          pButton
+          label="Save Numbering Rule"
+          icon="pi pi-check"
+          class="p-button-primary"
+          [loading]="saving()"
+          (click)="save()"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- CODE GENERATION / TEST DIALOG -->
+  <p-dialog
+    [(visible)]="genDialogOpen"
+    [modal]="true"
+    [style]="{ width: '620px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="Test &amp; Generate Packing Codes"
+  >
+    <div class="gen-dialog-content" *ngIf="targetRuleForGen() as rule">
+      <div class="gen-rule-banner">
+        <div class="gen-banner-left">
+          <p-tag
+            [icon]="getScopeBadge(rule.targetScope).icon"
+            [value]="getScopeBadge(rule.targetScope).label"
+            [severity]="getScopeBadge(rule.targetScope).severity"
+          ></p-tag>
+          <h4 class="rule-name-sub">{{ rule.ruleName }}</h4>
+        </div>
+        <span class="rule-code-badge font-mono">{{ rule.ruleCode }}</span>
+      </div>
+
+      <div class="gen-controls-row mt-3">
+        <div class="qty-field">
+          <label class="field-label">Quantity to Generate (1 to 50):</label>
+          <p-inputNumber
+            [ngModel]="genCount()"
+            (ngModelChange)="genCount.set($event)"
+            [min]="1"
+            [max]="50"
+            styleClass="w-full"
+          ></p-inputNumber>
+        </div>
+        <button
+          pButton
+          label="Generate Serial Codes"
+          icon="pi pi-bolt"
+          class="p-button-warning gen-btn"
+          [loading]="generating()"
+          (click)="runGenerate()"
+        ></button>
+      </div>
+
+      <!-- Generated Results Box -->
+      <div *ngIf="generatedResult() as res" class="gen-results-box mt-4">
+        <div class="results-header">
+          <div class="res-count-tag">
+            <i class="pi pi-check-circle"></i>
+            <span>Generated {{ res.generatedCodes.length }} code(s) at {{ res.generatedAt | date: 'shortTime' }}</span>
+          </div>
+          <button
+            pButton
+            label="Copy All"
+            icon="pi pi-copy"
+            class="p-button-sm p-button-outlined"
+            (click)="copyCodesToClipboard()"
+          ></button>
+        </div>
+
+        <div class="codes-list-container">
+          <div *ngFor="let code of res.generatedCodes; let i = index" class="code-item-row font-mono">
+            <span class="code-idx">#{{ i + 1 }}</span>
+            <span class="code-val">{{ code }}</span>
+            <button
+              pButton
+              icon="pi pi-clone"
+              class="p-button-rounded p-button-text p-button-sm copy-mini-btn"
+              pTooltip="Copy code"
+              (click)="copySingleCode(code)"
+            ></button>
+          </div>
+        </div>
+
+        <div class="seq-notice">
+          <i class="pi pi-info-circle"></i> Counter in database successfully incremented to current sequence.
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Close" class="p-button-secondary" (click)="genDialogOpen.set(false)"></button>
+    </ng-template>
+  </p-dialog>
+</div>
