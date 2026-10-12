@@ -117,6 +117,18 @@ export const routes: Routes = [
 				},
 			},
 			{
+				path: 'machine-status',
+				loadComponent: () =>
+					import('./pages/machine-status/machine-status.component').then(m => m.MachineStatusComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.machineStatus.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			{
 				// The flat line list — the same rows the factory-structure screen edits inside
 				// a selected area, plus the areas themselves to label and scope each one.
 				path: 'lines',

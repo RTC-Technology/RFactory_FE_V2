@@ -169,7 +169,11 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'perm.entity.label-template': { vi: 'mẫu in nhãn', en: 'label template' },
   'perm.entity.packing-specification': { vi: 'quy cách đóng gói', en: 'packing specification' },
   'perm.entity.packing-numbering-rule': { vi: 'quy tắc đánh số đóng gói', en: 'packing numbering rule' },
+  'perm.entity.machine-status': { vi: 'trạng thái máy & sự cố', en: 'machine status & downtime' },
   'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
+
+  'machineStatus.title': { vi: 'Giám Sát Trạng Thái Máy & Sự Cố (OEE)', en: 'Machine Status & Downtime Monitor' },
+  'machineStatus.subtitle': { vi: 'Theo dõi trạng thái máy trực quan theo thời gian thực, ghi nhận nguyên nhân dừng máy, phế phẩm (Scrap) và sửa lại (Rework).', en: 'Real-time visual equipment monitoring, downtime loss categorization, scrap, and rework defect logging.' },
 
   'packingNumberingRule.title': { vi: 'Quy Tắc Đánh Số Đóng Gói', en: 'Packing Numbering Rules' },
   'packingNumberingRule.subtitle': { vi: 'Cấu hình tiền tố, định dạng ngày, số thứ tự và quy tắc nhảy số tự động cho mã thùng, pallet, hộp và lô.', en: 'Configure prefixes, date formats, sequences, and reset triggers for carton, pallet, inner box, and lot numbering.' },

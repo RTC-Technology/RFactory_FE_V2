@@ -30,6 +30,7 @@ export const PERMISSIONS = {
   shiftBreak: crud('shift-break'),
   machineType: crud('machine-type'),
   machine: crud('machine'),
+  machineStatus: crud('machine-status'),
   organization: crud('organization'),
   user: crud('user'),
   userGroup: crud('user-group'),
