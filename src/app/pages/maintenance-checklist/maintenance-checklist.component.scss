@@ -1,0 +1,65 @@
+@use '../../shared/styles/master-detail';
+
+:host ::ng-deep {
+    .grid--edit {
+        .p-datatable-table {
+            min-width: 1300px;
+        }
+
+        .col-idx {
+            width: 48px;
+            min-width: 48px;
+            text-align: center;
+        }
+
+        .col-itemCode {
+            width: 140px;
+            min-width: 140px;
+        }
+
+        .col-status {
+            width: 110px;
+            min-width: 110px;
+        }
+
+        .col-itemName {
+            min-width: 200px;
+        }
+
+        .col-checkType {
+            width: 160px;
+            min-width: 160px;
+        }
+
+        .col-unit {
+            width: 130px;
+            min-width: 130px;
+        }
+
+        .col-targetValue {
+            width: 120px;
+            min-width: 120px;
+        }
+
+        .col-minValue {
+            width: 110px;
+            min-width: 110px;
+        }
+
+        .col-maxValue {
+            width: 110px;
+            min-width: 110px;
+        }
+
+        .col-expectedResult {
+            width: 180px;
+            min-width: 180px;
+        }
+
+        .col-act {
+            width: 50px;
+            min-width: 50px;
+            text-align: center;
+        }
+    }
+}

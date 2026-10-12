@@ -1,0 +1,413 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('lotRule.title') }}</h2>
+                    <span class="panel__count">{{ lotRules().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'lotRule', perms: perms.lotRule, canAdd: true, hasSelection: !!selectedLotRule(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #lotRuleTable [value]="lotRules()" dataKey="id" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.lotRule"
+                             (onFilter)="onFiltered('lotRule', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('lotRule.ruleCode') }}</th>
+                                <th class="col-ruleName">{{ i18n.t('lotRule.ruleName') }}</th>
+                                <th class="col-template">{{ i18n.t('lotRule.template') }}</th>
+                                <th class="col-prefix">{{ i18n.t('lotRule.prefix') }}</th>
+                                <th class="col-dateFormat">{{ i18n.t('lotRule.dateFormat') }}</th>
+                                <th class="col-sequenceLength">{{ i18n.t('lotRule.sequenceLength') }}</th>
+                                <th class="col-sequenceResetType">{{ i18n.t('lotRule.sequenceResetType') }}</th>
+                                <th class="col-status">{{ i18n.t('lotRule.status') }}</th>
+                                <th class="col-description">{{ i18n.t('lotRule.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedLotRule()?.id === row.id"
+                                (click)="selectLotRule(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.ruleCode || '—' }}</td>
+                                <td class="col-ruleName">{{ row.ruleName || '—' }}</td>
+                                <td class="col-template">{{ row.template || '—' }}</td>
+                                <td class="col-prefix">{{ row.prefix || '—' }}</td>
+                                <td class="col-dateFormat">{{ row.dateFormat || '—' }}</td>
+                                <td class="col-sequenceLength text-right">{{ row.sequenceLength || '—' }}</td>
+                                <td class="col-sequenceResetType">{{ resetTypeLabel(row.sequenceResetType) || '—' }}</td>
+                                <td class="col-status text-center">
+                                    @if (row.status) {
+                                    <p-tag [severity]="statusSeverity(row.status)?.severity" [value]="statusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="9">
+                                    <p class="empty">
+                                        {{ selectedLotRule() ? i18n.t('lotRule.empty') :
+                                        i18n.t('lotRule.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('productLotRule.title') }}</h2>
+                    @if (selectedLotRule(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('productLotRule.scopeOf', { name: t.ruleCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ productLotRules().length }}</span>
+                    }
+                </div>
+                <div class="table-scroll">
+                    <p-table #productLotRuleTable [value]="productLotRules()" dataKey="id" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.productLotRule"
+                             (onFilter)="onFiltered('productLotRule', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-product">{{ i18n.t('productLotRule.product') }}</th>
+                                <th class="col-effectiveFrom">{{ i18n.t('productLotRule.effectiveFrom') }}</th>
+                                <th class="col-effectiveTo">{{ i18n.t('productLotRule.effectiveTo') }}</th>
+                                <th class="col-isDefault">{{ i18n.t('productLotRule.isDefault') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
+                                (click)="selectProduct(row)" (dblclick)="openEdit()">
+                                <td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+                                <td class="col-effectiveFrom">{{ (row.effectiveFrom | date) || '—' }}</td>
+                                <td class="col-effectiveTo">{{ (row.effectiveTo | date) || '—' }}</td>
+                                <td class="col-isDefault text-center">
+                                    @if (row.isDefault) {
+                                    <p-tag severity="success" [value]="i18n.t('productLotRule.default')" [rounded]="true" />
+                                    } @else {
+                                    {{'—'}}
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="4">
+                                    <p class="empty">
+                                        {{ selectedLotRule() ? i18n.t('productLotRule.empty') :
+                                        i18n.t('productLotRule.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'50vh' }">
+
+    <p-tabs [value]="activeTab">
+        <p-tablist>
+            <p-tab value="lotRule">{{i18n.t('lotRule.title')}}</p-tab>
+            <p-tab value="productLotRule">{{i18n.t('productLotRule.title')}}</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+            <p-tabpanel value="lotRule">
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="l-ruleCode">
+                                {{ i18n.t('lotRule.ruleCode') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="l-ruleCode" name="ruleCode" [(ngModel)]="form.ruleCode" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="l-ruleName">
+                                {{ i18n.t('lotRule.ruleName') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="l-ruleName" name="ruleName" [(ngModel)]="form.ruleName" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="l-template">
+                                {{ i18n.t('lotRule.template') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="l-template" name="template" [(ngModel)]="form.template" autocomplete="off" />
+                        </div>
+
+                        <div class="field">
+                            <label for="l-status">
+                                {{ i18n.t('lotRule.status') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.status"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('lotRule.status.unset')" />
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="l-prefix">
+                                {{ i18n.t('lotRule.prefix') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="l-prefix" name="prefix" [(ngModel)]="form.prefix" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="l-dateFormat">
+                                {{ i18n.t('lotRule.dateFormat') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText id="l-dateFormat" name="dateFormat" [(ngModel)]="form.dateFormat" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="l-sequenceLength">
+                                {{ i18n.t('lotRule.sequenceLength') }}
+                                <span class="req">*</span>
+                            </label>
+                            <input pInputText type="number" min="2" max="10" id="l-sequenceLength" name="sequenceLength" [(ngModel)]="form.sequenceLength" autocomplete="off" />
+                        </div>
+                        <div class="field">
+                            <label for="l-sequenceResetType">
+                                {{ i18n.t('lotRule.sequenceResetType') }}
+                                <span class="req">*</span>
+                            </label>
+                            <p-select [options]="resetTypeOptions()" optionLabel="label" optionValue="value"
+                                      [(ngModel)]="form.sequenceResetType"
+                                      [filter]="true" filterBy="label" [showClear]="false"
+                                      appendTo="body" class="w-full" [placeholder]="i18n.t('lotRule.sequenceResetType.unset')" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="l-description">{{ i18n.t('lotRule.description') }}</label>
+                        <textarea pInputTextarea id="l-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="3"></textarea>
+                    </div>
+                </div>
+            </p-tabpanel>
+
+            <p-tabpanel value="productLotRule">
+                <div class="form">
+                    @if (formError()) {
+                    <div class="form__error">{{ formError() }}</div>
+                    }
+
+                    <section class="panel lines">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('productLotRule.title') }}</h2>
+                            <span class="panel__scope">
+                                {{ i18n.t('productLotRule.lineCount', { count: productRows().length || 0 }) }}
+                            </span>
+                            <button type="button" class="lines__add" (click)="addProductRow()">
+                                <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.8">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>{{ i18n.t('productLotRule.addLine') }}</span>
+                            </button>
+                        </div>
+
+                        <div class="lines__scroll">
+                            <p-table [value]="productRows()"
+                                     dataKey="id"
+                                     [showGridlines]="true"
+                                     class="grid grid--edit"
+                                     scrollable="true"
+                                     scrollHeight="flex"
+                                     [ngStyle]="{height:'19vh'}">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-idx">#</th>
+                                        <th class="col-product" colSpan="2">{{ i18n.t('productLotRule.product') }}</th>
+                                        <th class="col-effectiveFrom">{{ i18n.t('productLotRule.effectiveFrom') }}</th>
+                                        <th class="col-effectiveTo">{{ i18n.t('productLotRule.effectiveTo') }}</th>
+                                        <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #body let-row let-i="rowIndex">
+                                    <tr class="row row--edit">
+                                        <td class="col-idx">{{ i + 1 }}</td>
+                                        <td class="col-product">
+                                            <p-select [options]="productOptions()"
+                                                      optionLabel="label"
+                                                      optionValue="value"
+                                                      [(ngModel)]="row.productId"
+                                                      [filter]="true"
+                                                      filterBy="label"
+                                                      [placeholder]="i18n.t('productLotRule.product.unset')"
+                                                      appendTo="body"
+                                                      class="w-full">
+                                                <ng-template #header>
+                                                    <div class="picker-row picker-row--head">
+                                                        <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                            }}</span>
+                                                        <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                            }}</span>
+                                                    </div>
+                                                </ng-template>
+
+                                                <ng-template #item let-opt>
+                                                    <div class="picker-row">
+                                                        <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                                        <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                                        <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                                        <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                            {{ opt.drawingNo || '—' }}
+                                                        </span>
+                                                        <span class="picker-cell picker-cell--center">
+                                                            @if (opt.statusLabel) {
+                                                            <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                                   [rounded]="true" />
+                                                            } @else {
+                                                            <span class="picker-cell--muted">—</span>
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </ng-template>
+                                            </p-select>
+                                        </td>
+
+                                        <td class="col-isDefault">
+                                            <div class="flex items-center">
+                                                <p-checkbox [inputId]="'i-isDefault-' + i" name="i-isDefault" binary="true" [(ngModel)]="row.isDefault" />
+                                                <label [for]="'i-isDefault-' + i" class="ml-2"
+                                                       [ngStyle]="{'text-wrap':'nowrap'}">
+                                                    {{ i18n.t('productLotRule.isDefault') }}
+                                                </label>
+                                            </div>
+
+                                        </td>
+
+                                        <td class="col-effectiveFrom">
+                                            <input pInputText type="date" name="effectiveFrom" class="w-full" [(ngModel)]="row.effectiveFrom"
+                                                   autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-effectiveTo">
+                                            <input pInputText type="date" name="effectiveTo" class="w-full" [(ngModel)]="row.effectiveTo"
+                                                   autocomplete="off" />
+                                        </td>
+
+                                        <td class="col-act">
+                                            <button type="button"
+                                                    class="row-del"
+                                                    [title]="i18n.t('productLotRule.removeLine')"
+                                                    [attr.aria-label]="i18n.t('productLotRule.removeLine')"
+                                                    (click)="removeProductRow(row)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="6">
+                                            <p class="empty">{{ i18n.t('productLotRule.emptyLine') }}</p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </div>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

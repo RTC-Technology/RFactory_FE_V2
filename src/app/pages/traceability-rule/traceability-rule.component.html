@@ -1,0 +1,365 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('traceabilityRule.title') }}</h2>
+                    <span class="panel__count">{{ traceRules().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'traceabilityRule', perms: perms.traceabilityRule, canAdd: true, hasSelection: !!selectedRule(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #ruleTable [value]="traceRules()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.traceabilityRule"
+                             (onFilter)="onFiltered('traceabilityRule', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="productId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('traceabilityRule.ruleCode') }}</th>
+                                <th class="col-ruleName">{{ i18n.t('traceabilityRule.ruleName') }}</th>
+                                <th class="col-traceDirection">{{ i18n.t('traceabilityRule.traceDirection') }}</th>
+                                <th class="col-status">{{ i18n.t('traceabilityRule.isActive') }}</th>
+                                <th class="col-description">{{ i18n.t('traceabilityRule.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{ productLabel(row.productId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedRule()?.id === row.id"
+                                (click)="selectRule(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.ruleCode || '—' }}</td>
+                                <td class="col-ruleName">{{ row.ruleName || '—' }}</td>
+                                <td class="col-traceDirection">{{ directionLabel(row.traceDirection) || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('traceabilityRule.active')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('traceabilityRule.inactive')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="5">
+                                    <p class="empty">
+                                        {{ selectedRule() ? i18n.t('traceabilityRule.empty') :
+                                        i18n.t('traceabilityRule.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('traceabilityRuleItem.title') }}</h2>
+                    @if (selectedRule(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('traceabilityRuleItem.scopeOf', { name: t.ruleCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ traceItems().length }}</span>
+                    }
+                </div>
+                <div class="table-scroll">
+                    <p-table #itemTable [value]="traceItems()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.traceabilityRuleItem"
+                             (onFilter)="onFiltered('traceabilityRuleItem', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('traceabilityRuleItem.sortOrder') }}</th>
+                                <th class="col-traceType">{{ i18n.t('traceabilityRuleItem.traceType') }}</th>
+                                <th class="col-description">{{ i18n.t('traceabilityRuleItem.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                (click)="selectItem(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-traceType"
+                                    [ngStyle]="{'display': 'flex', 'justify-content': 'space-between', 'align-items': 'center'}">
+                                    {{ typeLabel(row.traceTypeId) || '—' }}
+                                    @if (row.isRequired) {
+                                    <p-tag severity="success" [value]="i18n.t('traceabilityRuleItem.required')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-description">{{row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="3">
+                                    <p class="empty">
+                                        {{ selectedRule() ? i18n.t('traceabilityRuleItem.empty') :
+                                        i18n.t('traceabilityRuleItem.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'70vh' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="t-ruleCode">
+                    {{ i18n.t('traceabilityRule.ruleCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="t-ruleCode" name="ruleCode" [(ngModel)]="form.ruleCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="t-ruleName">
+                    {{ i18n.t('traceabilityRule.ruleName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="t-ruleName" name="ruleName" [(ngModel)]="form.ruleName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="t-productId">
+                    {{ i18n.t('traceabilityRule.product') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="productOptions()"
+                          optionLabel="label"
+                          optionValue="value"
+                          [(ngModel)]="form.productId"
+                          [filter]="true"
+                          filterBy="label"
+                          [placeholder]="i18n.t('traceabilityRule.product.unset')"
+                          appendTo="body"
+                          class="w-full">
+                    <ng-template #header>
+                        <div class="picker-row picker-row--head">
+                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                }}</span>
+                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                }}</span>
+                        </div>
+                    </ng-template>
+
+                    <ng-template #item let-opt>
+                        <div class="picker-row">
+                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                {{ opt.drawingNo || '—' }}
+                            </span>
+                            <span class="picker-cell picker-cell--center">
+                                @if (opt.statusLabel) {
+                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                       [rounded]="true" />
+                                } @else {
+                                <span class="picker-cell--muted">—</span>
+                                }
+                            </span>
+                        </div>
+                    </ng-template>
+                </p-select>
+            </div>
+
+            <div class="field">
+                <label for="t-traceDirection">
+                    {{ i18n.t('traceabilityRule.traceDirection') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="directionOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.traceDirection"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('traceabilityRule.traceDirection.unset')" />
+            </div>
+        </div>
+
+        <div class="field field--inline">
+            <p-toggleswitch inputId="t-isActive" [(ngModel)]="form.isActive" />
+            <label for="t-isActive">{{ i18n.t('traceabilityRule.isActive') }}</label>
+        </div>
+
+        <div class="field">
+            <label for="t-description">{{ i18n.t('traceabilityRule.description') }}</label>
+            <textarea pInputTextarea id="t-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('traceabilityRuleItem.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('traceabilityRuleItem.lineCount', { count: itemRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addItemRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('traceabilityRuleItem.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="itemRows()"
+                         dataKey="id"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <th class="col-traceType" colspan="2">{{ i18n.t('traceabilityRuleItem.traceType') }}</th>
+                            <th class="col-description">{{ i18n.t('traceabilityRuleItem.description') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+                            <td class="col-traceType">
+                                <p-select [options]="typeOptions()"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          [(ngModel)]="row.traceTypeId"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          [placeholder]="i18n.t('traceabilityRuleItem.traceType.unset')"
+                                          appendTo="body"
+                                          class="w-full">
+                                </p-select>
+                            </td>
+
+                            <td class="col-status">
+                                <div class="flex items-center">
+                                    <p-checkbox [inputId]="'i-isRequired-' + i" name="i-isRequired" binary="true" [(ngModel)]="row.isRequired" />
+                                    <label [for]="'i-isRequired-' + i" class="ml-2"
+                                           [ngStyle]="{'text-wrap':'nowrap'}">
+                                        {{ i18n.t('traceabilityRuleItem.isRequired') }}
+                                    </label>
+                                </div>
+
+                            </td>
+
+                            <td class="col-description">
+                                <textarea pInputTextarea name="description" class="cell-input cell-input--text"
+                                          [(ngModel)]="row.description" autocomplete="off" [rows]="2">
+                                </textarea>
+                            </td>
+
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('traceabilityRuleItem.removeLine')"
+                                        [attr.aria-label]="i18n.t('traceabilityRuleItem.removeLine')"
+                                        (click)="removeItemRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="4">
+                                <p class="empty">{{ i18n.t('traceabilityRuleItem.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

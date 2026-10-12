@@ -1,0 +1,387 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenanceChecklist.title') }}</h2>
+                    <span class="panel__count">{{ checklists().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'maintenanceChecklist', perms: perms.maintenanceChecklist, canAdd: true, hasSelection: !!selectedChecklist(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #checklistTable [value]="checklists()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenanceChecklist"
+                             (onFilter)="onFiltered('maintenanceChecklist', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('maintenanceChecklist.checklistCode') }}</th>
+                                <th class="col-checklistName">{{ i18n.t('maintenanceChecklist.checklistName') }}</th>
+                                <th class="col-version">{{ i18n.t('maintenanceChecklist.version') }}</th>
+                                <th class="col-description">{{ i18n.t('maintenanceChecklist.description') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceChecklist.status') }}</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedChecklist()?.id === row.id"
+                                (click)="selectChecklist(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.checklistCode || '—' }}</td>
+                                <td class="col-checklistName">{{ row.checklistName || '—' }}</td>
+                                <td class="col-version">{{ row.version || '—' }}</td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="statusSeverity(row.status)?.severity" [value]="statusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="5">
+                                    <p class="empty">
+                                        {{ selectedChecklist() ? i18n.t('maintenanceChecklist.empty') :
+                                        i18n.t('maintenanceChecklist.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenanceChecklistItem.title') }}</h2>
+                    @if (selectedChecklist(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('maintenanceChecklistItem.scopeOf', { name: t.checklistCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ checklists().length }}</span>
+                    }
+                </div>
+                <div class="table-scroll">
+                    <p-table #itemTable [value]="items()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenanceChecklistItem"
+                             (onFilter)="onFiltered('maintenanceChecklistItem', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('maintenanceChecklistItem.sequenceNo') }}</th>
+                                <th class="col-itemCode">{{ i18n.t('maintenanceChecklistItem.itemCode') }}</th>
+                                <th class="col-itemName">{{ i18n.t('maintenanceChecklistItem.itemName') }}</th>
+                                <th class="col-checkType">{{ i18n.t('maintenanceChecklistItem.checkType') }}</th>
+                                <th class="col-unit">{{ i18n.t('maintenanceChecklistItem.unit') }}</th>
+                                <th class="col-targetValue">{{ i18n.t('maintenanceChecklistItem.targetValue') }}</th>
+                                <th class="col-minValue">{{ i18n.t('maintenanceChecklistItem.minValue') }}</th>
+                                <th class="col-maxValue">{{ i18n.t('maintenanceChecklistItem.maxValue') }}</th>
+                                <th class="col-expectedResult">{{ i18n.t('maintenanceChecklistItem.expectedResult') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceChecklistItem.isActive') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                (click)="selectItem(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sequenceNo || '—' }}</td>
+                                <td class="col-itemCode"
+                                    [ngStyle]="{'display': 'flex', 'justify-content': 'space-between', 'align-items': 'center'}">
+                                    {{ row.itemCode || '—' }}
+                                    @if (row.isRequired) {
+                                    <p-tag severity="success" [value]="i18n.t('maintenanceChecklistItem.required')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-itemName">{{row.itemName || '—' }}</td>
+                                <td class="col-type">{{typeLabel(row.checkType) || '—' }}</td>
+                                <td class="col-unit">{{unitLabel(row.unitId) || '—' }}</td>
+                                <td class="col-targetValue text-right">
+                                    {{row.targetValue != null ? (row.targetValue | number:'1.0-2') : 0 }}
+                                </td>
+                                <td class="col-minValue text-right">
+                                    {{row.minValue != null ? (row.minValue | number:'1.0-2') : 0 }}
+                                </td>
+                                <td class="col-maxValue text-right">
+                                    {{row.maxValue != null ? (row.maxValue | number:'1.0-2') : 0 }}
+                                </td>
+                                <td class="col-expectedResult">{{row.expectedResult || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('maintenanceChecklistItem.active')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('maintenanceChecklistItem.inactive')" [rounded]="true" />
+                                    }
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="10">
+                                    <p class="empty">
+                                        {{ selectedChecklist() ? i18n.t('maintenanceChecklistItem.empty') :
+                                        i18n.t('maintenanceChecklistItem.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'70vh' }">
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="c-checklistCode">
+                    {{ i18n.t('maintenanceChecklist.checklistCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-checklistCode" name="checklistCode" [(ngModel)]="form.checklistCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-checklistName">
+                    {{ i18n.t('maintenanceChecklist.checklistName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-checklistName" name="checklistName" [(ngModel)]="form.checklistName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-version">
+                    {{ i18n.t('maintenanceChecklist.version') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="c-version" name="version" [(ngModel)]="form.version" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="c-status">
+                    {{ i18n.t('maintenanceChecklist.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceChecklist.status.unset')" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="c-description">{{ i18n.t('maintenanceChecklist.description') }}</label>
+            <textarea pInputTextarea id="c-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('maintenanceChecklistItem.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('maintenanceChecklistItem.lineCount', { count: itemRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addItemRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('maintenanceChecklistItem.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="itemRows()"
+                         dataKey="id"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <th class="col-itemCode" colspan="2">{{ i18n.t('maintenanceChecklistItem.itemCode') }}</th>
+                            <th class="col-itemName">{{ i18n.t('maintenanceChecklistItem.itemName') }}</th>
+                            <th class="col-checkType">{{ i18n.t('maintenanceChecklistItem.checkType') }}</th>
+                            <th class="col-unit">{{ i18n.t('maintenanceChecklistItem.unit') }}</th>
+                            <th class="col-targetValue">{{ i18n.t('maintenanceChecklistItem.targetValue') }}</th>
+                            <th class="col-minValue">{{ i18n.t('maintenanceChecklistItem.minValue') }}</th>
+                            <th class="col-maxValue">{{ i18n.t('maintenanceChecklistItem.maxValue') }}</th>
+                            <th class="col-expectedResult">{{ i18n.t('maintenanceChecklistItem.expectedResult') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+                            <td class="col-itemCode">
+                                <input pInputText name="itemCode" class="w-full" [(ngModel)]="row.itemCode" autocomplete="off" />
+                            </td>
+                            <td class="col-status">
+                                <div class="flex items-center">
+                                    <p-checkbox [inputId]="'i-isRequired-' + i" name="i-isRequired" binary="true" [(ngModel)]="row.isRequired" />
+                                    <label [for]="'i-isRequired-' + i" class="ml-2"
+                                           [ngStyle]="{'text-wrap':'nowrap'}">
+                                        {{ i18n.t('maintenanceChecklistItem.isRequired') }}
+                                    </label>
+                                </div>
+
+                            </td>
+                            <td class="col-itemName">
+                                <input pInputText name="itemName" class="w-full" [(ngModel)]="row.itemName" autocomplete="off" />
+                            </td>
+                            <td class="col-checkType">
+                                <p-select [options]="typeOptions()"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          [(ngModel)]="row.checkType"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          [placeholder]="i18n.t('maintenanceChecklistItem.checkType.unset')"
+                                          appendTo="body"
+                                          class="w-full">
+                                </p-select>
+                            </td>
+                            <td class="col-unit">
+                                <p-select [options]="unitOptions()"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          [(ngModel)]="row.unitId"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          [placeholder]="i18n.t('maintenanceChecklistItem.unit.unset')"
+                                          appendTo="body"
+                                          class="w-full">
+                                </p-select>
+                            </td>
+                            <td class="col-targetValue">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.targetValue"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-minValue">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.minValue"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-maxValue">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.maxValue"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-expectedResult">
+                                <input pInputText name="expectedResult" class="w-full" [(ngModel)]="row.expectedResult" autocomplete="off" />
+                            </td>
+
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('maintenanceChecklistItem.removeLine')"
+                                        [attr.aria-label]="i18n.t('maintenanceChecklistItem.removeLine')"
+                                        (click)="removeItemRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="10">
+                                <p class="empty">{{ i18n.t('maintenanceChecklistItem.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

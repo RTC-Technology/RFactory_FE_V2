@@ -1,0 +1,217 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('maintenanceType.title') }}</h2>
+                    <span class="panel__count">{{ types().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'type', perms: perms.maintenanceType, canAdd: true, hasSelection: !!selectedType(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #typeTable [value]="types()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.maintenanceType"
+                             (onFilter)="onFiltered('maintenanceType', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="typeCategory">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('maintenanceType.sortOrder') }}</th>
+                                <th class="col-code">{{ i18n.t('maintenanceType.typeCode') }}</th>
+                                <th class="col-typeName">{{ i18n.t('maintenanceType.typeName') }}</th>
+                                <th class="col-shortName">{{ i18n.t('maintenanceType.shortName') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceType.priority') }}</th>
+                                <th class="col-status">{{ i18n.t('maintenanceType.isActive') }}</th>
+                                <th class="col-description">{{ i18n.t('maintenanceType.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="7">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{ categoryTypeLabel(row.typeCategory) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedType()?.id === row.id"
+                                (click)="selectType(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-code">{{ row.typeCode || '—' }}</td>
+                                <td class="col-typeName">{{ row.typeName || '—' }}</td>
+                                <td class="col-shortName">{{ row.shortName || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.priority) {
+                                    <p-tag [severity]="prioritySeverity(row.priority)?.severity" [value]="priorityLabel(row.priority)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-status">
+                                    @if (row.isActive) {
+                                    <p-tag severity="success" [value]="i18n.t('maintenanceType.active')" [rounded]="true" />
+                                    } @else {
+                                    <p-tag severity="secondary" [value]="i18n.t('maintenanceType.inactive')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="7">
+                                    <p class="empty">
+                                        {{ selectedType() ? i18n.t('maintenanceType.empty') :
+                                        i18n.t('maintenanceType.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '40vw',height:'auto' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="m-typeCategory">
+                    {{ i18n.t('maintenanceType.typeCategory') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="categoryTypeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.typeCategory"
+                          (ngModelChange)="onCategoryChange($event)"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceType.typeCategory.unset')" />
+            </div>
+            <div class="field">
+                <label for="m-sortOrder">
+                    {{ i18n.t('maintenanceType.sortOrder') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="m-sortOrder" type="number" name="sortOrder" [(ngModel)]="form.sortOrder"
+                       autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="m-typeCode">
+                {{ i18n.t('maintenanceType.typeCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="m-typeCode" name="typeCode" [(ngModel)]="form.typeCode" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="m-typeName">
+                {{ i18n.t('maintenanceType.typeName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="m-typeName" name="typeName" [(ngModel)]="form.typeName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="m-shortName">
+                {{ i18n.t('maintenanceType.shortName') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <input pInputText id="m-shortName" name="shortName" [(ngModel)]="form.shortName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="m-priority">
+                {{ i18n.t('maintenanceType.priority') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="priorityOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.priority"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('maintenanceType.priority.unset')" />
+        </div>
+
+        <div class="field field--inline">
+            <p-toggleswitch inputId="m-isActive" [(ngModel)]="form.isActive" />
+            <label for="m-isActive">{{ i18n.t('maintenanceType.isActive') }}</label>
+        </div>
+
+        <div class="field">
+            <label for="m-description">{{ i18n.t('maintenanceType.description') }}</label>
+            <textarea pInputTextarea id="m-description" name="description" [(ngModel)]="form.description"
+                      autocomplete="off" [rows]="2">
+            </textarea>
+        </div>
+    </div>
+
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

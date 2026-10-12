@@ -1,0 +1,422 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('samplingPlan.title') }}</h2>
+                    <span class="panel__count">{{ plans().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'samplingPlan', perms: perms.samplingPlan, canAdd: true, hasSelection: !!selectedPlan(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #planTable [value]="plans()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.samplingPlan"
+                             (onFilter)="onFiltered('samplingPlan', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('samplingPlan.samplingPlanCode') }}</th>
+                                <th class="col-samplingPlanName">{{ i18n.t('samplingPlan.samplingPlanName') }}</th>
+                                <th class="col-description">{{ i18n.t('samplingPlan.description') }}</th>
+                                <th class="col-samplingMethod">{{ i18n.t('samplingPlan.samplingMethod') }}</th>
+                                <th class="col-inspectionLevel">{{ i18n.t('samplingPlan.inspectionLevel') }}</th>
+                                <th class="col-aqlValue">{{ i18n.t('samplingPlan.aqlValue') }}</th>
+                                <th class="col-frequencyType">{{ i18n.t('samplingPlan.frequencyType') }}</th>
+                                <th class="col-frequencyValue">{{ i18n.t('samplingPlan.frequencyValue') }}</th>
+                                <th class="col-status">{{ i18n.t('samplingPlan.status') }}</th>
+                                <th class="col-effectiveFrom">{{ i18n.t('samplingPlan.effectiveFrom') }}</th>
+                                <th class="col-effectiveTo">{{ i18n.t('samplingPlan.effectiveTo') }}</th>
+                                <th class="col-remark">{{ i18n.t('samplingPlan.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedPlan()?.id === row.id"
+                                (click)="selectPlan(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.samplingPlanCode || '—' }}</td>
+                                <td class="col-planName">{{ row.samplingPlanName || '—' }}</td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                                <td class="col-samplingMethod">{{ methodLabel(row.samplingMethod) || '—' }}</td>
+                                <td class="col-inspectionLevel">{{ levelLabel(row.inspectionLevel) || '—' }}</td>
+                                <td class="col-aqlValue text-right">{{ row.aqlValue != null ? (row.aqlValue|number:'1.0-2') : 0 }}</td>
+                                <td class="col-frequencyType">{{ frequencyTypeLabel(row.frequencyType) || '—' }}</td>
+                                <td class="col-frequencyValue text-right">{{ row.frequencyValue != null ? (row.frequencyValue|number:'1.0-2') : 0 }}</td>
+                                <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+                                <td class="col-effectiveFrom">{{ (row.effectiveFrom|date) || '—' }}</td>
+                                <td class="col-effectiveTo">{{ (row.effectiveTo|date) || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="12">
+                                    <p class="empty">
+                                        {{ selectedPlan() ? i18n.t('samplingPlan.empty') :
+                                        i18n.t('samplingPlan.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('samplingPlanRule.title') }}</h2>
+                    @if (selectedPlan(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('samplingPlanRule.scopeOf', { name: t.samplingPlanCode || '—' })}}
+                    </span>
+                    <span class="panel__count">{{ rules().length }}</span>
+                    }
+                </div>
+
+                <div class="table-scroll">
+                    <p-table #ruleTable [value]="rules()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.samplingPlanRule"
+                             (onFilter)="onFiltered('samplingPlanRule', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('samplingPlanRule.sortOrder') }}</th>
+                                <th class="col-lotSizeFrom">{{ i18n.t('samplingPlanRule.lotSizeFrom') }}</th>
+                                <th class="col-lotSizeTo">{{ i18n.t('samplingPlanRule.lotSizeTo') }}</th>
+                                <th class="col-sampleSize">{{ i18n.t('samplingPlanRule.sampleSize') }}</th>
+                                <th class="col-acceptanceNumber">{{ i18n.t('samplingPlanRule.acceptanceNumber') }}</th>
+                                <th class="col-rejectionNumber">{{ i18n.t('samplingPlanRule.rejectionNumber') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedRule()?.id === row.id"
+                                (click)="selectRule(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-lotSizeFrom text-right">
+                                    {{ row.lotSizeFrom != null ? (row.lotSizeFrom | number:'1.0-2') :0}}
+                                </td>
+                                <td class="col-lotSizeTo text-right">{{ row.lotSizeTo != null ? (row.lotSizeTo|number:'1.0-2') : 0 }}</td>
+                                <td class="col-sampleSize text-right">{{ row.sampleSize != null ? (row.sampleSize|number:'1.0-2') : 0 }}</td>
+                                <td class="col-acceptanceNumber text-right">{{ row.acceptanceNumber != null ? (row.acceptanceNumber|number:'1.0-2') : 0 }}</td>
+                                <td class="col-rejectionNumber text-right">{{ row.rejectionNumber != null ? (row.rejectionNumber|number:'1.0-2') : 0 }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">
+                                    <p class="empty">
+                                        {{ selectedPlan() ? i18n.t('samplingPlanRule.empty') :
+                                        i18n.t('samplingPlanRule.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '70vw',height:'90vh' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="s-samplingPlanCode">
+                    {{ i18n.t('samplingPlan.samplingPlanCode') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="s-samplingPlanCode" name="samplingPlanCode" [(ngModel)]="form.samplingPlanCode" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="s-samplingPlanName">
+                    {{ i18n.t('samplingPlan.samplingPlanName') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="s-samplingPlanName" name="samplingPlanName" [(ngModel)]="form.samplingPlanName" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="s-samplingMethod">
+                    {{ i18n.t('samplingPlan.samplingMethod') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="methodOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.samplingMethod" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('samplingPlan.samplingMethod.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="s-inspectionLevel">
+                    {{ i18n.t('samplingPlan.inspectionLevel') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="levelOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.inspectionLevel" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('samplingPlan.inspectionLevel.unset')" />
+            </div>
+            <div class="field">
+                <label for="s-frequencyType">
+                    {{ i18n.t('samplingPlan.frequencyType') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="frequencyTypeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.frequencyType" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('samplingPlan.frequencyType.unset')" />
+            </div>
+            <div class="field">
+                <label for="s-frequencyValue">
+                    {{ i18n.t('samplingPlan.frequencyValue') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full"
+                               [(ngModel)]="form.frequencyValue"
+                               mode="decimal"
+                               [showButtons]="true"
+                               [min]="0"
+                               [minFractionDigits]="2"
+                               [maxFractionDigits]="2"
+                               locale="en-US" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="s-aqlValue">
+                    {{ i18n.t('samplingPlan.aqlValue') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full"
+                               [(ngModel)]="form.aqlValue"
+                               mode="decimal"
+                               [showButtons]="true"
+                               [min]="0"
+                               [minFractionDigits]="2"
+                               [maxFractionDigits]="2"
+                               locale="en-US" />
+            </div>
+            <div class="field">
+                <label for="s-status">
+                    {{ i18n.t('samplingPlan.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('samplingPlan.status.unset')" />
+            </div>
+            <div class="field">
+                <label for="s-effectiveFrom">
+                    {{ i18n.t('samplingPlan.effectiveFrom') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="s-effectiveFrom" type="date" name="effectiveFrom" [(ngModel)]="form.effectiveFrom" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="s-effectiveTo">
+                    {{ i18n.t('samplingPlan.effectiveTo') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="s-effectiveTo" type="date" name="effectiveTo" [(ngModel)]="form.effectiveTo" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="s-description">{{ i18n.t('samplingPlan.description') }}</label>
+            <textarea pInputTextarea id="s-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+        <div class="field">
+            <label for="s-remark">{{ i18n.t('samplingPlan.remark') }}</label>
+            <textarea pInputTextarea id="s-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('samplingPlanRule.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('samplingPlanRule.lineCount', { count: ruleRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addRuleRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('samplingPlanRule.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="ruleRows()"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <!-- <th class="col-code">{{ i18n.t('samplingPlanRule.sortOrder') }}</th> -->
+                            <th class="col-lotSizeFrom">{{ i18n.t('samplingPlanRule.lotSizeFrom') }}</th>
+                            <th class="col-lotSizeTo">{{ i18n.t('samplingPlanRule.lotSizeTo') }}</th>
+                            <th class="col-sampleSize">{{ i18n.t('samplingPlanRule.sampleSize') }}</th>
+                            <th class="col-acceptanceNumber">{{ i18n.t('samplingPlanRule.acceptanceNumber') }}</th>
+                            <th class="col-rejectionNumber">{{ i18n.t('samplingPlanRule.rejectionNumber') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+                            <td class="col-lotSizeFrom">
+                                <p-inputnumber class="w-full" inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.lotSizeFrom"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+
+                            </td>
+                            <td class="col-lotSizeTo">
+                                <p-inputnumber class="w-full" inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.lotSizeTo"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+
+                            </td>
+                            <td class="col-sampleSize">
+                                <p-inputnumber class="w-full" inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.sampleSize"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+
+                            </td>
+                            <td class="col-acceptanceNumber">
+                                <p-inputnumber class="w-full" inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.acceptanceNumber"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+
+                            </td>
+                            <td class="col-rejectionNumber">
+                                <p-inputnumber class="w-full" inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.rejectionNumber"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+
+                            </td>
+
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('samplingPlanRule.removeLine')"
+                                        [attr.aria-label]="i18n.t('samplingPlanRule.removeLine')"
+                                        (click)="removeRuleRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="8">
+                                <p class="empty">{{ i18n.t('samplingPlanRule.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

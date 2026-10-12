@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import {
   BomDetailDto, BomDetailRequest, BomDto, BomRequest,
-  ProductDto, ProductRequest, ProductTypeDto, ProductTypeRequest,
+  ProductDto, ProductGroupDto, ProductGroupRequest, ProductRequest, ProductTypeDto, ProductTypeRequest,
   RoutingDto, RoutingOperationDto, RoutingOperationRequest, RoutingRequest,
   UnitCategoryDto, UnitCategoryRequest, UnitConversionDto, UnitConversionRequest,
   UnitDto, UnitRequest,
@@ -15,9 +15,15 @@ export class ProductTypeApiService extends CrudApiService<ProductTypeDto, Produc
 }
 
 @Injectable({ providedIn: 'root' })
+export class ProductGroupApiService extends CrudApiService<ProductGroupDto, ProductGroupRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/product/groups`;
+}
+
+@Injectable({ providedIn: 'root' })
 export class ProductApiService extends CrudApiService<ProductDto, ProductRequest> {
   protected readonly baseUrl = `${environment.apiUrl}/product/products`;
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class BomApiService extends CrudApiService<BomDto, BomRequest> {

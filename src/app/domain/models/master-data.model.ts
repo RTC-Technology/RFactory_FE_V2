@@ -1,44 +1,79 @@
 /** Mirrors the backend DTOs in RFactory.Application.Modules.MasterData.DTOs. */
 
 export interface FactoryDto {
-  id: number;
-  factoryCode: string;
-  factoryName: string;
+	id: number;
+	factoryCode: string;
+	factoryName: string;
 }
 
 export interface AreaDto {
-  id: number;
-  factoryId?: number | null;
-  areaCode: string;
-  areaName: string;
+	id: number;
+	factoryId?: number | null;
+	areaCode: string;
+	areaName: string;
 }
 
 export interface LineDto {
-  id: number;
-  areaId?: number | null;
-  lineCode: string;
-  lineName: string;
-  status?: number | null;
-  layoutImage?: string | null;
+	id: number;
+	areaId?: number | null;
+	lineCode: string;
+	lineName: string;
+	status?: number | null;
+	layoutImage?: string | null;
 }
 
 export interface SupplierDto {
-  id: number;
-  supplierCode: string;
-  supplierName: string;
-  shortName?: string | null;
-  taxCode?: string | null;
-  supplierType?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  website?: string | null;
-  contactPerson?: string | null;
-  paymentTerm?: string | null;
-  currencyCode?: string | null;
-  status: number;
-  description?: string | null;
-
+	id: number;
+	supplierCode: string;
+	supplierName: string;
+	shortName?: string | null;
+	taxCode?: string | null;
+	supplierType?: string | null;
+	phone?: string | null;
+	email?: string | null;
+	website?: string | null;
+	contactPerson?: string | null;
+	paymentTerm?: string | null;
+	currencyCode?: string | null;
+	status: number;
+	description?: string | null;
 }
+
+export interface CustomerDto {
+	id: number;
+	customerCode: string;
+	customerName: string;
+	shortName: string;
+	englishName?: string | null;
+	customerType: number;
+	taxCode?: string | null;
+	contactPerson?: string | null;
+	phone?: string | null;
+	email?: string | null;
+	address?: string | null;
+	countryId?: number | null;
+	provinceId?: number | null;
+	districtId?: number | null;
+	paymentTerm?: string | null;
+	currencyId?: number | null;
+	defaultWarehouseId?: number | null;
+	remark?: string | null;
+	isActive?: boolean | null;
+}
+
+export interface CustomerContactDto {
+	id: number;
+	customerId?: number | null;
+	contactName: string;
+	contactType: number;
+	position?: string | null;
+	phone: string;
+	email?: string | null;
+	isPrimary: boolean;
+	isActive?: boolean | null;
+	remark?: string | null;
+}
+
 
 /** Create/Update share one shape per entity on the backend, so one type covers both. */
 export type FactoryRequest = Omit<FactoryDto, 'id'>;
@@ -46,39 +81,521 @@ export type AreaRequest = Omit<AreaDto, 'id'>;
 export type LineRequest = Omit<LineDto, 'id'>;
 export type SupplierRequest = Omit<SupplierDto, 'id'>;
 
+export type CustomerRequest = Omit<CustomerDto, 'id'> & {
+	customerContacts?: CustomerContactDto[];
+};
+export type CustomerContactRequest = Omit<CustomerContactDto, 'id'>;
+
 /**
  * `Line.Status` is a nullable int in the database with no enum or lookup table backing
  * it, so these labels are an assumption. Change the pairs here if the real coding
  * differs — nothing else reads the raw numbers.
  */
 export const LINE_STATUSES = [
-  { labelKey: 'plant.status.running', value: 1, severity: 'success' as const },
-  { labelKey: 'plant.status.stopped', value: 0, severity: 'danger' as const },
+	{ labelKey: 'plant.status.running', value: 1, severity: 'success' as const },
+	{ labelKey: 'plant.status.stopped', value: 0, severity: 'danger' as const },
 ];
 
 export const SUPPLIER_STATUS = [
-  {
-    labelKey: 'supplier.status.inactive',
-    value: 0,
-    severity: 'danger' as const
-  },
-  {
-    labelKey: 'supplier.status.active',
-    value: 1,
-    severity: 'success' as const
-  },
-  {
-    labelKey: 'supplier.status.pending',
-    value: 2,
-    severity: 'warn' as const
-  },
+	{
+		labelKey: 'supplier.status.inactive',
+		value: 0,
+		severity: 'danger' as const
+	},
+	{
+		labelKey: 'supplier.status.active',
+		value: 1,
+		severity: 'success' as const
+	},
+	{
+		labelKey: 'supplier.status.pending',
+		value: 2,
+		severity: 'warn' as const
+	},
 
 ];
 
+export const CUSTOMER_TYPES = [
+	{ labelKey: 'customer.type.domestic', value: 1 },
+	{ labelKey: 'customer.type.international', value: 2 },
+	{ labelKey: 'customer.type.internal', value: 3 },
+	{ labelKey: 'customer.type.other', value: 99 },
+];
+
+export const CUSTOMER_CONTACT_TYPES = [
+	{ labelKey: 'customerContact.type.purchasing', value: 1 },
+	{ labelKey: 'customerContact.type.technical', value: 2 },
+	{ labelKey: 'customerContact.type.quality', value: 3 },
+	{ labelKey: 'customerContact.type.receiver', value: 4 },
+	{ labelKey: 'customerContact.type.accountant', value: 5 },
+	{ labelKey: 'customerContact.type.other', value: 99 },
+];
+
+export const CUSTOMER_COUNTRIES = [
+	{ labelKey: 'customer.country.vietnam', value: 1 },
+	{ labelKey: 'customer.country.other', value: 99 },
+];
+
+export const CUSTOMER_PROVINCES = [
+	{ labelKey: 'customer.province.hanoi', value: 1 },
+	{ labelKey: 'customer.province.haiphong', value: 2 },
+	{ labelKey: 'customer.province.hungyen', value: 3 },
+];
+
+export const CUSTOMER_DISTRICTS = [
+	{ labelKey: 'customer.district.hanoi', value: 1 },
+	{ labelKey: 'customer.district.haiphong', value: 2 },
+	{ labelKey: 'customer.district.hungyen', value: 3 },
+];
+
+export const CUSTOMER_CURRENCIES = [
+	{ labelKey: 'customer.currency.vnd', value: 1 },
+	{ labelKey: 'customer.currency.usd', value: 2 },
+	{ labelKey: 'customer.currency.eur', value: 3 },
+	{ labelKey: 'customer.currency.gbp', value: 4 },
+	{ labelKey: 'customer.currency.jpy', value: 5 },
+	{ labelKey: 'customer.currency.krw', value: 6 },
+	{ labelKey: 'customer.currency.cny', value: 7 },
+	{ labelKey: 'customer.currency.other', value: 99 },
+];
+
 export function supplierStatusOf(status?: number | null) {
-  return SUPPLIER_STATUS.find(s => s.value === status);
+	return SUPPLIER_STATUS.find(s => s.value === status);
 }
 
 export function lineStatusOf(status?: number | null) {
-  return LINE_STATUSES.find(s => s.value === status);
+	return LINE_STATUSES.find(s => s.value === status);
 }
+
+
+
+//#region lot
+export interface LotDto {
+	id: number;
+	lotNo: string;
+	lotRuleId?: number | null;
+	productId: number;
+	supplierId?: number | null;
+	supplierLotNo: string;
+	manufactureDate?: string | null;
+	expireDate?: string | null;
+	status?: number | null;
+}
+
+export interface LotRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	template: string;
+	prefix: string;
+	dateFormat: string;
+	sequenceLength?: number | null;
+	sequenceResetType: number;
+	status: number;
+	description?: string | null;
+}
+
+export interface LotRuleSequenceDto {
+	id: number;
+	lotRuleId: number;
+	sequenceKey: string;
+	currentValue: number;
+}
+
+export interface ProductLotRuleDto {
+	id: number;
+	productId?: number | null;
+	lotRuleId?: number | null;
+	isDefault?: boolean | null;
+	effectiveFrom?: string | null;
+	effectiveTo?: string | null;
+}
+
+
+export type LotRequest = Omit<LotDto, 'id'>;
+export type LotRuleRequest = Omit<LotRuleDto, 'id'> & {
+	productLotRules?: ProductLotRuleRequest[] | [];
+};
+export type LotRuleSequenceRequest = Omit<LotRuleSequenceDto, 'id'>;
+export type ProductLotRuleRequest = Omit<ProductLotRuleDto, 'id'>;
+
+export const LOT_STATUS = [
+	{ labelKey: 'lot.status.available', value: 1 },
+	{ labelKey: 'lot.status.hold', value: 2 },
+	{ labelKey: 'lot.status.blocked', value: 3 },
+	{ labelKey: 'lot.status.closed', value: 4 },
+];
+
+export const LOT_RULE_STATUS = [
+	{ labelKey: 'lotRule.status.draft', value: 1, severity: 'warn' as const },
+	{ labelKey: 'lotRule.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'lotRule.status.inactive', value: 3, severity: 'danger' as const },
+];
+
+export const LOT_RULE_SEQUENCE_RESET_TYPES = [
+	{ labelKey: 'lotRule.sequenceResetType.daily', value: 1 },
+	{ labelKey: 'lotRule.sequenceResetType.monthly', value: 2 },
+	{ labelKey: 'lotRule.sequenceResetType.yearly', value: 3 },
+	{ labelKey: 'lotRule.sequenceResetType.never', value: 4 },
+];
+
+export function lotRuleStatusOf(status?: number | null) {
+	return LOT_RULE_STATUS.find(s => s.value === status);
+}
+//#endregion
+
+//#region Serial
+export interface SerialRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	productId: number;
+	prefix: string;
+	suffix?: string | null;
+	dateFormat: string;
+	separator: string;
+	sequenceLength: number;
+	sequenceResetType: number;
+	pattern: string;
+	isActive?: boolean | null;
+	isDefault: boolean;
+	remark?: string | null;
+}
+
+export type SerialRuleRequest = Omit<SerialRuleDto, 'id'>;
+export const SERIAL_RULE_SEQUENCE_RESET_TYPES = [
+	{ labelKey: 'serialRule.sequenceResetType.daily', value: 1 },
+	{ labelKey: 'serialRule.sequenceResetType.monthly', value: 2 },
+	{ labelKey: 'serialRule.sequenceResetType.yearly', value: 3 },
+	{ labelKey: 'serialRule.sequenceResetType.never', value: 4 },
+];
+//#endregion
+
+//#region TraceabilityRule
+
+export interface TraceabilityRuleDto {
+	id: number;
+	ruleCode: string;
+	ruleName: string;
+	productId?: number | null;
+	traceDirection: number;
+	isActive?: boolean | null;
+	description?: string | null;
+}
+
+export interface TraceabilityRuleItemDto {
+	id: number;
+	traceabilityRuleId?: number | null;
+	traceTypeId: number;
+	isRequired?: boolean | null;
+	sortOrder: number;
+	description?: string | null;
+}
+
+export interface TraceabilityTypeDto {
+	id: number;
+	sortOrder: number;
+	traceCode: string;
+	traceName: string;
+	isActive?: boolean | null;
+	description?: string | null;
+}
+
+export type TraceabilityRuleRequest = Omit<TraceabilityRuleDto, 'id'> & {
+	traceabilityRuleItems?: TraceabilityRuleItemRequest[] | [];
+};
+export type TraceabilityRuleItemRequest = Omit<TraceabilityRuleItemDto, 'id'>;
+export type TraceabilityTypeRequest = Omit<TraceabilityTypeDto, 'id'>;
+
+export const TRACEABILITY_DIRECTION = [
+	{ labelKey: 'traceability.direction.forward', value: 1 },
+	{ labelKey: 'traceability.direction.backward', value: 2 },
+	{ labelKey: 'traceability.direction.both', value: 3 },
+];
+
+//#endregion
+
+//#region Maintenance
+
+export interface MaintenanceTypeDto {
+	id: number;
+	typeCode: string;
+	typeName: string;
+	shortName?: string | null;
+	description?: string | null;
+	typeCategory?: number | null;
+	priority?: number | null;
+	sortOrder?: number | null;
+	isActive?: boolean | null;
+}
+
+export interface MaintenanceChecklistDto {
+	id: number;
+	checklistCode: string;
+	checklistName: string;
+	description?: string | null;
+	version: number;
+	status: number;
+}
+
+export interface MaintenanceChecklistItemDto {
+	id: number;
+	maintenanceChecklistId?: number | null;
+	sequenceNo: number;
+	itemCode: string;
+	itemName: string;
+	checkType: number;
+	unitId?: number | null;
+	targetValue?: number | null;
+	minValue?: number | null;
+	maxValue?: number | null;
+	expectedResult?: string | null;
+	isRequired?: boolean | null;
+	isActive?: boolean | null;
+}
+
+export interface MaintenancePlanDto {
+	id: number;
+	planCode: string;
+	planName: string;
+	maintenanceTypeId: number;
+	machineId: number;
+	workCenterId?: number | null;
+	maintenanceChecklistId?: number | null;
+	frequency: number;
+	frequencyUnit: number;
+	startDate: string;
+	endDate?: string | null;
+	lastMaintenanceDate?: string | null;
+	nextMaintenanceDate?: string | null;
+	priority: number;
+	status: number;
+	responsibleDepartmentId?: number | null;
+	responsibleEmployeeId?: number | null;
+	remark?: string | null;
+}
+
+export type MaintenanceTypeRequest = Omit<MaintenanceTypeDto, 'id'>;
+export type MaintenanceChecklistRequest = Omit<MaintenanceChecklistDto, 'id'> & {
+	maintenanceChecklistItems?: MaintenanceChecklistItemRequest[] | [];
+};
+export type MaintenanceChecklistItemRequest = Omit<MaintenanceChecklistItemDto, 'id'>;
+export type MaintenancePlanRequest = Omit<MaintenancePlanDto, 'id'>;
+
+export const MAINTENANCE_TYPE_CATEGORY = [
+	{ labelKey: 'maintenanceType.category.planned', value: 1 },
+	{ labelKey: 'maintenanceType.category.unplanned', value: 2 },
+	{ labelKey: 'maintenanceType.category.condition', value: 3 },
+	{ labelKey: 'maintenanceType.category.special', value: 4 },
+];
+
+export const MAINTENANCE_TYPE_PRIORITY = [
+	{ labelKey: 'maintenanceType.priority.low', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceType.priority.normal', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceType.priority.high', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceType.priority.critical', value: 4, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_CHECKLIST_STATUS = [
+	{ labelKey: 'maintenanceChecklist.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceChecklist.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'maintenanceChecklist.status.inactive', value: 3, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_CHECKLIST_TYPE = [
+	{ labelKey: 'maintenanceChecklist.checkType.yesNo', value: 1 },
+	{ labelKey: 'maintenanceChecklist.checkType.numeric', value: 2 },
+	{ labelKey: 'maintenanceChecklist.checkType.text', value: 3 },
+	{ labelKey: 'maintenanceChecklist.checkType.selection', value: 4 },
+	{ labelKey: 'maintenanceChecklist.checkType.passFail', value: 5 },
+	{ labelKey: 'maintenanceChecklist.checkType.inspection', value: 6 },
+];
+
+export const MAINTENANCE_PLAN_FREQUENCY_UNIT = [
+	{ labelKey: 'maintenancePlan.frequencyUnit.day', value: 1 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.week', value: 2 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.month', value: 3 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.year', value: 4 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.hour', value: 5 },
+	{ labelKey: 'maintenancePlan.frequencyUnit.productionQuantity', value: 6 },
+];
+
+export const MAINTENANCE_PLAN_STATUS = [
+	{ labelKey: 'maintenancePlan.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenancePlan.status.active', value: 2, severity: 'success' as const },
+	{ labelKey: 'maintenancePlan.status.inactive', value: 3, severity: 'danger' as const },
+	{ labelKey: 'maintenancePlan.status.expired', value: 4, severity: 'warn' as const },
+];
+
+export function priorityOf(value?: number | null) {
+	return MAINTENANCE_TYPE_PRIORITY.find(s => s.value === value);
+}
+export function statusOf(value?: number | null) {
+	return MAINTENANCE_CHECKLIST_STATUS.find(s => s.value === value);
+}
+export function planStatusOf(value?: number | null) {
+	return MAINTENANCE_PLAN_STATUS.find(s => s.value === value);
+}
+
+//#endregion
+
+//#region Failure
+
+export interface FailureGroupDto {
+	id: number;
+	groupCode: string;
+	groupName: string;
+	shortName?: string | null;
+	description?: string | null;
+	sortOrder: number;
+	isActive?: boolean | null;
+}
+
+export interface FailureCodeDto {
+	id: number;
+	code: string;
+	name: string;
+	shortName?: string | null;
+	description?: string | null;
+	failureGroupId?: number | null;
+	severity: number;
+	isActive: boolean;
+}
+
+export type FailureGroupRequest = Omit<FailureGroupDto, 'id'>;
+export type FailureCodeRequest = Omit<FailureCodeDto, 'id'>;
+
+export const FAILURE_CODE_SEVERITY = [
+	{ labelKey: 'failureCode.severity.critical', value: 1, severity: 'danger' as const },
+	{ labelKey: 'failureCode.severity.major', value: 2, severity: 'warn' as const },
+	{ labelKey: 'failureCode.severity.minor', value: 3, severity: 'info' as const },
+];
+
+export function failureSeverityOf(value?: number | null) {
+	return FAILURE_CODE_SEVERITY.find(s => s.value === value);
+}
+
+//#endregion
+
+
+//#region maintenance order
+
+export interface MaintenanceOrderDto {
+	id: number;
+	orderNo: string;
+	maintenancePlanId?: number | null;
+	maintenanceTypeId: number;
+	machineId: number;
+	priority: number;
+	status: number;
+	plannedStartDate?: string | null;
+	plannedEndDate?: string | null;
+	actualStartDate?: string | null;
+	actualEndDate?: string | null;
+	responsibleEmployeeId?: number | null;
+	description?: string | null;
+	completionNote?: string | null;
+	remark?: string | null;
+}
+
+export interface MaintenanceOrderChecklistDto {
+	id: number;
+	maintenanceOrderId?: number | null;
+	maintenanceChecklistId?: number | null;
+	checklistCode: string;
+	checklistName: string;
+	checklistVersion?: number | null;
+	status: number;
+	startedDate?: string | null;
+	completedDate?: string | null;
+	completedBy?: number | null;
+	remark?: string | null;
+	maintenanceOrderChecklistItems: MaintenanceOrderChecklistItemDto[];
+}
+
+export interface MaintenanceOrderChecklistItemDto {
+	id: number;
+	maintenanceOrderChecklistId?: number | null;
+	maintenanceChecklistItemId?: number | null;
+	sequenceNo: number;
+	itemCode: string;
+	itemName: string;
+	checkType: number;
+	unitId?: number | null;
+	targetValue?: number | null;
+	minValue?: number | null;
+	maxValue?: number | null;
+	expectedResult?: string | null;
+	actualValue?: number | null;
+	actualText?: string | null;
+	result?: number | null;
+	isRequired?: boolean | null;
+	completedDate?: string | null;
+	completedBy?: number | null;
+	remark?: string | null;
+	failureCodeId?: number | null;
+}
+
+export type MaintenanceOrderChecklistItemRequest = Omit<MaintenanceOrderChecklistItemDto, 'id'>;
+
+export type MaintenanceOrderChecklistRequest = Omit<MaintenanceOrderChecklistDto, 'id'> & {
+	maintenanceOrderChecklistItems?: MaintenanceOrderChecklistItemRequest[] | null;
+};
+
+export type MaintenanceOrderRequest = Omit<MaintenanceOrderDto, 'id'> & {
+	maintenanceOrderChecklists?: MaintenanceOrderChecklistRequest[] | null;
+};
+
+export const MAINTENANCE_ORDER_PRIORITY = [
+	{ labelKey: 'maintenanceOrder.priority.low', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrder.priority.normal', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceOrder.priority.high', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrder.priority.critical', value: 4, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_ORDER_STATUS = [
+	{ labelKey: 'maintenanceOrder.status.draft', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrder.status.released', value: 2, severity: 'info' as const },
+	{ labelKey: 'maintenanceOrder.status.inProgress', value: 3, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrder.status.completed', value: 4, severity: 'success' as const },
+	{ labelKey: 'maintenanceOrder.status.cancelled', value: 5, severity: 'danger' as const },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_STATUS = [
+	{ labelKey: 'maintenanceOrderChecklist.status.pending', value: 1, severity: 'secondary' as const },
+	{ labelKey: 'maintenanceOrderChecklist.status.inProgress', value: 2, severity: 'warn' as const },
+	{ labelKey: 'maintenanceOrderChecklist.status.completed', value: 3, severity: 'success' as const },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_ITEM_TYPE = [
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.yesNo', value: 1 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.numeric', value: 2 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.text', value: 3 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.selection', value: 4 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.passFail', value: 5 },
+	{ labelKey: 'maintenanceOrderChecklistItem.checkType.inspection', value: 6 },
+];
+
+export const MAINTENANCE_ORDER_CHECKLIST_ITEM_RESULT = [
+	{ labelKey: 'maintenanceOrderChecklistItem.result.pass', value: 1, severity: 'success' as const },
+	{ labelKey: 'maintenanceOrderChecklistItem.result.fail', value: 2, severity: 'danger' as const },
+	{ labelKey: 'maintenanceOrderChecklistItem.result.na', value: 3, severity: 'secondary' as const },
+];
+
+export function maintenanceOrderPriorityOf(value?: number | null) {
+	return MAINTENANCE_ORDER_PRIORITY.find(s => s.value === value);
+}
+
+export function maintenanceOrderStatusOf(value?: number | null) {
+	return MAINTENANCE_ORDER_STATUS.find(s => s.value === value);
+}
+
+export function maintenanceOrderChecklistStatusOf(value?: number | null) {
+	return MAINTENANCE_ORDER_CHECKLIST_STATUS.find(s => s.value === value);
+}
+
+export function maintenanceOrderChecklistItemResultOf(value?: number | null) {
+	return MAINTENANCE_ORDER_CHECKLIST_ITEM_RESULT.find(s => s.value === value);
+}
+
+//#endregion
