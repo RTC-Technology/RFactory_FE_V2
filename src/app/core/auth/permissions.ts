@@ -31,6 +31,7 @@ export const PERMISSIONS = {
   shiftBreak: crud('shift-break'),
   machineType: crud('machine-type'),
   machine: crud('machine'),
+  machineStatus: crud('machine-status'),
   organization: crud('organization'),
   user: crud('user'),
   userGroup: crud('user-group'),
@@ -43,6 +44,10 @@ export const PERMISSIONS = {
   goodsReceipt: crud('goods-receipt'),
   goodsReceiptDetail: crud('goods-receipt-detail'),
   supplier: crud('supplier'),
+  employee: crud('employee'),
+  position: crud('position'),
+  skill: crud('skill'),
+  employeeSkill: crud('employee-skill'),
   goodsIssue: crud('goods-issue'),
   goodsIssueDetail: crud('goods-issue-detail'),
   inventory: crud('inventory'),
@@ -50,6 +55,10 @@ export const PERMISSIONS = {
   purchaseOrder: crud('purchase-order'),
   purchaseOrderDetail: crud('purchase-order-detail'),
   purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
+  qrCode: crud('qrcode'),
+  labelTemplate: crud('label-template'),
+  packingSpecification: crud('packing-specification'),
+  packingNumberingRule: crud('packing-numbering-rule'),
 
   pickingPlan: crud('picking-plan'),
   pickingPlanSource: crud('picking-plan-source'),
@@ -116,7 +125,6 @@ export const PERMISSIONS = {
 
   failureCode: crud('failure-code'),
   failureGroup: crud('failure-group'),
-
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

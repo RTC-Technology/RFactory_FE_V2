@@ -1,0 +1,843 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="machine-status-container">
+  <!-- Top Navigation & Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-server"></i>
+      </div>
+      <div>
+        <h1 class="page-title">{{ i18n.t('machineStatus.title') }}</h1>
+        <p class="page-subtitle">{{ i18n.t('machineStatus.subtitle') }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="Machine Master Data"
+        icon="pi pi-cog"
+        class="p-button-outlined p-button-secondary"
+        (click)="goToMachineMaster()"
+      ></button>
+      <button
+        pButton
+        [label]="autoRefresh() ? 'Auto-Refresh: 15s' : 'Auto-Refresh: OFF'"
+        [icon]="autoRefresh() ? 'pi pi-spin pi-sync' : 'pi pi-sync'"
+        [class]="autoRefresh() ? 'p-button-outlined p-button-success' : 'p-button-outlined p-button-secondary'"
+        (click)="toggleAutoRefresh()"
+        pTooltip="Toggle real-time auto refresh"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-refresh"
+        class="p-button-primary"
+        [loading]="loading()"
+        (click)="refreshAll()"
+        pTooltip="Refresh status now"
+      ></button>
+    </div>
+  </header>
+
+  <!-- KPI Overview Ribbon -->
+  <div class="kpi-ribbon" *ngIf="summary() as sum">
+    <div class="kpi-card total-kpi">
+      <div class="kpi-meta">TOTAL MACHINES</div>
+      <div class="kpi-value">{{ sum.totalMachines }}</div>
+      <div class="kpi-sub">{{ sum.availabilityPercentage }}% Availability</div>
+    </div>
+
+    <div class="kpi-card running-kpi">
+      <div class="kpi-meta"><span class="pulse-dot green"></span> RUNNING</div>
+      <div class="kpi-value text-green">{{ sum.runningCount }}</div>
+      <div class="kpi-sub">In Production</div>
+    </div>
+
+    <div class="kpi-card idle-kpi">
+      <div class="kpi-meta"><span class="pulse-dot amber"></span> IDLE / STANDBY</div>
+      <div class="kpi-value text-amber">{{ sum.idleCount }}</div>
+      <div class="kpi-sub">Awaiting Job</div>
+    </div>
+
+    <div class="kpi-card dt-kpi">
+      <div class="kpi-meta"><span class="pulse-dot red"></span> DOWNTIME</div>
+      <div class="kpi-value text-red">{{ sum.downtimeCount }}</div>
+      <div class="kpi-sub">{{ sum.totalDowntimeMinutesToday }} min today</div>
+    </div>
+
+    <div class="kpi-card changeover-kpi">
+      <div class="kpi-meta"><span class="pulse-dot purple"></span> CHANGEOVER</div>
+      <div class="kpi-value text-purple">{{ sum.changeoverCount }}</div>
+      <div class="kpi-sub">Tooling / Setup</div>
+    </div>
+
+    <div class="kpi-card maint-kpi">
+      <div class="kpi-meta"><span class="pulse-dot blue"></span> PM MAINT.</div>
+      <div class="kpi-value text-blue">{{ sum.maintenanceCount }}</div>
+      <div class="kpi-sub">Preventive</div>
+    </div>
+
+    <div class="kpi-card defect-kpi">
+      <div class="kpi-meta"><i class="pi pi-shield"></i> TODAY DEFECTS</div>
+      <div class="kpi-value defect-val">
+        <span class="scrap-count" pTooltip="Scrap Units">{{ sum.totalScrapQtyToday }} S</span>
+        <span class="sep">/</span>
+        <span class="rework-count" pTooltip="Rework Units">{{ sum.totalReworkQtyToday }} R</span>
+      </div>
+      <div class="kpi-sub">Scrap / Rework</div>
+    </div>
+  </div>
+
+  <!-- Navigation View Tabs -->
+  <div class="nav-tabs-bar">
+    <div class="tabs-group">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'board'"
+        (click)="activeTab.set('board')"
+      >
+        <i class="pi pi-th-large"></i> Live Machine Board
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'history'"
+        (click)="activeTab.set('history'); loadHistory()"
+      >
+        <i class="pi pi-history"></i> Downtime &amp; State History
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'defects'"
+        (click)="activeTab.set('defects'); loadDefectLogs()"
+      >
+        <i class="pi pi-filter"></i> Defect Logs (Scrap / Rework)
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'reasons'"
+        (click)="activeTab.set('reasons'); loadReasons()"
+      >
+        <i class="pi pi-list"></i> Reason Taxonomy Catalog
+      </button>
+    </div>
+
+    <div class="tab-extra-actions" *ngIf="activeTab() === 'reasons'">
+      <button
+        pButton
+        label="New Reason Code"
+        icon="pi pi-plus"
+        class="p-button-sm p-button-primary"
+        (click)="openCreateReason()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 1: LIVE MACHINE BOARD                                 -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab() === 'board'" class="tab-content">
+    <!-- Filter Toolbar -->
+    <div class="board-filter-toolbar">
+      <div class="filter-left">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            placeholder="Search machine code, name, reason..."
+            [ngModel]="boardSearchQuery()"
+            (ngModelChange)="boardSearchQuery.set($event)"
+            class="p-inputtext-sm"
+          />
+        </div>
+
+        <p-select
+          [options]="lineFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="selectedLineFilter()"
+          (ngModelChange)="selectedLineFilter.set($event)"
+          placeholder="Filter by Line..."
+          styleClass="p-inputtext-sm"
+          [showClear]="true"
+        ></p-select>
+
+        <p-select
+          [options]="statusFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="selectedStatusFilter()"
+          (ngModelChange)="selectedStatusFilter.set($event)"
+          placeholder="Filter by Status..."
+          styleClass="p-inputtext-sm"
+          [showClear]="true"
+        ></p-select>
+      </div>
+
+      <div class="board-counts-info">
+        Showing <b>{{ filteredMachines().length }}</b> of {{ machines().length }} machines
+      </div>
+    </div>
+
+    <!-- Machine Cards Grid -->
+    <div class="machines-grid" *ngIf="filteredMachines().length > 0; else noMachinesFound">
+      <div
+        *ngFor="let m of filteredMachines()"
+        class="machine-card"
+        [style.border-top-color]="getStatusConfig(m.status).color"
+      >
+        <!-- Card Header -->
+        <div class="m-card-header">
+          <div class="m-ident">
+            <span class="m-code font-mono">{{ m.machineCode }}</span>
+            <span class="m-name">{{ m.machineName }}</span>
+          </div>
+          <span
+            class="status-pill"
+            [style.color]="getStatusConfig(m.status).color"
+            [style.background]="getStatusConfig(m.status).bg"
+            [style.border-color]="getStatusConfig(m.status).border"
+          >
+            <i [class]="'pi ' + getStatusConfig(m.status).icon"></i>
+            {{ getStatusConfig(m.status).label }}
+          </span>
+        </div>
+
+        <!-- Location & Type -->
+        <div class="m-location-row">
+          <span class="loc-tag" *ngIf="m.lineName"><i class="pi pi-map-pin"></i> {{ m.lineName }}</span>
+          <span class="type-tag" *ngIf="m.machineTypeName">{{ m.machineTypeName }}</span>
+        </div>
+
+        <!-- State Duration Timer -->
+        <div class="m-state-timer">
+          <span class="timer-label">DURATION IN STATE:</span>
+          <span class="timer-value font-mono">
+            {{ formatDuration(m.durationSeconds) }}
+          </span>
+        </div>
+
+        <!-- Active Downtime / Changeover Reason Banner -->
+        <div
+          class="m-active-reason"
+          *ngIf="m.currentReasonName"
+          [class.dt-reason]="m.status === 'DOWNTIME'"
+          [class.setup-reason]="m.status === 'CHANGEOVER'"
+        >
+          <div class="reason-top">
+            <span class="reason-badge">{{ m.reasonCategory || 'Downtime' }}</span>
+            <span class="reason-code font-mono">{{ m.currentReasonCode }}</span>
+          </div>
+          <div class="reason-name">{{ m.currentReasonName }}</div>
+        </div>
+
+        <!-- Operator / Work Order -->
+        <div class="m-operator-row" *ngIf="m.operatorName || m.workOrderCode">
+          <span *ngIf="m.operatorName" class="op-info"><i class="pi pi-user"></i> {{ m.operatorName }}</span>
+          <span *ngIf="m.workOrderCode" class="wo-info font-mono"><i class="pi pi-bookmark"></i> {{ m.workOrderCode }}</span>
+        </div>
+
+        <!-- Today Metrics Footer -->
+        <div class="m-today-metrics">
+          <div class="today-metric">
+            <span class="tm-lbl">Downtime</span>
+            <span class="tm-val" [class.has-dt]="m.todayDowntimeMinutes > 0">{{ m.todayDowntimeMinutes }}m</span>
+          </div>
+          <div class="today-metric">
+            <span class="tm-lbl">Scrap</span>
+            <span class="tm-val" [class.has-scrap]="m.todayScrapQty > 0">{{ m.todayScrapQty }}</span>
+          </div>
+          <div class="today-metric">
+            <span class="tm-lbl">Rework</span>
+            <span class="tm-val" [class.has-rework]="m.todayReworkQty > 0">{{ m.todayReworkQty }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="m-card-actions">
+          <button
+            pButton
+            label="Change Status"
+            icon="pi pi-sync"
+            class="p-button-outlined p-button-sm flex-1"
+            (click)="openChangeStatus(m)"
+          ></button>
+          <button
+            pButton
+            icon="pi pi-flag"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Log Scrap / Rework"
+            tooltipPosition="top"
+            (click)="openLogDefect(m)"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noMachinesFound>
+      <div class="empty-state-box">
+        <i class="pi pi-server"></i>
+        <h3>No machines matching criteria</h3>
+        <p>Try clearing your line or status filters.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 2: DOWNTIME & STATE HISTORY                          -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab() === 'history'" class="tab-content table-card">
+    <div class="table-toolbar">
+      <div class="filter-left">
+        <p-select
+          [options]="machineOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="historyMachineFilter()"
+          (ngModelChange)="historyMachineFilter.set($event); loadHistory()"
+          placeholder="Filter by Machine..."
+          [showClear]="true"
+          styleClass="p-inputtext-sm"
+        ></p-select>
+        <button pButton label="Refresh History" icon="pi pi-refresh" class="p-button-outlined p-button-secondary p-button-sm" (click)="loadHistory()"></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="historyRecords()"
+      [loading]="historyLoading()"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Machine</th>
+          <th style="width: 140px">State</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th style="width: 110px">Duration</th>
+          <th>Reason Code / Name</th>
+          <th>Operator</th>
+          <th>Work Order</th>
+          <th>Remarks</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-h>
+        <tr>
+          <td>
+            <div class="cell-machine font-mono">
+              <b>{{ h.machineCode }}</b>
+              <span class="m-sub">{{ h.machineName }}</span>
+            </div>
+          </td>
+          <td>
+            <span
+              class="status-pill-sm"
+              [style.color]="getStatusConfig(h.status).color"
+              [style.background]="getStatusConfig(h.status).bg"
+            >
+              <i [class]="'pi ' + getStatusConfig(h.status).icon"></i>
+              {{ getStatusConfig(h.status).label }}
+            </span>
+          </td>
+          <td>{{ h.startTime | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+          <td>{{ h.endTime ? (h.endTime | date: 'dd/MM/yyyy HH:mm:ss') : 'Active Now' }}</td>
+          <td class="font-mono"><b>{{ formatDuration(h.durationSeconds) }}</b></td>
+          <td>
+            <div *ngIf="h.reasonName; else noReason">
+              <span class="reason-tag font-mono">{{ h.reasonCode }}</span>
+              <span class="reason-desc">{{ h.reasonName }}</span>
+            </div>
+            <ng-template #noReason><span class="muted">—</span></ng-template>
+          </td>
+          <td>{{ h.operatorName || '—' }}</td>
+          <td class="font-mono">{{ h.workOrderCode || '—' }}</td>
+          <td>{{ h.remarks || '—' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center p-4">No state transitions recorded.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 3: DEFECT LOGS (SCRAP / REWORK)                      -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab() === 'defects'" class="tab-content table-card">
+    <div class="table-toolbar">
+      <div class="filter-left">
+        <p-select
+          [options]="defectTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="defectTypeFilter()"
+          (ngModelChange)="defectTypeFilter.set($event); loadDefectLogs()"
+          placeholder="Filter Defect Type..."
+          [showClear]="true"
+          styleClass="p-inputtext-sm"
+        ></p-select>
+
+        <p-select
+          [options]="machineOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="defectMachineFilter()"
+          (ngModelChange)="defectMachineFilter.set($event); loadDefectLogs()"
+          placeholder="Filter Machine..."
+          [showClear]="true"
+          styleClass="p-inputtext-sm"
+        ></p-select>
+
+        <button pButton label="Refresh Defects" icon="pi pi-refresh" class="p-button-outlined p-button-secondary p-button-sm" (click)="loadDefectLogs()"></button>
+      </div>
+
+      <button
+        pButton
+        label="Log Scrap / Rework"
+        icon="pi pi-plus"
+        class="p-button-sm p-button-danger"
+        (click)="openDirectLogDefect()"
+      ></button>
+    </div>
+
+    <p-table
+      [value]="defectRecords()"
+      [loading]="defectLoading()"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Time</th>
+          <th>Machine</th>
+          <th style="width: 110px">Type</th>
+          <th style="width: 100px; text-align: right">Qty</th>
+          <th>Defect Reason</th>
+          <th>Product Code</th>
+          <th>Work Order</th>
+          <th>Operator</th>
+          <th>Remarks</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td>{{ d.loggedTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="font-mono"><b>{{ d.machineCode }}</b></td>
+          <td>
+            <span class="defect-badge" [class.scrap]="d.defectType === 'SCRAP'" [class.rework]="d.defectType === 'REWORK'">
+              {{ d.defectType }}
+            </span>
+          </td>
+          <td style="text-align: right" class="font-mono text-bold">{{ d.quantity }}</td>
+          <td>
+            <span class="reason-tag font-mono" *ngIf="d.reasonCode">{{ d.reasonCode }}</span>
+            <span>{{ d.reasonName || '—' }}</span>
+          </td>
+          <td class="font-mono">{{ d.productCode || '—' }}</td>
+          <td class="font-mono">{{ d.workOrderCode || '—' }}</td>
+          <td>{{ d.operatorName || '—' }}</td>
+          <td>{{ d.remarks || '—' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center p-4">No scrap or rework defects recorded.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TAB 4: REASON TAXONOMY CATALOG                           -->
+  <!-- ======================================================== -->
+  <div *ngIf="activeTab() === 'reasons'" class="tab-content table-card">
+    <div class="table-toolbar">
+      <div class="filter-left">
+        <p-select
+          [options]="reasonFilterTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="reasonsFilterType()"
+          (ngModelChange)="reasonsFilterType.set($event); loadReasons()"
+          styleClass="p-inputtext-sm"
+        ></p-select>
+        <button pButton label="Refresh Catalog" icon="pi pi-refresh" class="p-button-outlined p-button-secondary p-button-sm" (click)="loadReasons()"></button>
+      </div>
+      <button pButton label="Add Reason Code" icon="pi pi-plus" class="p-button-sm p-button-primary" (click)="openCreateReason()"></button>
+    </div>
+
+    <p-table
+      [value]="reasonsList()"
+      [loading]="reasonsLoading()"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 140px">Code</th>
+          <th>Reason Name</th>
+          <th style="width: 130px">Reason Type</th>
+          <th style="width: 140px">Category</th>
+          <th style="width: 110px">Planned?</th>
+          <th style="width: 90px; text-align: center">Status</th>
+          <th style="width: 110px; text-align: center">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td class="font-mono font-bold">{{ r.reasonCode }}</td>
+          <td>
+            <div class="reason-col">
+              <span class="reason-title">{{ r.reasonName }}</span>
+              <small class="reason-desc-text" *ngIf="r.description">{{ r.description }}</small>
+            </div>
+          </td>
+          <td>
+            <p-tag
+              [value]="r.reasonType"
+              [severity]="r.reasonType === 'DOWNTIME' ? 'danger' : (r.reasonType === 'SCRAP' ? 'warn' : 'info')"
+            ></p-tag>
+          </td>
+          <td><span class="cat-pill">{{ r.category }}</span></td>
+          <td>
+            <span *ngIf="r.isPlanned" class="text-blue font-bold"><i class="pi pi-check"></i> Planned</span>
+            <span *ngIf="!r.isPlanned" class="text-muted">Unplanned</span>
+          </td>
+          <td style="text-align: center">
+            <span *ngIf="r.isActive" class="active-dot">Active</span>
+            <span *ngIf="!r.isActive" class="inactive-dot">Inactive</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button pButton icon="pi pi-pencil" class="p-button-text p-button-info p-button-sm" (click)="openEditReason(r)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="confirmDeleteReason(r)"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center p-4">No reason codes registered in catalog.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CHANGE MACHINE STATUS                              -->
+  <!-- ======================================================== -->
+  <p-dialog
+    [(visible)]="changeStatusDialogOpen"
+    [modal]="true"
+    [style]="{ width: '560px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="Change Machine State"
+  >
+    <div class="dialog-content" *ngIf="targetMachineForStatus() as tm">
+      <div class="target-machine-banner">
+        <div>
+          <span class="tm-code font-mono">{{ tm.machineCode }}</span>
+          <h3 class="tm-name">{{ tm.machineName }}</h3>
+          <span class="tm-line" *ngIf="tm.lineName">{{ tm.lineName }}</span>
+        </div>
+        <div class="current-badge-wrap">
+          <span class="cur-lbl">CURRENT:</span>
+          <span class="status-pill-sm" [style.color]="getStatusConfig(tm.status).color" [style.background]="getStatusConfig(tm.status).bg">
+            {{ getStatusConfig(tm.status).label }}
+          </span>
+        </div>
+      </div>
+
+      <!-- New Status Selector Buttons -->
+      <div class="field-item mt-3">
+        <label class="field-label">Select New Operational State *</label>
+        <div class="status-grid-picker">
+          <button
+            type="button"
+            *ngFor="let s of operationalStatuses"
+            class="status-choice-btn"
+            [class.selected]="formNewStatus() === s.key"
+            [style.--btn-color]="s.config.color"
+            (click)="onStatusChoiceSelect(s.key)"
+          >
+            <i [class]="'pi ' + s.config.icon"></i>
+            <span>{{ s.config.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reason Code (Shown for Downtime & Changeover) -->
+      <div class="field-item mt-3" *ngIf="formNewStatus() === 'DOWNTIME' || formNewStatus() === 'CHANGEOVER'">
+        <label class="field-label">
+          Downtime / Stop Reason Code *
+          <small class="text-red">(Required for loss analysis)</small>
+        </label>
+        <p-select
+          [options]="downtimeReasonsList()"
+          optionLabel="label"
+          optionValue="id"
+          [ngModel]="formStatusReasonId()"
+          (ngModelChange)="formStatusReasonId.set($event)"
+          placeholder="Select specific downtime cause..."
+          [filter]="true"
+          filterBy="label,category"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="item" let-r>
+            <div class="reason-dropdown-item">
+              <span class="rd-cat">{{ r.category }}</span>
+              <span class="rd-code font-mono">{{ r.reasonCode }}</span>
+              <span class="rd-name">{{ r.reasonName }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Operator & Work Order -->
+      <div class="form-grid-2 mt-3">
+        <div class="field-item">
+          <label class="field-label">Operator Name</label>
+          <input pInputText [ngModel]="formStatusOperator()" (ngModelChange)="formStatusOperator.set($event)" placeholder="e.g. Nguyen Van A" class="w-full" />
+        </div>
+        <div class="field-item">
+          <label class="field-label">Work Order / Batch</label>
+          <input pInputText [ngModel]="formStatusWorkOrder()" (ngModelChange)="formStatusWorkOrder.set($event)" placeholder="e.g. WO-202610-001" class="w-full font-mono" />
+        </div>
+      </div>
+
+      <div class="field-item mt-3">
+        <label class="field-label">Remarks / Action Taken</label>
+        <textarea pTextarea rows="2" [ngModel]="formStatusRemarks()" (ngModelChange)="formStatusRemarks.set($event)" placeholder="Details about cause or intervention..." class="w-full"></textarea>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="changeStatusDialogOpen.set(false)"></button>
+      <button pButton label="Commit State Change" icon="pi pi-check" class="p-button-primary" [loading]="statusSaving()" (click)="saveStatusChange()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: LOG DEFECT (SCRAP / REWORK)                       -->
+  <!-- ======================================================== -->
+  <p-dialog
+    [(visible)]="logDefectDialogOpen"
+    [modal]="true"
+    [style]="{ width: '560px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="Record Machine Defect (Scrap / Rework)"
+  >
+    <div class="dialog-content">
+      <!-- Target Machine Picker if opened directly -->
+      <div class="field-item mb-3" *ngIf="!targetMachineForDefect()">
+        <label class="field-label">Target Machine *</label>
+        <p-select
+          [options]="machineOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="formDefectMachineId()"
+          (ngModelChange)="formDefectMachineId.set($event)"
+          placeholder="Select machine..."
+          styleClass="w-full"
+        ></p-select>
+      </div>
+
+      <div class="target-machine-banner mb-3" *ngIf="targetMachineForDefect() as tm">
+        <div>
+          <span class="tm-code font-mono">{{ tm.machineCode }}</span>
+          <h4 class="tm-name">{{ tm.machineName }}</h4>
+        </div>
+      </div>
+
+      <!-- Defect Type Toggle (SCRAP vs REWORK) -->
+      <div class="field-item">
+        <label class="field-label">Defect Classification *</label>
+        <div class="defect-choice-row">
+          <button
+            type="button"
+            class="choice-btn scrap-btn"
+            [class.active]="formDefectType() === 'SCRAP'"
+            (click)="onDefectTypeChanged('SCRAP')"
+          >
+            <i class="pi pi-trash"></i>
+            <div>
+              <b>SCRAP</b>
+              <span>Unrecoverable / Discard</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="choice-btn rework-btn"
+            [class.active]="formDefectType() === 'REWORK'"
+            (click)="onDefectTypeChanged('REWORK')"
+          >
+            <i class="pi pi-replay"></i>
+            <div>
+              <b>REWORK</b>
+              <span>Repairable Defect</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reason Code -->
+      <div class="field-item mt-3">
+        <label class="field-label">{{ formDefectType() }} Defect Reason *</label>
+        <p-select
+          [options]="filteredDefectReasonsList()"
+          optionLabel="label"
+          optionValue="id"
+          [ngModel]="formDefectReasonId()"
+          (ngModelChange)="formDefectReasonId.set($event)"
+          placeholder="Select defect cause..."
+          [filter]="true"
+          filterBy="label,category"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="item" let-r>
+            <div class="reason-dropdown-item">
+              <span class="rd-cat">{{ r.category }}</span>
+              <span class="rd-code font-mono">{{ r.reasonCode }}</span>
+              <span class="rd-name">{{ r.reasonName }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Quantity & Product -->
+      <div class="form-grid-2 mt-3">
+        <div class="field-item">
+          <label class="field-label">Defect Quantity (Units) *</label>
+          <p-inputNumber
+            [ngModel]="formDefectQty()"
+            (ngModelChange)="formDefectQty.set($event)"
+            [min]="1"
+            styleClass="w-full"
+          ></p-inputNumber>
+        </div>
+
+        <div class="field-item">
+          <label class="field-label">Affected Product</label>
+          <p-select
+            [options]="products()"
+            optionLabel="productName"
+            optionValue="id"
+            [ngModel]="formDefectProductId()"
+            (ngModelChange)="formDefectProductId.set($event)"
+            [filter]="true"
+            filterBy="productCode,productName"
+            placeholder="Pick product..."
+            styleClass="w-full"
+          ></p-select>
+        </div>
+      </div>
+
+      <!-- Work Order & Operator -->
+      <div class="form-grid-2 mt-3">
+        <div class="field-item">
+          <label class="field-label">Work Order / Batch</label>
+          <input pInputText [ngModel]="formDefectWorkOrder()" (ngModelChange)="formDefectWorkOrder.set($event)" placeholder="e.g. WO-1024" class="w-full font-mono" />
+        </div>
+        <div class="field-item">
+          <label class="field-label">Logged By Operator</label>
+          <input pInputText [ngModel]="formDefectOperator()" (ngModelChange)="formDefectOperator.set($event)" placeholder="e.g. Inspector B" class="w-full" />
+        </div>
+      </div>
+
+      <div class="field-item mt-3">
+        <label class="field-label">Remarks</label>
+        <textarea pTextarea rows="2" [ngModel]="formDefectRemarks()" (ngModelChange)="formDefectRemarks.set($event)" placeholder="Optional root cause notes..." class="w-full"></textarea>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="logDefectDialogOpen.set(false)"></button>
+      <button pButton label="Record Defect" icon="pi pi-check" class="p-button-danger" [loading]="defectSaving()" (click)="saveDefectLog()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ADD / EDIT REASON CODE                            -->
+  <!-- ======================================================== -->
+  <p-dialog
+    [(visible)]="reasonDialogOpen"
+    [modal]="true"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="{{ editingReasonId() ? 'Edit Reason Code' : 'Create Reason Code' }}"
+  >
+    <div class="dialog-content">
+      <div class="form-grid-2">
+        <div class="field-item">
+          <label class="field-label">Reason Type *</label>
+          <p-select
+            [options]="reasonTypes"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="formReasonType()"
+            (ngModelChange)="formReasonType.set($event)"
+            styleClass="w-full"
+          ></p-select>
+        </div>
+
+        <div class="field-item">
+          <label class="field-label">Category *</label>
+          <p-select
+            [options]="reasonCategories"
+            [ngModel]="formReasonCategory()"
+            (ngModelChange)="formReasonCategory.set($event)"
+            styleClass="w-full"
+          ></p-select>
+        </div>
+      </div>
+
+      <div class="form-grid-2 mt-3">
+        <div class="field-item">
+          <label class="field-label">Reason Code *</label>
+          <input pInputText [ngModel]="formReasonCode()" (ngModelChange)="formReasonCode.set($event)" placeholder="e.g. DT-MECH-02" class="w-full font-mono" />
+        </div>
+        <div class="field-item">
+          <label class="field-label">Planned Loss?</label>
+          <div class="checkbox-simple mt-2">
+            <p-checkbox [binary]="true" [ngModel]="formReasonIsPlanned()" (ngModelChange)="formReasonIsPlanned.set($event)" inputId="chkPlan"></p-checkbox>
+            <label for="chkPlan">Is Planned Stop (e.g. Setup / PM)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-item mt-3">
+        <label class="field-label">Reason Name *</label>
+        <input pInputText [ngModel]="formReasonName()" (ngModelChange)="formReasonName.set($event)" placeholder="e.g. Hydraulic Pump Pressure Drop" class="w-full" />
+      </div>
+
+      <div class="field-item mt-3">
+        <label class="field-label">Description / Guidelines</label>
+        <textarea pTextarea rows="2" [ngModel]="formReasonDescription()" (ngModelChange)="formReasonDescription.set($event)" placeholder="Operational notes..." class="w-full"></textarea>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="reasonDialogOpen.set(false)"></button>
+      <button pButton label="Save Reason" icon="pi pi-check" class="p-button-primary" [loading]="reasonSaving()" (click)="saveReason()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

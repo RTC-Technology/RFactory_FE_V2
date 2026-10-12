@@ -36,7 +36,7 @@ type WriteAction = 'add' | 'edit' | 'delete';
 export abstract class PermissionAwarePage {
   protected readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  protected readonly router = inject(Router);
 
   /** The whole catalogue, so templates keep reading `perms.area.add`. */
   readonly perms = PERMISSIONS;

@@ -1,0 +1,34 @@
+/* Flat declaration screen for Line. Reuses the shared master-detail chrome so it sits
+   beside the other declaration screens without a second look — it is the same rows the
+   factory-structure screen edits, just not scoped to one area. */
+
+@use '../../shared/styles/master-detail';
+
+/* No splitter here — the one panel takes the whole page. */
+.page > .panel { flex: 1; min-height: 0; }
+
+/* Area is the one column showing a name rather than a code, so it needs the room. */
+.col-area { width: 180px; }
+
+/* The layout value is a path or URL, and a long one must not push the status tag off the
+   edge: clip it to the column and let the tooltip carry the full value. */
+.col-layout {
+  width: 200px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-status { width: 130px; }
+
+/* The area filter sits with the tools, not in the search slot: `.tool-search` owns
+   `margin-left: auto`, so it stays the only thing pinned to the far end. */
+.tool-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
