@@ -343,6 +343,20 @@ export const routes: Routes = [
 				},
 			},
 
+			//packing-specifications
+			{
+				path: 'packing-specifications',
+				loadComponent: () =>
+					import('./pages/packing-specification/packing-specification.component').then(m => m.PackingSpecificationComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingSpecification.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			{
 				path: 'forbidden',
 				loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),

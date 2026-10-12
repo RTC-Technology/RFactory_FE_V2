@@ -55,6 +55,7 @@ export const PERMISSIONS = {
   purchaseDeliverySchedule: crud('purchase-order-delivery-schedule'),
   qrCode: crud('qrcode'),
   labelTemplate: crud('label-template'),
+  packingSpecification: crud('packing-specification'),
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

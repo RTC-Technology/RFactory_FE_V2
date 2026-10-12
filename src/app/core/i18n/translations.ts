@@ -167,7 +167,15 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'perm.entity.employee-skill': { vi: 'kỹ năng nhân viên', en: 'employee skill' },
   'perm.entity.qrcode': { vi: 'mã QR & nhãn', en: 'QR code & label' },
   'perm.entity.label-template': { vi: 'mẫu in nhãn', en: 'label template' },
+  'perm.entity.packing-specification': { vi: 'quy cách đóng gói', en: 'packing specification' },
   'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
+
+  'packing.title': { vi: 'Quản Lý Quy Cách Đóng Gói', en: 'Packing Specification Management' },
+  'packing.type.box': { vi: 'Hộp', en: 'Box' },
+  'packing.type.carton': { vi: 'Thùng carton', en: 'Carton' },
+  'packing.type.pallet': { vi: 'Pallet', en: 'Pallet' },
+  'packing.type.crate': { vi: 'Kiện gỗ', en: 'Crate' },
+  'packing.type.bundle': { vi: 'Bó / Kiện', en: 'Bundle' },
 
   'template.title': { vi: 'Quản Lý Mẫu Nhãn In', en: 'Label Template Designer & Manager' },
   'template.entity.product': { vi: 'Sản phẩm', en: 'Product' },

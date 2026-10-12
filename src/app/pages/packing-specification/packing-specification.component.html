@@ -1,0 +1,399 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="packing-page-container">
+  <!-- Page Header -->
+  <header class="page-header no-print">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-box"></i>
+      </div>
+      <div>
+        <h1 class="page-title">Packing Specification Management</h1>
+        <p class="page-subtitle">Standardize unit packaging rules, master carton dimensions, Ti/Hi pallet stacking, and label template associations.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button pButton label="New Specification" icon="pi pi-plus" class="p-button-primary" (click)="openCreate()"></button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- Specifications Data Table -->
+    <div class="table-card no-print">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            placeholder="Filter code, name, product, type..."
+            (input)="applyFilter($any($event.target).value)"
+            class="p-inputtext-sm"
+          />
+        </div>
+        <button pButton icon="pi pi-refresh" class="p-button-outlined p-button-secondary p-button-sm" (click)="reload()"></button>
+      </div>
+
+      <p-table
+        #dt
+        [value]="specs()"
+        [loading]="loading()"
+        [globalFilterFields]="filterFields"
+        [paginator]="true"
+        [rows]="10"
+        selectionMode="single"
+        [selection]="selected()"
+        (onRowSelect)="select($event.data)"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Spec Code</th>
+            <th>Specification Name</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Qty / Pack</th>
+            <th>Dimensions (mm)</th>
+            <th>Gross Wt</th>
+            <th>Pallet (Ti×Hi)</th>
+            <th>Default</th>
+            <th>Status</th>
+            <th style="width: 100px; text-align: center">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr [class.selected-row]="selected()?.id === item.id" (click)="select(item)">
+            <td><span class="font-bold text-primary">{{ item.specCode }}</span></td>
+            <td>{{ item.specName }}</td>
+            <td>
+              <span *ngIf="item.productCode" class="product-tag">
+                {{ item.productCode }} - {{ item.productName }}
+              </span>
+              <span *ngIf="!item.productCode" class="text-secondary italic">General Spec</span>
+            </td>
+            <td>
+              <p-tag [value]="item.packagingType" severity="info"></p-tag>
+            </td>
+            <td>
+              <strong>{{ item.quantityPerPack }}</strong> {{ item.packUnitName || 'pcs' }}
+            </td>
+            <td>
+              <span class="dims-badge">{{ item.lengthMm }}×{{ item.widthMm }}×{{ item.heightMm }}</span>
+            </td>
+            <td>{{ item.grossWeightKg }} kg</td>
+            <td>
+              <span *ngIf="item.palletTi && item.palletHi" class="tihi-badge">
+                {{ item.palletTi }} × {{ item.palletHi }}
+              </span>
+              <span *ngIf="!item.palletTi" class="text-secondary">—</span>
+            </td>
+            <td>
+              <span *ngIf="item.isDefault" class="default-badge">
+                <i class="pi pi-star-fill"></i> DEFAULT
+              </span>
+              <button
+                *ngIf="!item.isDefault"
+                pButton
+                label="Set Default"
+                class="p-button-text p-button-sm text-xs p-0"
+                (click)="setDefault(item); $event.stopPropagation()"
+              ></button>
+            </td>
+            <td>
+              <p-tag
+                [value]="item.status"
+                [severity]="item.status === 'ACTIVE' ? 'success' : item.status === 'DRAFT' ? 'warn' : 'secondary'"
+              ></p-tag>
+            </td>
+            <td style="text-align: center">
+              <div class="flex-align justify-center gap-1">
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-sm"
+                  (click)="openEdit(item); $event.stopPropagation()"
+                  title="Edit"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                  (click)="askDelete(item); $event.stopPropagation()"
+                  title="Delete"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="11" class="text-center py-6 text-secondary">
+              No packing specifications found. Click <strong>New Specification</strong> to create one.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Visual Hierarchy Drawer / Summary Card for Selected Spec -->
+    <div *ngIf="selected() as sel" class="hierarchy-sidebar no-print">
+      <div class="sidebar-header">
+        <h3 class="sidebar-title"><i class="pi pi-sitemap"></i> Packaging Hierarchy</h3>
+        <span class="font-bold text-primary">{{ sel.specCode }}</span>
+      </div>
+
+      <div class="hierarchy-tree">
+        <!-- Tier 1: Unit / Piece -->
+        <div class="tier-card tier-1">
+          <div class="tier-icon"><i class="pi pi-box"></i></div>
+          <div class="tier-info">
+            <span class="tier-level">Level 1 - Product Unit</span>
+            <span class="tier-val">{{ sel.productName || sel.productCode || 'Single Finished Good' }}</span>
+          </div>
+        </div>
+
+        <div class="tier-arrow"><i class="pi pi-arrow-down"></i> {{ sel.innerPackQty ? sel.innerPackQty + ' pcs/pack' : 'Packed into box' }}</div>
+
+        <!-- Tier 2: Master Carton -->
+        <div class="tier-card tier-2">
+          <div class="tier-icon"><i class="pi pi-inbox"></i></div>
+          <div class="tier-info">
+            <span class="tier-level">Level 2 - Master Carton ({{ sel.packagingType }})</span>
+            <span class="tier-val">{{ sel.quantityPerPack }} {{ sel.packUnitName || 'pcs' }} / carton</span>
+            <span class="tier-meta">{{ sel.lengthMm }}×{{ sel.widthMm }}×{{ sel.heightMm }} mm | {{ sel.grossWeightKg }} kg</span>
+          </div>
+        </div>
+
+        <div class="tier-arrow"><i class="pi pi-arrow-down"></i> {{ sel.palletTi && sel.palletHi ? (sel.palletTi * sel.palletHi) + ' cartons/pallet' : 'Stacked on pallet' }}</div>
+
+        <!-- Tier 3: Pallet -->
+        <div class="tier-card tier-3">
+          <div class="tier-icon"><i class="pi pi-database"></i></div>
+          <div class="tier-info">
+            <span class="tier-level">Level 3 - Shipping Pallet (Ti × Hi)</span>
+            <span class="tier-val">{{ sel.palletTi || 0 }} per layer × {{ sel.palletHi || 0 }} layers</span>
+            <span class="tier-meta">Total: <strong>{{ sel.totalUnitsPerPallet || (sel.palletTi && sel.palletHi ? sel.palletTi * sel.palletHi * sel.quantityPerPack : 0) }}</strong> units / pallet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra Details -->
+      <div class="spec-extra-details">
+        <div class="detail-row">
+          <span class="dt-label">Label Template:</span>
+          <span class="dt-val">{{ sel.labelTemplateName || 'Default System Tag' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="sel.barcode">
+          <span class="dt-label">Packaging Barcode:</span>
+          <span class="dt-val font-mono">{{ sel.barcode }}</span>
+        </div>
+        <div class="detail-row" *ngIf="sel.packagingMaterial">
+          <span class="dt-label">Materials:</span>
+          <span class="dt-val">{{ sel.packagingMaterial }}</span>
+        </div>
+        <div class="detail-row" *ngIf="sel.instructions">
+          <span class="dt-label">Instructions:</span>
+          <span class="dt-val">{{ sel.instructions }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT SPECIFICATION DIALOG -->
+  <p-dialog
+    [(visible)]="dialogOpen"
+    [modal]="true"
+    [style]="{ width: '920px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="{{ editingId() ? 'Edit Specification: ' + formSpecName() : 'Create New Packing Specification' }}"
+  >
+    <div class="dialog-form-content">
+      <div *ngIf="formError()" class="form-error-banner mb-3">
+        <i class="pi pi-exclamation-triangle"></i> {{ formError() }}
+      </div>
+
+      <!-- Section 1: General & Target Product -->
+      <div class="form-section">
+        <h4 class="form-section-title"><i class="pi pi-info-circle"></i> General &amp; Product Information</h4>
+        <div class="form-grid-3">
+          <div class="field-item">
+            <label class="field-label">Spec Code *</label>
+            <input pInputText [ngModel]="formSpecCode()" (ngModelChange)="formSpecCode.set($event)" placeholder="e.g. PK-CARTON-50PCS" class="w-full" />
+          </div>
+          <div class="field-item">
+            <label class="field-label">Spec Name *</label>
+            <input pInputText [ngModel]="formSpecName()" (ngModelChange)="formSpecName.set($event)" placeholder="e.g. Export Standard 50pcs Carton" class="w-full" />
+          </div>
+          <div class="field-item">
+            <label class="field-label">Assigned Product</label>
+            <p-select
+              [options]="products()"
+              optionLabel="productName"
+              optionValue="id"
+              [ngModel]="formProductId()"
+              (ngModelChange)="formProductId.set($event)"
+              [filter]="true"
+              filterBy="productCode,productName"
+              placeholder="Pick product or leave general..."
+              styleClass="w-full"
+            >
+              <ng-template pTemplate="item" let-p>
+                <div><strong>{{ p.productCode }}</strong> - {{ p.productName }}</div>
+              </ng-template>
+            </p-select>
+          </div>
+        </div>
+
+        <div class="form-grid-3 mt-3">
+          <div class="field-item">
+            <label class="field-label">Packaging Type</label>
+            <p-select
+              [options]="packagingTypes"
+              optionLabel="value"
+              optionValue="value"
+              [ngModel]="formPackagingType()"
+              (ngModelChange)="formPackagingType.set($event)"
+              styleClass="w-full"
+            ></p-select>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Status</label>
+            <p-select
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="formStatus()"
+              (ngModelChange)="formStatus.set($event)"
+              styleClass="w-full"
+            ></p-select>
+          </div>
+          <div class="field-item flex-align pt-4">
+            <label class="checkbox-label">
+              <p-checkbox [binary]="true" [ngModel]="formIsDefault()" (ngModelChange)="formIsDefault.set($event)"></p-checkbox>
+              <span>Default for this Product</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Dimensions & Weights -->
+      <div class="form-section mt-3">
+        <h4 class="form-section-title"><i class="pi pi-arrows-alt"></i> Dimensions &amp; Weights (mm &amp; kg)</h4>
+        <div class="form-grid-4">
+          <div class="field-item">
+            <label class="field-label">Length (mm)</label>
+            <p-inputNumber [ngModel]="formLengthMm()" (ngModelChange)="formLengthMm.set($event); recalculateVolume()" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Width (mm)</label>
+            <p-inputNumber [ngModel]="formWidthMm()" (ngModelChange)="formWidthMm.set($event); recalculateVolume()" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Height (mm)</label>
+            <p-inputNumber [ngModel]="formHeightMm()" (ngModelChange)="formHeightMm.set($event); recalculateVolume()" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Calculated Vol (m³)</label>
+            <p-inputNumber [ngModel]="formVolumeM3()" (ngModelChange)="formVolumeM3.set($event)" [minFractionDigits]="4" styleClass="w-full"></p-inputNumber>
+          </div>
+        </div>
+
+        <div class="form-grid-3 mt-3">
+          <div class="field-item">
+            <label class="field-label">Net Weight (kg)</label>
+            <p-inputNumber [ngModel]="formNetWeightKg()" (ngModelChange)="formNetWeightKg.set($event); recalculateTare()" [minFractionDigits]="2" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Gross Weight (kg)</label>
+            <p-inputNumber [ngModel]="formGrossWeightKg()" (ngModelChange)="formGrossWeightKg.set($event); recalculateTare()" [minFractionDigits]="2" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Tare Weight (kg)</label>
+            <p-inputNumber [ngModel]="formTareWeightKg()" (ngModelChange)="formTareWeightKg.set($event)" [minFractionDigits]="2" styleClass="w-full"></p-inputNumber>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Multi-Tier Hierarchy & Pallet Stacking -->
+      <div class="form-section mt-3">
+        <h4 class="form-section-title"><i class="pi pi-sitemap"></i> Packaging Hierarchy &amp; Pallet Calculator</h4>
+        <div class="form-grid-4">
+          <div class="field-item">
+            <label class="field-label">Qty per Carton / Pack *</label>
+            <p-inputNumber [ngModel]="formQuantityPerPack()" (ngModelChange)="formQuantityPerPack.set($event); recalculatePallet()" [min]="1" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Inner Pack Qty (pcs)</label>
+            <p-inputNumber [ngModel]="formInnerPackQty()" (ngModelChange)="formInnerPackQty.set($event)" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Pallet Ti (cartons/layer)</label>
+            <p-inputNumber [ngModel]="formPalletTi()" (ngModelChange)="formPalletTi.set($event); recalculatePallet()" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Pallet Hi (layers/pallet)</label>
+            <p-inputNumber [ngModel]="formPalletHi()" (ngModelChange)="formPalletHi.set($event); recalculatePallet()" [min]="0" styleClass="w-full"></p-inputNumber>
+          </div>
+        </div>
+
+        <div class="calc-highlight-box mt-3">
+          <div class="highlight-item">
+            <span class="hl-label">Cartons per Pallet:</span>
+            <span class="hl-val">{{ (formPalletTi() || 0) * (formPalletHi() || 0) }} cartons</span>
+          </div>
+          <div class="highlight-item">
+            <span class="hl-label">Total Units per Pallet:</span>
+            <span class="hl-val text-primary font-bold">{{ formTotalUnitsPerPallet() || 0 }} units</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Materials & Label Template Link -->
+      <div class="form-section mt-3">
+        <h4 class="form-section-title"><i class="pi pi-tag"></i> Label Template &amp; Packaging Notes</h4>
+        <div class="form-grid-3">
+          <div class="field-item">
+            <label class="field-label">Affiliated Label Template</label>
+            <p-select
+              [options]="templates()"
+              optionLabel="templateName"
+              optionValue="id"
+              [ngModel]="formLabelTemplateId()"
+              (ngModelChange)="formLabelTemplateId.set($event)"
+              placeholder="Select print template..."
+              styleClass="w-full"
+            ></p-select>
+          </div>
+          <div class="field-item">
+            <label class="field-label">Carton Barcode (EAN/ITF)</label>
+            <input pInputText [ngModel]="formBarcode()" (ngModelChange)="formBarcode.set($event)" placeholder="e.g. 8935001234567" class="w-full" />
+          </div>
+          <div class="field-item">
+            <label class="field-label">Packaging Material</label>
+            <input pInputText [ngModel]="formPackagingMaterial()" (ngModelChange)="formPackagingMaterial.set($event)" placeholder="e.g. 5-ply carton, PE bag" class="w-full" />
+          </div>
+        </div>
+
+        <div class="field-item mt-3">
+          <label class="field-label">Special Packaging &amp; Handling Instructions</label>
+          <textarea
+            pTextarea
+            [ngModel]="formInstructions()"
+            (ngModelChange)="formInstructions.set($event)"
+            rows="2"
+            placeholder="e.g. Affix fragile label on two sides, corner protectors required..."
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="dialogOpen.set(false)"></button>
+      <button pButton label="Save Specification" icon="pi pi-check" class="p-button-primary" [loading]="saving()" (click)="save()"></button>
+    </ng-template>
+  </p-dialog>
+</div>
