@@ -32,6 +32,7 @@ import { COMPANY_DISTRICTS, COMPANY_PROVINCES, COMPANY_WARDS, CompanyDto, Compan
 import { FieldsetModule } from 'primeng/fieldset';
 import { ImageModule } from 'primeng/image';
 import { FileSelectEvent, FileUpload, FileUploadEvent, FileUploadModule, } from 'primeng/fileupload';
+import { ProvinceApiService, DistrictApiService, WardApiService, CurrencyApiService } from '../../core/services/master-data-api.service';
 
 type EntityKind = 'company';
 
@@ -72,6 +73,12 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 	private readonly companyApi = inject(CompanyApiService);
 	private readonly userApi = inject(UserApiService);
 
+	private readonly provinceApi = inject(ProvinceApiService);
+	private readonly districtApi = inject(DistrictApiService);
+	private readonly wardApi = inject(WardApiService);
+
+
+
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
 	readonly i18n = inject(I18nService);
@@ -87,33 +94,48 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 
 	provinceLabel(id?: number | null): string {
 		if (id == null) return '';
-		const province = COMPANY_PROVINCES.find(u => u.value === id);
-		return province ? this.i18n.t(province.labelKey) : '';
+		const province = this.provinceApi.items().find(u => u.id === id);
+		return province ? `${province.provinceCode} · ${province.provinceName}` : '';
 	}
 
 	districtLabel(id?: number | null): string {
 		if (id == null) return '';
-		const district = COMPANY_DISTRICTS.find(u => u.value === id);
-		return district ? this.i18n.t(district.labelKey) : '';
+		const district = this.districtApi.items().find(u => u.id === id);
+		return district ? `${district.districtCode} · ${district.districtName}` : '';
 	}
 
 	wardLabel(id?: number | null): string {
 		if (id == null) return '';
-		const ward = COMPANY_WARDS.find(u => u.value === id);
-		return ward ? this.i18n.t(ward.labelKey) : '';
+		const ward = this.wardApi.items().find(u => u.id === id);
+		return ward ? `${ward.wardCode} · ${ward.wardName}` : '';
 	}
+
+	// currencyLabel(id?: number | null): string {
+	// 	if (id == null) return '';
+	// 	const currency = this.currencyApi.items().find(u => u.id === id);
+	// 	return currency ? `${currency.currencyCode} · ${currency.currencyName}` : '';
+	// }
 
 	readonly userOptions = computed(() =>
 		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
 
 	readonly provinceOptions = computed(() =>
-		COMPANY_PROVINCES.map(p => ({ label: this.i18n.t(p.labelKey), value: p.value })));
+		this.provinceApi.items().map(u => ({ label: `${u.provinceCode} · ${u.provinceName}`, value: u.id })));
 
-	readonly districtOptions = computed(() =>
-		COMPANY_DISTRICTS.map(d => ({ label: this.i18n.t(d.labelKey), value: d.value })));
+	districtOptions() {
+		return this.districtApi.items()
+			.filter(x => x.provinceId === this.form.provinceId)
+			.map(u => ({ label: `${u.districtCode} · ${u.districtName}`, value: u.id }));
+	}
 
-	readonly wardOptions = computed(() =>
-		COMPANY_WARDS.map(w => ({ label: this.i18n.t(w.labelKey), value: w.value })));
+	wardOptions() {
+		return this.wardApi.items()
+			.filter(x => x.districtId === this.form.districtId)
+			.map(u => ({ label: `${u.wardCode} · ${u.wardName}`, value: u.id }));
+	}
+
+	// readonly currencyOptions = computed(() =>
+	// 	this.currencyApi.items().map(u => ({ label: `${u.currencyCode} · ${u.currencyName}`, value: u.id })));
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
 	readonly selectedCompany = signal<CompanyDto | null>(null);
@@ -170,6 +192,9 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 		forkJoin({
 			companies: this.companyApi.load(),
 			users: this.userApi.load(),
+			provinces: this.provinceApi.load(),
+			districts: this.districtApi.load(),
+			wards: this.wardApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('company.err.load'), err),
 		});

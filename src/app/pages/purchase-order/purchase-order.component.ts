@@ -21,7 +21,7 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
-import { SupplierApiService } from '../../core/services/master-data-api.service';
+import { CurrencyApiService, SupplierApiService } from '../../core/services/master-data-api.service';
 import { PurchaseOrderApiService, PurchaseOrderDeliveryScheduleApiService, PurchaseOrderDetailApiService } from '../../core/services/purchase-order-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
@@ -83,6 +83,7 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 	private readonly poApi = inject(PurchaseOrderApiService);
 	private readonly detailApi = inject(PurchaseOrderDetailApiService);
 	private readonly scheduleApi = inject(PurchaseOrderDeliveryScheduleApiService);
+	private readonly currencyApi = inject(CurrencyApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -121,6 +122,11 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 	statusLabel(value: number): string {
 		const type = PURCHASE_ORDER_STATUSES.find(s => s.value === value);
 		return type ? this.i18n.t(type.labelKey) : '';
+	}
+	currencyLabel(id?: number | null): string {
+		if (id == null) return '';
+		const currency = this.currencyApi.items().find(u => u.id === id);
+		return currency ? `${currency.currencyCode} · ${currency.currencyName}` : '';
 	}
 
 	readonly unitOptions = computed(() =>
@@ -189,7 +195,7 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
 	readonly currencyOptions = computed(() =>
-		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
+		this.currencyApi.items().map(u => ({ label: `${u.currencyCode} · ${u.currencyName}`, value: u.id })));
 
 	readonly paymentTermOptions = computed(() =>
 		PURCHASE_ORDER_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
@@ -301,6 +307,7 @@ export class PurchaseOrderComponent extends PermissionAwarePage implements OnIni
 			units: this.unitApi.load(),
 			warehouse: this.warehouseApi.load(),
 			suppliers: this.supplierApi.load(),
+			currencies: this.currencyApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('purchaseOrder.err.load'), err),
 		});

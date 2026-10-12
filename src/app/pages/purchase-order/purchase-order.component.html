@@ -130,7 +130,7 @@
 									{{row.expectedDeliveryDate ? (row.expectedDeliveryDate | date) :'—' }}
 								</td>
 								<td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
-								<td class="col-currency">{{ row.currencyId || '—' }}</td>
+								<td class="col-currency">{{ currencyLabel(row.currencyId) || '—' }}</td>
 								<td class="col-exchangeRate">{{ row.exchangeRate || '—' }}</td>
 								<td class="col-paymentTerm">{{ row.paymentTermId || '—' }}</td>
 								<td class="col-deliveryTerm">{{ row.deliveryTermId || '—' }}</td>
