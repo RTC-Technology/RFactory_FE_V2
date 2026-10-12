@@ -137,6 +137,10 @@ export class LabelTemplateComponent extends PermissionAwarePage implements OnIni
     this.reload();
   }
 
+  goToQrGenerator(): void {
+    this.router.navigate(['/qr-code']);
+  }
+
   reload(): void {
     this.templateApi.load().subscribe({
       next: rows => {

@@ -14,6 +14,13 @@
       </div>
     </div>
     <div class="header-actions">
+      <button
+        pButton
+        label="QR Code Generator"
+        icon="pi pi-qrcode"
+        class="p-button-outlined p-button-secondary"
+        (click)="goToQrGenerator()"
+      ></button>
       <button pButton label="New Template" icon="pi pi-plus" class="p-button-primary" (click)="openCreate()"></button>
     </div>
   </header>
