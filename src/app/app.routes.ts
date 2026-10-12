@@ -315,6 +315,33 @@ export const routes: Routes = [
 				},
 			},
 
+			//qr-code
+			{
+				path: 'qr-code',
+				loadComponent: () =>
+					import('./pages/qr-code/qr-code.component').then(m => m.QrCodeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.qrCode.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//label-templates
+			{
+				path: 'label-templates',
+				loadComponent: () =>
+					import('./pages/label-template/label-template.component').then(m => m.LabelTemplateComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.labelTemplate.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 			{
 				path: 'forbidden',

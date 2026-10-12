@@ -165,7 +165,25 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
   'perm.entity.position': { vi: 'chức vụ', en: 'position' },
   'perm.entity.skill': { vi: 'kỹ năng', en: 'skill' },
   'perm.entity.employee-skill': { vi: 'kỹ năng nhân viên', en: 'employee skill' },
+  'perm.entity.qrcode': { vi: 'mã QR & nhãn', en: 'QR code & label' },
+  'perm.entity.label-template': { vi: 'mẫu in nhãn', en: 'label template' },
   'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
+
+  'template.title': { vi: 'Quản Lý Mẫu Nhãn In', en: 'Label Template Designer & Manager' },
+  'template.entity.product': { vi: 'Sản phẩm', en: 'Product' },
+  'template.entity.machine': { vi: 'Máy / Thiết bị', en: 'Machine' },
+  'template.entity.location': { vi: 'Vị trí kho', en: 'Location' },
+  'template.entity.employee': { vi: 'Nhân viên', en: 'Employee' },
+
+  'qr.title': { vi: 'Quản Lý Mã QR & In Nhãn', en: 'QR Code & Label Management' },
+  'qr.subtitle': { vi: 'Tạo mã QR chuẩn công nghiệp, in nhãn dán hàng loạt, tra cứu thông tin sản phẩm & thiết bị tức thì.', en: 'Generate industrial QR labels, batch print sticker tags, and perform instant entity lookups.' },
+  'qr.entity.product': { vi: 'Sản phẩm', en: 'Product' },
+  'qr.entity.location': { vi: 'Vị trí kho', en: 'Warehouse Location' },
+  'qr.entity.machine': { vi: 'Máy / Thiết bị', en: 'Machine / Equipment' },
+  'qr.entity.employee': { vi: 'Nhân viên', en: 'Employee' },
+  'qr.entity.goodsReceipt': { vi: 'Phiếu nhập kho', en: 'Goods Receipt' },
+  'qr.entity.inventory': { vi: 'Lô tồn kho', en: 'Inventory Stock' },
+  'qr.entity.custom': { vi: 'Tùy chỉnh', en: 'Custom Text' },
 
   // ─── Dashboard (demo data) ────────────────────────────────────────────────
   'dashboard.title': { vi: 'Tổng quan', en: 'Dashboard' },

@@ -1,0 +1,366 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="template-page-container">
+  <!-- Page Header -->
+  <header class="page-header no-print">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-palette"></i>
+      </div>
+      <div>
+        <h1 class="page-title">Label Template Designer &amp; Manager</h1>
+        <p class="page-subtitle">Configure industrial barcode &amp; QR label templates, define physical dimensions (mm), and customize print fields.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button pButton label="New Template" icon="pi pi-plus" class="p-button-primary" (click)="openCreate()"></button>
+    </div>
+  </header>
+
+  <!-- Template Table Card -->
+  <div class="table-card no-print">
+    <div class="table-toolbar">
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          placeholder="Filter by code, name, entity..."
+          (input)="applyFilter($any($event.target).value)"
+          class="p-inputtext-sm"
+        />
+      </div>
+      <button pButton icon="pi pi-refresh" class="p-button-outlined p-button-secondary p-button-sm" (click)="reload()"></button>
+    </div>
+
+    <p-table
+      #dt
+      [value]="templates()"
+      [loading]="loading()"
+      [globalFilterFields]="filterFields"
+      [paginator]="true"
+      [rows]="10"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Template Code</th>
+          <th>Template Name</th>
+          <th>Entity Type</th>
+          <th>Dimensions</th>
+          <th>Default</th>
+          <th>Status</th>
+          <th style="width: 140px; text-align: center">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-tmpl>
+        <tr>
+          <td><span class="font-bold text-primary">{{ tmpl.templateCode }}</span></td>
+          <td>{{ tmpl.templateName }}</td>
+          <td>
+            <p-tag [value]="tmpl.entityType" severity="info"></p-tag>
+          </td>
+          <td>
+            <span class="dims-badge">
+              {{ tmpl.widthMm }} × {{ tmpl.heightMm }} mm ({{ tmpl.orientation }})
+            </span>
+          </td>
+          <td>
+            <span *ngIf="tmpl.isDefault" class="default-badge">
+              <i class="pi pi-star-fill"></i> DEFAULT
+            </span>
+            <button
+              *ngIf="!tmpl.isDefault"
+              pButton
+              label="Make Default"
+              class="p-button-text p-button-sm text-xs p-0"
+              (click)="setDefault(tmpl)"
+            ></button>
+          </td>
+          <td>
+            <p-tag [value]="tmpl.isActive ? 'Active' : 'Inactive'" [severity]="tmpl.isActive ? 'success' : 'secondary'"></p-tag>
+          </td>
+          <td style="text-align: center">
+            <div class="flex-align justify-center gap-1">
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm" (click)="openEdit(tmpl)" title="Edit Template"></button>
+              <button pButton icon="pi pi-copy" class="p-button-rounded p-button-text p-button-secondary p-button-sm" (click)="duplicate(tmpl)" title="Duplicate Template"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger p-button-sm" (click)="askDelete(tmpl)" title="Delete Template"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-6 text-secondary">
+            No label templates configured yet. Click <strong>New Template</strong> to design one.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- VISUAL TEMPLATE DESIGNER MODAL -->
+  <p-dialog
+    [(visible)]="editorOpen"
+    [modal]="true"
+    [style]="{ width: '1100px', maxWidth: '95vw' }"
+    [draggable]="false"
+    [resizable]="false"
+    header="{{ editingId() ? 'Edit Label Template: ' + formTemplateName() : 'Design New Label Template' }}"
+  >
+    <div class="designer-modal-content">
+      <div *ngIf="formError()" class="form-error-banner mb-3">
+        <i class="pi pi-exclamation-triangle"></i> {{ formError() }}
+      </div>
+
+      <div class="designer-layout">
+        <!-- LEFT: Controls & Property Form -->
+        <div class="designer-controls">
+          <div class="control-section">
+            <h4 class="section-title"><i class="pi pi-sliders-h"></i> General Properties</h4>
+            <div class="form-row">
+              <div class="field-col">
+                <label class="field-label">Template Code *</label>
+                <input pInputText [ngModel]="formTemplateCode()" (ngModelChange)="formTemplateCode.set($event)" placeholder="e.g. TMPL-PROD-70X50" class="w-full" />
+              </div>
+              <div class="field-col">
+                <label class="field-label">Template Name *</label>
+                <input pInputText [ngModel]="formTemplateName()" (ngModelChange)="formTemplateName.set($event)" placeholder="e.g. Product 70x50mm Thermal Tag" class="w-full" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field-col">
+                <label class="field-label">Target Entity Type</label>
+                <p-select
+                  [options]="entityTypes"
+                  optionLabel="value"
+                  optionValue="value"
+                  [ngModel]="formEntityType()"
+                  (ngModelChange)="onEntityTypeChange($event)"
+                  styleClass="w-full"
+                ></p-select>
+              </div>
+              <div class="field-col">
+                <label class="field-label">Orientation</label>
+                <div class="flex-align gap-3 pt-2">
+                  <label class="radio-label">
+                    <input type="radio" name="orient" value="LANDSCAPE" [checked]="formOrientation() === 'LANDSCAPE'" (change)="formOrientation.set('LANDSCAPE')" />
+                    Landscape
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="orient" value="PORTRAIT" [checked]="formOrientation() === 'PORTRAIT'" (change)="formOrientation.set('PORTRAIT')" />
+                    Portrait
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field-col">
+                <label class="field-label">Width (mm)</label>
+                <p-inputNumber [ngModel]="formWidthMm()" (ngModelChange)="formWidthMm.set($event)" [min]="20" [max]="300" styleClass="w-full"></p-inputNumber>
+              </div>
+              <div class="field-col">
+                <label class="field-label">Height (mm)</label>
+                <p-inputNumber [ngModel]="formHeightMm()" (ngModelChange)="formHeightMm.set($event)" [min]="20" [max]="300" styleClass="w-full"></p-inputNumber>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field-col">
+                <label class="field-label">Header Banner Text</label>
+                <input pInputText [ngModel]="formHeaderText()" (ngModelChange)="formHeaderText.set($event)" placeholder="e.g. R-FACTORY MES" class="w-full" />
+              </div>
+              <div class="field-col">
+                <label class="field-label">Footer Banner Text</label>
+                <input pInputText [ngModel]="formFooterText()" (ngModelChange)="formFooterText.set($event)" placeholder="e.g. QC INSPECTED" class="w-full" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Elements Toggles -->
+          <div class="control-section">
+            <h4 class="section-title"><i class="pi pi-qrcode"></i> Visual Elements</h4>
+            <div class="toggles-grid">
+              <label class="checkbox-item">
+                <p-checkbox [binary]="true" [ngModel]="formShowQr()" (ngModelChange)="formShowQr.set($event)"></p-checkbox>
+                <span>Show QR Code</span>
+              </label>
+              <label class="checkbox-item">
+                <p-checkbox [binary]="true" [ngModel]="formShowBarcode()" (ngModelChange)="formShowBarcode.set($event)"></p-checkbox>
+                <span>Show Barcode Lines</span>
+              </label>
+              <label class="checkbox-item">
+                <p-checkbox [binary]="true" [ngModel]="formShowLogo()" (ngModelChange)="formShowLogo.set($event)"></p-checkbox>
+                <span>Show Logo Badge</span>
+              </label>
+              <label class="checkbox-item">
+                <p-checkbox [binary]="true" [ngModel]="formShowBorder()" (ngModelChange)="formShowBorder.set($event)"></p-checkbox>
+                <span>Show Border</span>
+              </label>
+              <label class="checkbox-item">
+                <p-checkbox [binary]="true" [ngModel]="formIsDefault()" (ngModelChange)="formIsDefault.set($event)"></p-checkbox>
+                <span>Default for {{ formEntityType() }}</span>
+              </label>
+            </div>
+
+            <div *ngIf="formShowQr()" class="form-row mt-3">
+              <div class="field-col">
+                <label class="field-label">QR Code Size (px)</label>
+                <p-inputNumber [ngModel]="formQrSizePx()" (ngModelChange)="formQrSizePx.set($event)" [min]="60" [max]="240" styleClass="w-full"></p-inputNumber>
+              </div>
+            </div>
+          </div>
+
+          <!-- Field Binding Configuration -->
+          <div class="control-section">
+            <h4 class="section-title"><i class="pi pi-list"></i> Field Layout &amp; Typography</h4>
+            <div class="field-config-table">
+              <div *ngFor="let field of formFields()" class="field-config-row">
+                <div class="field-vis">
+                  <p-checkbox [(ngModel)]="field.visible" [binary]="true"></p-checkbox>
+                </div>
+                <div class="field-custom-label">
+                  <input pInputText [(ngModel)]="field.label" placeholder="Field Title" class="w-full p-inputtext-sm" />
+                </div>
+                <div class="field-size">
+                  <input type="number" [(ngModel)]="field.fontSize" min="8" max="28" class="size-input" title="Font Size (px)" />
+                  <span class="text-xs text-secondary">px</span>
+                </div>
+                <div class="field-bold">
+                  <button
+                    type="button"
+                    class="bold-toggle-btn"
+                    [class.active]="field.bold"
+                    (click)="field.bold = !field.bold"
+                    title="Toggle Bold"
+                  >
+                    <strong>B</strong>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Live Visual Sticker Preview -->
+        <div class="designer-preview">
+          <div class="preview-header">
+            <h4 class="section-title"><i class="pi pi-eye"></i> Live Print Preview</h4>
+            <span class="text-xs text-secondary font-mono">{{ formWidthMm() }} × {{ formHeightMm() }} mm ({{ formOrientation() }})</span>
+          </div>
+
+          <div class="preview-canvas-box">
+            <!-- Scaled Sticker Tag -->
+            <div
+              class="visual-sticker-tag"
+              [class.has-border]="formShowBorder()"
+              [style.width.mm]="formWidthMm()"
+              [style.height.mm]="formHeightMm()"
+              [style.aspectRatio]="formWidthMm() + '/' + formHeightMm()"
+            >
+              <!-- Sticker Header -->
+              <div *ngIf="formHeaderText() || formShowLogo()" class="sticker-head">
+                <span *ngIf="formShowLogo()" class="sticker-logo">RF</span>
+                <span class="sticker-header-text">{{ formHeaderText() }}</span>
+                <span class="sticker-entity-pill">{{ formEntityType() }}</span>
+              </div>
+
+              <!-- Sticker Body -->
+              <div class="sticker-body">
+                <!-- Left QR Code -->
+                <div *ngIf="formShowQr()" class="sticker-qr-wrapper">
+                  <app-qr-generator
+                    [value]="sampleData().payload"
+                    [size]="formQrSizePx()"
+                    logoText="RF"
+                  ></app-qr-generator>
+                </div>
+
+                <!-- Right / Center Fields -->
+                <div class="sticker-fields-wrapper">
+                  <ng-container *ngFor="let field of formFields()">
+                    <div *ngIf="field.visible" class="sticker-field-line">
+                      <span class="field-title" [style.fontSize.px]="field.fontSize - 3">{{ field.label }}:</span>
+                      <span
+                        class="field-value"
+                        [style.fontSize.px]="field.fontSize"
+                        [style.fontWeight]="field.bold ? '800' : '500'"
+                      >
+                        {{ getSampleFieldValue(field.fieldKey) }}
+                      </span>
+                    </div>
+                  </ng-container>
+
+                  <!-- Simulated Barcode if enabled -->
+                  <div *ngIf="formShowBarcode()" class="barcode-simulation">
+                    <div class="barcode-lines">
+                      <div class="b-line" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"></div>
+                    </div>
+                    <span class="barcode-text font-mono">*{{ sampleData().code }}*</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sticker Footer -->
+              <div *ngIf="formFooterText()" class="sticker-footer">
+                <span>{{ formFooterText() }}</span>
+                <span class="font-mono text-xs">TAG-VER: 1.0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-actions">
+            <button pButton label="Test Print" icon="pi pi-print" class="p-button-outlined p-button-secondary p-button-sm" (click)="printTest()"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancel" class="p-button-text p-button-secondary" (click)="editorOpen.set(false)"></button>
+      <button pButton label="Save Template" icon="pi pi-check" class="p-button-primary" [loading]="saving()" (click)="save()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- PRINT ONLY SECTION FOR TEST PRINT -->
+  <div class="print-only">
+    <div
+      class="visual-sticker-tag print-tag"
+      [class.has-border]="formShowBorder()"
+      [style.width.mm]="formWidthMm()"
+      [style.height.mm]="formHeightMm()"
+    >
+      <div *ngIf="formHeaderText() || formShowLogo()" class="sticker-head">
+        <span *ngIf="formShowLogo()" class="sticker-logo">RF</span>
+        <span class="sticker-header-text">{{ formHeaderText() }}</span>
+        <span class="sticker-entity-pill">{{ formEntityType() }}</span>
+      </div>
+      <div class="sticker-body">
+        <div *ngIf="formShowQr()" class="sticker-qr-wrapper">
+          <app-qr-generator [value]="sampleData().payload" [size]="formQrSizePx()" logoText="RF"></app-qr-generator>
+        </div>
+        <div class="sticker-fields-wrapper">
+          <ng-container *ngFor="let field of formFields()">
+            <div *ngIf="field.visible" class="sticker-field-line">
+              <span class="field-title" [style.fontSize.px]="field.fontSize - 3">{{ field.label }}:</span>
+              <span
+                class="field-value"
+                [style.fontSize.px]="field.fontSize"
+                [style.fontWeight]="field.bold ? '800' : '500'"
+              >
+                {{ getSampleFieldValue(field.fieldKey) }}
+              </span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      <div *ngIf="formFooterText()" class="sticker-footer">
+        <span>{{ formFooterText() }}</span>
+      </div>
+    </div>
+  </div>
+</div>
