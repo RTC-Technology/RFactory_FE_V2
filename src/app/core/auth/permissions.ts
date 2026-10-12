@@ -117,6 +117,13 @@ export const PERMISSIONS = {
   failureCode: crud('failure-code'),
   failureGroup: crud('failure-group'),
 
+  country: crud('country'),
+  province: crud('province'),
+  district: crud('district'),
+  ward: crud('ward'),
+
+  currency: crud('currency'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

@@ -599,3 +599,95 @@ export function maintenanceOrderChecklistItemResultOf(value?: number | null) {
 }
 
 //#endregion
+
+//#region Geographic
+
+// -------------------------------------------------------------
+// DTOs
+// -------------------------------------------------------------
+
+export interface CountryDto {
+	id: number;
+	countryCode: string;
+	countryName: string;
+	englishName?: string | null;
+	phoneCode?: string | null;
+	isActive?: boolean | null;
+}
+
+export interface ProvinceDto {
+	id: number;
+	countryId?: number | null;
+	provinceCode: string;
+	provinceName: string;
+	englishName?: string | null;
+	provinceType: number;
+	postalCode?: string | null;
+	isActive?: boolean | null;
+}
+
+export interface DistrictDto {
+	id: number;
+	provinceId?: number | null;
+	districtCode: string;
+	districtName: string;
+	englishName?: string | null;
+	districtType: number;
+	isActive?: boolean | null;
+}
+
+export interface WardDto {
+	id: number;
+	districtId?: number | null;
+	wardCode: string;
+	wardName: string;
+	englishName?: string | null;
+	wardType: number;
+	isActive?: boolean | null;
+}
+
+// -------------------------------------------------------------
+// Requests
+// -------------------------------------------------------------
+
+export type WardRequest = Omit<WardDto, 'id'>;
+export type DistrictRequest = Omit<DistrictDto, 'id'>;
+export type ProvinceRequest = Omit<ProvinceDto, 'id'>;
+export type CountryRequest = Omit<CountryDto, 'id'>;
+
+export const PROVINCE_TYPES = [
+	{ labelKey: 'province.type.province', value: 1 },
+	{ labelKey: 'province.type.centralCity', value: 2 },
+];
+
+export const DISTRICT_TYPES = [
+	{ labelKey: 'district.type.district', value: 1 },
+	{ labelKey: 'district.type.county', value: 2 },
+	{ labelKey: 'district.type.town', value: 3 },
+	{ labelKey: 'district.type.provincialCity', value: 4 },
+];
+
+export const WARD_TYPES = [
+	{ labelKey: 'ward.type.ward', value: 1 },
+	{ labelKey: 'ward.type.commune', value: 2 },
+	{ labelKey: 'ward.type.township', value: 3 },
+];
+
+//#endregion
+
+//#region Currency
+
+export interface CurrencyDto {
+	id: number;
+	currencyCode: string;
+	currencyName: string;
+	currencySymbol: string;
+	decimalPlaces: number;
+	isBaseCurrency: boolean;
+	isActive?: boolean | null;
+	sortOrder: number;
+}
+
+export type CurrencyRequest = Omit<CurrencyDto, 'id'>;
+
+//#endregion

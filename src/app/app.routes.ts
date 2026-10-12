@@ -595,6 +595,35 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//country
+			{
+				path: 'country',
+				loadComponent: () =>
+					import('./pages/country/country.component').then(m => m.CountryComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.country.view,
+						PERMISSIONS.province.view,
+						PERMISSIONS.district.view,
+						PERMISSIONS.ward.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//currency
+			{
+				path: 'currency',
+				loadComponent: () =>
+					import('./pages/currency/currency.component').then(m => m.CurrencyComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.currency.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			{
