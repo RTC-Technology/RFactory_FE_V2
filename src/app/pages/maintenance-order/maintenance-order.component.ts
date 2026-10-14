@@ -693,7 +693,7 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 			}))
 		};
 
-		console.log('body:', body);
+		// console.log('body:', body);
 		return id ? this.maintenanceOrderApi.update(id, body) : this.maintenanceOrderApi.create(body);
 	}
 
