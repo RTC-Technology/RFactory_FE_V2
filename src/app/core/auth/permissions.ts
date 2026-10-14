@@ -133,6 +133,10 @@ export const PERMISSIONS = {
 
   currency: crud('currency'),
 
+  salesOrder: crud('sales-order'),
+  salesOrderItem: crud('sales-order-item'),
+  salesOrderPaymentSchedule: crud('sales-order-payment-schedule'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
