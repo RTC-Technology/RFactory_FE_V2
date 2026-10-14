@@ -4085,8 +4085,6 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'currency.err.currencyCodeRequired': { vi: 'Mã tiền tệ không được để trống.', en: 'Currency code is required.' },
 	'currency.err.currencyNameRequired': { vi: 'Tên tiền tệ không được để trống.', en: 'Currency name is required.' },
 	'currency.err.currencyCodeTaken': { vi: 'Mã tiền tệ "{currencyCode}" đã tồn tại.', en: 'Currency code "{currencyCode}" already exists.' },
-};
-
 
 	// ─── Permissions (Additional) ───────────────────────────────────────────────────────────────
 	'perm.entity.employee': { vi: 'nhân viên', en: 'employee' },
@@ -4119,36 +4117,40 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'employee.empty': {
 		vi: 'Không có nhân viên nào.',
 		en: 'No employees found.',
-		},
+	},
 	'employee.err.load': {
 		vi: 'Không tải được dữ liệu nhân viên.',
 		en: 'Could not load the employee data.',
-		},
+	},
 	'employee.err.codeRequired': {
 		vi: 'Mã nhân viên không được để trống.',
 		en: 'Employee code is required.',
-		},
+	},
 	'employee.err.nameRequired': {
 		vi: 'Họ và tên không được để trống.',
 		en: 'Full name is required.',
-		},
+	},
 	'employee.err.codeTaken': {
 		vi: 'Mã nhân viên "{code}" đã tồn tại.',
+		en: 'Employee code "{code}" already exists.',
+	},
 	'employee.ok.created': { vi: 'Đã tạo nhân viên.', en: 'Employee created.' },
 	'employee.ok.updated': {
 		vi: 'Đã cập nhật nhân viên.',
 		en: 'Employee updated.',
-		},
+	},
 	'employee.ok.deleted': {
 		vi: 'Đã xoá nhân viên "{label}".',
+		en: 'Employee "{label}" deleted.'
+	},
 	'employee.err.saveFailed': {
 		vi: 'Lưu nhân viên thất bại.',
 		en: 'Failed to save employee.',
-		},
+	},
 	'employee.err.deleteFailed': {
 		vi: 'Xoá nhân viên thất bại.',
 		en: 'Failed to delete employee.',
-		},
+	},
 	'employee.status.active': { vi: 'Đang làm việc', en: 'Active' },
 	'employee.status.inactive': { vi: 'Đã nghỉ việc', en: 'Inactive' },
 	'employee.status.pending': { vi: 'Đang chờ', en: 'Pending' },
@@ -4158,6 +4160,8 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'employee.gender.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
 	'employee.confirm.message': {
 		vi: 'Bạn có chắc chắn muốn xoá nhân viên "{label}"?',
+		en: 'Are you sure you want to delete employee "{label}"?'
+	},
 	'employee.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
 
 	// ─── Machine Status & Loss Tracking ───────────────────────────────────────────────────────────────
@@ -4172,20 +4176,20 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'line.areaHint': {
 		vi: 'Line thuộc đúng một khu vực, và khu vực đó thuộc một nhà máy.',
 		en: 'A line belongs to one area, and that area belongs to one factory.',
-		},
+	},
 	'line.layoutHint': {
 		vi: 'Đường dẫn tới ảnh sơ đồ của line — không bắt buộc.',
 		en: 'Path to the line layout drawing — optional.',
-		},
+	},
 	'line.empty': { vi: 'Chưa có line nào.', en: 'No lines yet.' },
 	'line.err.load': {
 		vi: 'Không tải được danh sách line.',
 		en: 'Could not load the lines.',
-		},
+	},
 	'line.err.noAreas': {
 		vi: 'Chưa có khu vực nào — hãy tạo khu vực ở màn Nhà máy trước.',
 		en: 'There are no areas yet — create one on the Factory screen first.',
-		},
+	},
 
 	// ─── QR Code Generation ───────────────────────────────────────────────────────────────
 	'qr.title': { vi: 'Quản Lý Mã QR & In Nhãn', en: 'QR Code & Label Management' },
@@ -4220,5 +4224,6 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'purchaseOrder.err.ponoRequired': {
 		vi: 'Số PO không được để trống.',
 		en: 'PO number is required.',
-		},
+	},
+
 };
