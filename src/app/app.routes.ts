@@ -308,6 +308,20 @@ export const routes: Routes = [
 				},
 			},
 
+			//production-orders
+			{
+				path: 'production-orders',
+				loadComponent: () =>
+					import('./pages/production-order/production-order.component').then(m => m.ProductionOrderComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.productionOrder.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			//qr-code
 			{
 				path: 'qr-code',
@@ -731,6 +745,11 @@ export const routes: Routes = [
 				loadComponent: () => import('./pages/shift/shift.component').then(m => m.ShiftComponent),
 				canActivate: [permissionGuard],
 				data: { permissions: [PERMISSIONS.shift.view, PERMISSIONS.shiftBreak.view], permissionMode: 'all' },
+			},
+			{
+				path: 'production/orders',
+				redirectTo: 'production-orders',
+				pathMatch: 'full',
 			},
 
 			{
