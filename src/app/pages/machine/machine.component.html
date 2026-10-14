@@ -93,6 +93,20 @@
           <span class="panel__scope">{{ i18n.t('machine.scopeOf', { name: type.machineTypeName }) }}</span>
           <span class="panel__count">{{ machines().length }}</span>
         }
+        <button
+          type="button"
+          class="tool"
+          style="margin-left: auto; display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer;"
+          (click)="goToLiveStatusBoard()"
+        >
+          <svg style="width: 14px; height: 14px; color: #0284c7;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          <span style="font-size: 0.8125rem; font-weight: 600; color: #0f172a;">Live Status &amp; Downtime</span>
+        </button>
       </div>
       <ng-container
         *ngTemplateOutlet="toolbar; context: { kind: 'machine', perms: perms.machine, canAdd: !!selectedType(), hasSelection: !!selectedMachine() }" />

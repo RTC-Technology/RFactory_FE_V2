@@ -308,6 +308,62 @@ export const routes: Routes = [
 				},
 			},
 
+			//qr-code
+			{
+				path: 'qr-code',
+				loadComponent: () =>
+					import('./pages/qr-code/qr-code.component').then(m => m.QrCodeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.qrCode.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//label-templates
+			{
+				path: 'label-templates',
+				loadComponent: () =>
+					import('./pages/label-template/label-template.component').then(m => m.LabelTemplateComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.labelTemplate.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//packing-specifications
+			{
+				path: 'packing-specifications',
+				loadComponent: () =>
+					import('./pages/packing-specification/packing-specification.component').then(m => m.PackingSpecificationComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingSpecification.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//packing-numbering-rules
+			{
+				path: 'packing-numbering-rules',
+				loadComponent: () =>
+					import('./pages/packing-numbering-rule/packing-numbering-rule.component').then(m => m.PackingNumberingRuleComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.packingNumberingRule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			//picking-plan
 			{
 				path: 'picking-plan',
@@ -640,6 +696,86 @@ export const routes: Routes = [
 				},
 			},
 
+
+			// ─── Aliases matching legacy / nested database menu URLs ───
+			{
+				path: 'equipment/machines',
+				loadComponent: () => import('./pages/machine/machine.component').then(m => m.MachineComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.machineType.view, PERMISSIONS.machine.view], permissionMode: 'all' },
+			},
+			{
+				path: 'equipment/machine-status',
+				loadComponent: () => import('./pages/machine-status/machine-status.component').then(m => m.MachineStatusComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.machineStatus.view], permissionMode: 'all' },
+			},
+			{
+				path: 'equipment/machine-types',
+				loadComponent: () => import('./pages/machine/machine.component').then(m => m.MachineComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.machineType.view, PERMISSIONS.machine.view], permissionMode: 'all' },
+			},
+			{
+				path: 'products/types',
+				loadComponent: () => import('./pages/product-type/product-type.component').then(m => m.ProductTypeComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.productType.view] },
+			},
+			{
+				path: 'products/units',
+				loadComponent: () => import('./pages/unit/unit.component').then(m => m.UnitComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.unitCategory.view, PERMISSIONS.unit.view, PERMISSIONS.unitConversion.view], permissionMode: 'all' },
+			},
+			{
+				path: 'administration/users',
+				loadComponent: () => import('./pages/organization/organization.component').then(m => m.OrganizationComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.organization.view, PERMISSIONS.user.view], permissionMode: 'all' },
+			},
+			{
+				path: 'administration/function-groups',
+				loadComponent: () => import('./pages/user-group/user-group.component').then(m => m.UserGroupComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.userGroup.view, PERMISSIONS.function.view], permissionMode: 'all' },
+			},
+			{
+				path: 'administration/functions',
+				loadComponent: () => import('./pages/function/function.component').then(m => m.FunctionComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.functionGroup.view, PERMISSIONS.function.view, PERMISSIONS.menu.view], permissionMode: 'all' },
+			},
+			{
+				path: 'administration/menus',
+				loadComponent: () => import('./pages/menu-manager/menu-manager.component').then(m => m.MenuManagerComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.menu.view, PERMISSIONS.function.view], permissionMode: 'all' },
+			},
+			{
+				path: 'settings/organizations',
+				loadComponent: () => import('./pages/organization/organization.component').then(m => m.OrganizationComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.organization.view, PERMISSIONS.user.view], permissionMode: 'all' },
+			},
+			{
+				path: 'settings/factories',
+				loadComponent: () => import('./pages/factory-structure/factory-structure.component').then(m => m.FactoryStructureComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.factory.view, PERMISSIONS.area.view, PERMISSIONS.line.view], permissionMode: 'all' },
+			},
+			{
+				path: 'settings/lines',
+				loadComponent: () => import('./pages/line/line.component').then(m => m.LineComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.line.view, PERMISSIONS.area.view], permissionMode: 'all' },
+			},
+			{
+				path: 'settings/shifts',
+				loadComponent: () => import('./pages/shift/shift.component').then(m => m.ShiftComponent),
+				canActivate: [permissionGuard],
+				data: { permissions: [PERMISSIONS.shift.view, PERMISSIONS.shiftBreak.view], permissionMode: 'all' },
+			},
 
 			{
 				path: 'forbidden',

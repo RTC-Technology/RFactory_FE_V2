@@ -103,6 +103,10 @@ export class MachineComponent extends PermissionAwarePage implements OnInit {
     ...this.lineApi.items().map(line => ({ label: this.lineLabel(line.id), value: line.id })),
   ]);
 
+  goToLiveStatusBoard(): void {
+    this.router.navigate(['/machine-status']);
+  }
+
   constructor() {
     // No entity passed: both panels gate on their own code set, handed to the shared
     // toolbar template through ngTemplateOutlet.

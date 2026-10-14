@@ -4089,6 +4089,148 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'currency.err.currencyNameRequired': { vi: 'Tên tiền tệ không được để trống.', en: 'Currency name is required.' },
 	'currency.err.currencyCodeTaken': { vi: 'Mã tiền tệ "{currencyCode}" đã tồn tại.', en: 'Currency code "{currencyCode}" already exists.' },
 
+	// ─── Permissions (Additional) ───────────────────────────────────────────────────────────────
+	'perm.entity.employee': { vi: 'nhân viên', en: 'employee' },
+	'perm.entity.position': { vi: 'chức vụ', en: 'position' },
+	'perm.entity.skill': { vi: 'kỹ năng', en: 'skill' },
+	'perm.entity.employee-skill': { vi: 'kỹ năng nhân viên', en: 'employee skill' },
+	'perm.entity.qrcode': { vi: 'mã QR & nhãn', en: 'QR code & label' },
+	'perm.entity.label-template': { vi: 'mẫu in nhãn', en: 'label template' },
+	'perm.entity.packing-specification': { vi: 'quy cách đóng gói', en: 'packing specification' },
+	'perm.entity.packing-numbering-rule': { vi: 'quy tắc đánh số đóng gói', en: 'packing numbering rule' },
+	'perm.entity.machine-status': { vi: 'trạng thái máy & sự cố', en: 'machine status & downtime' },
+
+	// ─── Employees ───────────────────────────────────────────────────────────────
+	'employee.title': { vi: 'Nhân viên', en: 'Employee' },
+	'employee.lower': { vi: 'nhân viên', en: 'employee' },
+	'employee.employeeCode': { vi: 'Mã nhân viên', en: 'Employee Code' },
+	'employee.fullName': { vi: 'Họ và tên', en: 'Full Name' },
+	'employee.nickName': { vi: 'Tên gọi khác', en: 'Nick Name' },
+	'employee.position': { vi: 'Chức vụ', en: 'Position' },
+	'employee.phone': { vi: 'Điện thoại', en: 'Phone' },
+	'employee.email': { vi: 'Email', en: 'Email' },
+	'employee.gender': { vi: 'Giới tính', en: 'Gender' },
+	'employee.birthDate': { vi: 'Ngày sinh', en: 'Birth Date' },
+	'employee.hireDate': { vi: 'Ngày vào làm', en: 'Hire Date' },
+	'employee.terminationDate': { vi: 'Ngày nghỉ việc', en: 'Termination Date' },
+	'employee.status': { vi: 'Trạng thái', en: 'Status' },
+	'employee.remark': { vi: 'Ghi chú', en: 'Remark' },
+	'employee.dialog.add': { vi: 'Thêm nhân viên', en: 'Add Employee' },
+	'employee.dialog.edit': { vi: 'Sửa nhân viên', en: 'Edit Employee' },
+	'employee.empty': {
+		vi: 'Không có nhân viên nào.',
+		en: 'No employees found.',
+	},
+	'employee.err.load': {
+		vi: 'Không tải được dữ liệu nhân viên.',
+		en: 'Could not load the employee data.',
+	},
+	'employee.err.codeRequired': {
+		vi: 'Mã nhân viên không được để trống.',
+		en: 'Employee code is required.',
+	},
+	'employee.err.nameRequired': {
+		vi: 'Họ và tên không được để trống.',
+		en: 'Full name is required.',
+	},
+	'employee.err.codeTaken': {
+		vi: 'Mã nhân viên "{code}" đã tồn tại.',
+		en: 'Employee code "{code}" already exists.',
+	},
+	'employee.ok.created': { vi: 'Đã tạo nhân viên.', en: 'Employee created.' },
+	'employee.ok.updated': {
+		vi: 'Đã cập nhật nhân viên.',
+		en: 'Employee updated.',
+	},
+	'employee.ok.deleted': {
+		vi: 'Đã xoá nhân viên "{label}".',
+		en: 'Employee "{label}" deleted.'
+	},
+	'employee.err.saveFailed': {
+		vi: 'Lưu nhân viên thất bại.',
+		en: 'Failed to save employee.',
+	},
+	'employee.err.deleteFailed': {
+		vi: 'Xoá nhân viên thất bại.',
+		en: 'Failed to delete employee.',
+	},
+	'employee.status.active': { vi: 'Đang làm việc', en: 'Active' },
+	'employee.status.inactive': { vi: 'Đã nghỉ việc', en: 'Inactive' },
+	'employee.status.pending': { vi: 'Đang chờ', en: 'Pending' },
+	'employee.gender.male': { vi: 'Nam', en: 'Male' },
+	'employee.gender.female': { vi: 'Nữ', en: 'Female' },
+	'employee.gender.other': { vi: 'Khác', en: 'Other' },
+	'employee.gender.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'employee.confirm.message': {
+		vi: 'Bạn có chắc chắn muốn xoá nhân viên "{label}"?',
+		en: 'Are you sure you want to delete employee "{label}"?'
+	},
+	'employee.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
+
+	// ─── Machine Status & Loss Tracking ───────────────────────────────────────────────────────────────
+	'machineStatus.title': { vi: 'Giám Sát Trạng Thái Máy & Sự Cố (OEE)', en: 'Machine Status & Downtime Monitor' },
+	'machineStatus.subtitle': { vi: 'Theo dõi trạng thái máy trực quan theo thời gian thực, ghi nhận nguyên nhân dừng máy, phế phẩm (Scrap) và sửa lại (Rework).', en: 'Real-time visual equipment monitoring, downtime loss categorization, scrap, and rework defect logging.' },
+
+	// ─── Lines (Additional) ───────────────────────────────────────────────────────────────
+	'line.title': { vi: 'Danh sách line', en: 'Lines' },
+	'line.lower': { vi: 'line', en: 'line' },
+	'line.areaAny': { vi: 'Tất cả khu vực', en: 'All areas' },
+	'line.areaPick': { vi: '— Chọn khu vực —', en: '— Select an area —' },
+	'line.areaHint': {
+		vi: 'Line thuộc đúng một khu vực, và khu vực đó thuộc một nhà máy.',
+		en: 'A line belongs to one area, and that area belongs to one factory.',
+	},
+	'line.layoutHint': {
+		vi: 'Đường dẫn tới ảnh sơ đồ của line — không bắt buộc.',
+		en: 'Path to the line layout drawing — optional.',
+	},
+	'line.empty': { vi: 'Chưa có line nào.', en: 'No lines yet.' },
+	'line.err.load': {
+		vi: 'Không tải được danh sách line.',
+		en: 'Could not load the lines.',
+	},
+	'line.err.noAreas': {
+		vi: 'Chưa có khu vực nào — hãy tạo khu vực ở màn Nhà máy trước.',
+		en: 'There are no areas yet — create one on the Factory screen first.',
+	},
+
+	// ─── QR Code Generation ───────────────────────────────────────────────────────────────
+	'qr.title': { vi: 'Quản Lý Mã QR & In Nhãn', en: 'QR Code & Label Management' },
+	'qr.subtitle': { vi: 'Tạo mã QR chuẩn công nghiệp, in nhãn dán hàng loạt, tra cứu thông tin sản phẩm & thiết bị tức thì.', en: 'Generate industrial QR labels, batch print sticker tags, and perform instant entity lookups.' },
+	'qr.entity.product': { vi: 'Sản phẩm', en: 'Product' },
+	'qr.entity.location': { vi: 'Vị trí kho', en: 'Warehouse Location' },
+	'qr.entity.machine': { vi: 'Máy / Thiết bị', en: 'Machine / Equipment' },
+	'qr.entity.employee': { vi: 'Nhân viên', en: 'Employee' },
+	'qr.entity.goodsReceipt': { vi: 'Phiếu nhập kho', en: 'Goods Receipt' },
+	'qr.entity.inventory': { vi: 'Lô tồn kho', en: 'Inventory Stock' },
+	'qr.entity.custom': { vi: 'Tùy chỉnh', en: 'Custom Text' },
+
+	// ─── Label Templates ───────────────────────────────────────────────────────────────
+	'template.title': { vi: 'Quản Lý Mẫu Nhãn In', en: 'Label Template Designer & Manager' },
+	'template.entity.product': { vi: 'Sản phẩm', en: 'Product' },
+	'template.entity.machine': { vi: 'Máy / Thiết bị', en: 'Machine' },
+	'template.entity.location': { vi: 'Vị trí kho', en: 'Location' },
+	'template.entity.employee': { vi: 'Nhân viên', en: 'Employee' },
+
+	// ─── Packing & Numbering Rules ───────────────────────────────────────────────────────────────
+	'packingNumberingRule.title': { vi: 'Quy Tắc Đánh Số Đóng Gói', en: 'Packing Numbering Rules' },
+	'packingNumberingRule.subtitle': { vi: 'Cấu hình tiền tố, định dạng ngày, số thứ tự và quy tắc nhảy số tự động cho mã thùng, pallet, hộp và lô.', en: 'Configure prefixes, date formats, sequences, and reset triggers for carton, pallet, inner box, and lot numbering.' },
+	'packing.title': { vi: 'Quản Lý Quy Cách Đóng Gói', en: 'Packing Specification Management' },
+	'packing.type.box': { vi: 'Hộp', en: 'Box' },
+	'packing.type.carton': { vi: 'Thùng carton', en: 'Carton' },
+	'packing.type.pallet': { vi: 'Pallet', en: 'Pallet' },
+	'packing.type.crate': { vi: 'Kiện gỗ', en: 'Crate' },
+	'packing.type.bundle': { vi: 'Bó / Kiện', en: 'Bundle' },
+
+	// ─── Additional Keys ───────────────────────────────────────────────────────────────
+	'bom.active': { vi: 'Đang áp dụng', en: 'Active' },
+	'purchaseOrder.err.ponoRequired': {
+		vi: 'Số PO không được để trống.',
+		en: 'PO number is required.',
+	},
+
+
+
 	// ─── Sales Order ───────────────────────────────────────────────────────────
 	'salesOrder.title': { vi: 'Đơn bán hàng', en: 'Sales Orders' },
 	'salesOrder.lower': { vi: 'đơn bán hàng', en: 'sales order' },
