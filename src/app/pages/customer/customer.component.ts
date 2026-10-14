@@ -21,7 +21,7 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { CustomerApiService, CustomerContactApiService } from '../../core/services/master-data-api.service';
+import { CountryApiService, CurrencyApiService, CustomerApiService, CustomerContactApiService, DistrictApiService, ProvinceApiService, WardApiService } from '../../core/services/master-data-api.service';
 import { CUSTOMER_CONTACT_TYPES, CUSTOMER_COUNTRIES, CUSTOMER_CURRENCIES, CUSTOMER_DISTRICTS, CUSTOMER_PROVINCES, CUSTOMER_TYPES, CustomerContactDto, CustomerDto, CustomerRequest } from '../../domain/models/master-data.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
@@ -63,6 +63,10 @@ export class CustomerComponent extends PermissionAwarePage implements OnInit {
 	private readonly contactApi = inject(CustomerContactApiService);
 
 	private readonly warehouseApi = inject(WarehouseApiService);
+	private readonly countryApi = inject(CountryApiService);
+	private readonly provinceApi = inject(ProvinceApiService);
+	private readonly districtApi = inject(DistrictApiService);
+	private readonly currencyApi = inject(CurrencyApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -83,28 +87,28 @@ export class CustomerComponent extends PermissionAwarePage implements OnInit {
 		return type ? this.i18n.t(type.labelKey) : '';
 	}
 
-	countryLabel(value?: number | null): string {
-		if (value == null) return '';
-		const type = CUSTOMER_COUNTRIES.find(u => u.value === value);
-		return type ? this.i18n.t(type.labelKey) : '';
+	countryLabel(id?: number | null): string {
+		if (id == null) return '';
+		const country = this.countryApi.items().find(u => u.id === id);
+		return country ? `${country.countryCode} · ${country.countryName}` : '';
 	}
 
-	provinceLabel(value?: number | null): string {
-		if (value == null) return '';
-		const type = CUSTOMER_PROVINCES.find(u => u.value === value);
-		return type ? this.i18n.t(type.labelKey) : '';
+	provinceLabel(id?: number | null): string {
+		if (id == null) return '';
+		const province = this.provinceApi.items().find(u => u.id === id);
+		return province ? `${province.provinceCode} · ${province.provinceName}` : '';
 	}
 
-	districtLabel(value?: number | null): string {
-		if (value == null) return '';
-		const type = CUSTOMER_DISTRICTS.find(u => u.value === value);
-		return type ? this.i18n.t(type.labelKey) : '';
+	districtLabel(id?: number | null): string {
+		if (id == null) return '';
+		const district = this.districtApi.items().find(u => u.id === id);
+		return district ? `${district.districtCode} · ${district.districtName}` : '';
 	}
 
-	currencyLabel(value?: number | null): string {
-		if (value == null) return '';
-		const type = CUSTOMER_CURRENCIES.find(u => u.value === value);
-		return type ? this.i18n.t(type.labelKey) : '';
+	currencyLabel(id?: number | null): string {
+		if (id == null) return '';
+		const currency = this.currencyApi.items().find(u => u.id === id);
+		return currency ? `${currency.currencyCode} · ${currency.currencyName}` : '';
 	}
 
 	warehouseLabel(id?: number | null): string {
@@ -123,16 +127,22 @@ export class CustomerComponent extends PermissionAwarePage implements OnInit {
 		this.warehouseApi.items().map(w => ({ label: `${w.warehouseCode} · ${w.warehouseName}`, value: w.id })));
 
 	readonly countryOptions = computed(() =>
-		CUSTOMER_COUNTRIES.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
+		this.countryApi.items().map(u => ({ label: `${u.countryCode} · ${u.countryName}`, value: u.id })));
 
-	readonly provinceOptions = computed(() =>
-		CUSTOMER_PROVINCES.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
+	provinceOptions() {
+		return this.provinceApi.items()
+			.filter(x => x.countryId === this.form.countryId)
+			.map(u => ({ label: `${u.provinceCode} · ${u.provinceName}`, value: u.id }));
+	}
 
-	readonly districtOptions = computed(() =>
-		CUSTOMER_DISTRICTS.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
+	districtOptions() {
+		return this.districtApi.items()
+			.filter(x => x.provinceId === this.form.provinceId)
+			.map(u => ({ label: `${u.districtCode} · ${u.districtName}`, value: u.id }));
+	}
 
 	readonly currencyOptions = computed(() =>
-		CUSTOMER_CURRENCIES.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
+		this.currencyApi.items().map(u => ({ label: `${u.currencyCode} · ${u.currencyName}`, value: u.id })));
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
 	readonly selectedCustomer = signal<CustomerDto | null>(null);
@@ -210,6 +220,10 @@ export class CustomerComponent extends PermissionAwarePage implements OnInit {
 			customers: this.customerApi.load(),
 			contacts: this.contactApi.load(),
 			warehouses: this.warehouseApi.load(),
+			countries: this.countryApi.load(),
+			provinces: this.provinceApi.load(),
+			districts: this.districtApi.load(),
+			currencies: this.currencyApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('customer.err.load'), err),
 		});

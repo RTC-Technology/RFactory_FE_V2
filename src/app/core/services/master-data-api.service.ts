@@ -2,10 +2,16 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import {
   AreaDto, AreaRequest,
+  CountryDto,
+  CountryRequest,
+  CurrencyDto,
+  CurrencyRequest,
   CustomerContactDto,
   CustomerContactRequest,
   CustomerDto,
   CustomerRequest,
+  DistrictDto,
+  DistrictRequest,
   FactoryDto, FactoryRequest,
   FailureCodeDto,
   FailureCodeRequest,
@@ -32,6 +38,8 @@ import {
   MaintenanceTypeRequest,
   ProductLotRuleDto,
   ProductLotRuleRequest,
+  ProvinceDto,
+  ProvinceRequest,
   SerialRuleDto,
   SerialRuleRequest,
   SupplierDto,
@@ -42,6 +50,8 @@ import {
   TraceabilityRuleRequest,
   TraceabilityTypeDto,
   TraceabilityTypeRequest,
+  WardDto,
+  WardRequest,
 } from '../../domain/models/master-data.model';
 import { CrudApiService } from './crud-api.service';
 
@@ -163,3 +173,30 @@ export class FailureCodeApiService extends CrudApiService<FailureCodeDto, Failur
   protected readonly baseUrl = `${environment.apiUrl}/master-data/failure-code`;
 }
 //#endregion
+
+//#region Geographic
+@Injectable({ providedIn: 'root' })
+export class CountryApiService extends CrudApiService<CountryDto, CountryRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/country`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ProvinceApiService extends CrudApiService<ProvinceDto, ProvinceRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/province`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DistrictApiService extends CrudApiService<DistrictDto, DistrictRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/district`;
+}
+
+@Injectable({ providedIn: 'root' })
+export class WardApiService extends CrudApiService<WardDto, WardRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/ward`;
+}
+//#endregion
+
+@Injectable({ providedIn: 'root' })
+export class CurrencyApiService extends CrudApiService<CurrencyDto, CurrencyRequest> {
+  protected readonly baseUrl = `${environment.apiUrl}/master-data/currency`;
+}

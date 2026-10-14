@@ -1,0 +1,477 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete(kind)">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                        [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('country.title') }}</h2>
+                            <span class="panel__count">{{ countries().length }}</span>
+                        </div>
+                        <ng-container
+                                      *ngTemplateOutlet="toolbar; context: { kind: 'country', perms: perms.country, canAdd: true, hasSelection: !!selectedCountry(), showReload: true }" />
+
+                        <div class="table-scroll">
+                            <p-table #countryTable [value]="countries()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.country"
+                                     (onFilter)="onFiltered('country', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('country.countryCode') }}</th>
+                                        <th class="col-countryName">{{ i18n.t('country.countryName') }}</th>
+                                        <th class="col-englishName">{{ i18n.t('country.englishName') }}</th>
+                                        <th class="col-phoneCode">{{ i18n.t('country.phoneCode') }}</th>
+                                        <th class="col-status">{{ i18n.t('country.isActive') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedCountry()?.id === row.id"
+                                        (click)="selectCountry(row)" (dblclick)="openEdit('country')">
+                                        <td class="col-code">{{ row.countryCode || '—' }}</td>
+                                        <td class="col-countryName">{{ row.countryName || '—' }}</td>
+                                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                                        <td class="col-phoneCode">{{ row.phoneCode || '—' }}</td>
+                                        <td class="col-status">
+                                            @if (row.isActive) {
+                                            <p-tag severity="success" [value]="i18n.t('country.active')" [rounded]="true" />
+                                            } @else {
+                                            <span class="muted">{{ i18n.t('country.inactive') }}</span>
+                                            }
+                                        </td>
+
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="5">
+                                            <p class="empty">
+                                                {{ selectedCountry() ? i18n.t('country.empty') :
+                                                i18n.t('country.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('province.title') }}</h2>
+                            @if (selectedCountry(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('country.scopeOf', { name: t.countryCode || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ provinces().length }}</span>
+                            }
+                        </div>
+                        <ng-container
+                                      *ngTemplateOutlet="toolbar; context: { kind: 'province', perms: perms.province, canAdd: true, hasSelection: !!selectedProvince(), showReload: true }" />
+
+                        <div class="table-scroll">
+                            <p-table #provinceTable [value]="provinces()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.province"
+                                     (onFilter)="onFiltered('province', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('province.provinceCode') }}</th>
+                                        <th class="col-provinceName">{{ i18n.t('province.provinceName') }}</th>
+                                        <th class="col-englishName">{{ i18n.t('province.englishName') }}</th>
+                                        <th class="col-provinceType">{{ i18n.t('province.provinceType') }}</th>
+                                        <th class="col-postalCode">{{ i18n.t('province.postalCode') }}</th>
+                                        <th class="col-status">{{ i18n.t('province.isActive') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedProvince()?.id === row.id"
+                                        (click)="selectProvince(row)" (dblclick)="openEdit('province')">
+                                        <td class="col-code">{{ row.provinceCode || '—' }}</td>
+                                        <td class="col-provinceName">{{ row.provinceName || '—' }}</td>
+                                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                                        <td class="col-provinceType">{{ provinceTypeLabel(row.provinceType)|| '—' }}</td>
+                                        <td class="col-postalCode">{{ row.postalCode || '—' }}</td>
+                                        <td class="col-status">
+                                            @if (row.isActive) {
+                                            <p-tag severity="success" [value]="i18n.t('province.active')" [rounded]="true" />
+                                            } @else {
+                                            <p-tag severity="secondary" [value]="i18n.t('province.inactive')" [rounded]="true" />
+                                            }
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="6">
+                                            <p class="empty">
+                                                {{ selectedCountry() ? i18n.t('province.empty') :
+                                                i18n.t('province.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+        </ng-template>
+
+        <ng-template #panel>
+            <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                        [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('district.title') }}</h2>
+                            @if (selectedProvince(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('province.scopeOf', { name: t.provinceCode || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ districts().length }}</span>
+                            }
+                        </div>
+                        <ng-container
+                                      *ngTemplateOutlet="toolbar; context: { kind: 'district', perms: perms.district, canAdd: true, hasSelection: !!selectedDistrict(), showReload: true }" />
+
+                        <div class="table-scroll">
+                            <p-table #districtTable [value]="districts()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.district"
+                                     (onFilter)="onFiltered('district', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('district.districtCode') }}</th>
+                                        <th class="col-districtName">{{ i18n.t('district.districtName') }}</th>
+                                        <th class="col-englishName">{{ i18n.t('district.englishName') }}</th>
+                                        <th class="col-districtType">{{ i18n.t('district.districtType') }}</th>
+                                        <th class="col-status">{{ i18n.t('district.isActive') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedDistrict()?.id === row.id"
+                                        (click)="selectDistrict(row)" (dblclick)="openEdit('district')">
+                                        <td class="col-code">{{ row.districtCode || '—' }}</td>
+                                        <td class="col-districtName">{{ row.districtName || '—' }}</td>
+                                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                                        <td class="col-districtType">{{ districtTypeLabel(row.districtType) || '—' }}</td>
+                                        <td class="col-status">
+                                            @if (row.isActive) {
+                                            <p-tag severity="success" [value]="i18n.t('district.active')" [rounded]="true" />
+                                            } @else {
+                                            <span class="muted">{{ i18n.t('district.inactive') }}</span>
+                                            }
+                                        </td>
+
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="5">
+                                            <p class="empty">
+                                                {{ selectedProvince() ? i18n.t('district.empty') :
+                                                i18n.t('district.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('ward.title') }}</h2>
+                            @if (selectedDistrict(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('district.scopeOf', { name: t.districtCode || '—' })}}
+                            </span>
+                            <span class="panel__count">{{ wards().length }}</span>
+                            }
+                        </div>
+                        <ng-container
+                                      *ngTemplateOutlet="toolbar; context: { kind: 'ward', perms: perms.ward, canAdd: true, hasSelection: !!selectedWard(), showReload: true }" />
+
+                        <div class="table-scroll">
+                            <p-table #wardTable [value]="wards()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.ward"
+                                     (onFilter)="onFiltered('ward', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('ward.wardCode') }}</th>
+                                        <th class="col-wardName">{{ i18n.t('ward.wardName') }}</th>
+                                        <th class="col-englishName">{{ i18n.t('ward.englishName') }}</th>
+                                        <th class="col-wardType">{{ i18n.t('ward.wardType') }}</th>
+                                        <th class="col-status">{{ i18n.t('ward.isActive') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedWard()?.id === row.id"
+                                        (click)="selectWard(row)" (dblclick)="openEdit('ward')">
+                                        <td class="col-code">{{ row.wardCode || '—' }}</td>
+                                        <td class="col-wardName">{{ row.wardName || '—' }}</td>
+                                        <td class="col-englishName">{{ row.englishName || '—' }}</td>
+                                        <td class="col-wardType">{{ wardTypeLabel(row.wardType)|| '—' }}</td>
+                                        <td class="col-status">
+                                            @if (row.isActive) {
+                                            <p-tag severity="success" [value]="i18n.t('ward.active')" [rounded]="true" />
+                                            } @else {
+                                            <p-tag severity="secondary" [value]="i18n.t('ward.inactive')" [rounded]="true" />
+                                            }
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="5">
+                                            <p class="empty">
+                                                {{ selectedDistrict() ? i18n.t('ward.empty') :
+                                                i18n.t('ward.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: dialogKind() === 'country' ? '40vw' : '40vw', maxWidth: '1280px' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        @if (dialogKind() === 'country'){
+        <div class="field">
+            <label for="c-countryCode">
+                {{ i18n.t('country.countryCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="c-countryCode" name="countryCode" [(ngModel)]="form.countryCode" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="c-countryName">
+                {{ i18n.t('country.countryName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="c-countryName" name="countryName" [(ngModel)]="form.countryName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="c-phoneCode">
+                {{ i18n.t('country.phoneCode') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <input pInputText id="c-phoneCode" name="phoneCode" [(ngModel)]="form.phoneCode" autocomplete="off" />
+        </div>
+        }
+        @if (dialogKind() === 'province'){
+        <div class="field">
+            <label for="p-countryId">
+                {{ i18n.t('province.country') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="countryOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.countryId"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('province.country.unset')" />
+        </div>
+        <div class="field">
+            <label for="p-provinceCode">
+                {{ i18n.t('province.provinceCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="p-provinceCode" name="provinceCode" [(ngModel)]="form.provinceCode" autocomplete="off" />
+        </div>
+
+        <div class="field">
+            <label for="p-provinceName">
+                {{ i18n.t('province.provinceName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="p-provinceName" name="provinceName" [(ngModel)]="form.provinceName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="p-provinceType">
+                {{ i18n.t('province.provinceType') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="provinceTypeOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.provinceType"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('province.provinceType.unset')" />
+        </div>
+        <div class="field">
+            <label for="p-postalCode">
+                {{ i18n.t('province.postalCode') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <input pInputText id="p-postalCode" name="postalCode" [(ngModel)]="form.postalCode" autocomplete="off" />
+        </div>
+
+        }
+
+        @if (dialogKind() === 'district'){
+        <div class="field">
+            <label for="d-provinceId">
+                {{ i18n.t('district.province') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="provinceOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.provinceId"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('district.province.unset')" />
+        </div>
+        <div class="field">
+            <label for="d-districtCode">
+                {{ i18n.t('district.districtCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="d-districtCode" name="districtCode" [(ngModel)]="form.districtCode" autocomplete="off" />
+        </div>
+
+        <div class="field">
+            <label for="d-districtName">
+                {{ i18n.t('district.districtName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="d-districtName" name="districtName" [(ngModel)]="form.districtName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="d-districtType">
+                {{ i18n.t('district.districtType') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="districtTypeOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.districtType"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('district.districtType.unset')" />
+        </div>
+        }
+        @if (dialogKind() === 'ward'){
+        <div class="field">
+            <label for="w-districtId">
+                {{ i18n.t('ward.district') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="districtOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.districtId"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('ward.district.unset')" />
+        </div>
+        <div class="field">
+            <label for="w-wardCode">
+                {{ i18n.t('ward.wardCode') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="w-wardCode" name="wardCode" [(ngModel)]="form.wardCode" autocomplete="off" />
+        </div>
+
+        <div class="field">
+            <label for="w-wardName">
+                {{ i18n.t('ward.wardName') }}
+                <span class="req">*</span>
+            </label>
+            <input pInputText id="w-wardName" name="wardName" [(ngModel)]="form.wardName" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="w-wardType">
+                {{ i18n.t('ward.wardType') }}
+                <span class="req">*</span>
+            </label>
+            <p-select [options]="wardTypeOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.wardType"
+                      [filter]="true" filterBy="label" [showClear]="false"
+                      appendTo="body" class="w-full" [placeholder]="i18n.t('ward.wardType.unset')" />
+        </div>
+
+        }
+        <div class="field">
+            <label for="w-englishName">
+                {{ i18n.t('country.englishName') }}
+                <!-- <span class="req">*</span> -->
+            </label>
+            <input pInputText id="w-englishName" name="englishName" [(ngModel)]="form.englishName" autocomplete="off" />
+        </div>
+        <div class="field field--inline">
+            <p-toggleswitch inputId="g-active" [(ngModel)]="form.isActive" />
+            <label for="g-active">{{ i18n.t('country.isActive') }}</label>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
