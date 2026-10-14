@@ -1,0 +1,132 @@
+@use '../../shared/styles/master-detail';
+
+/* Edit-grid columns. Scoped to `.grid--edit` so the read-only grids above keep the
+   narrower widths that suit plain text. */
+:host ::ng-deep {
+	.grid--edit {
+
+		// Bắt buộc table mở rộng theo đúng kích thước các cột thay vì bị ép co lại trong 100% container
+		table,
+		.p-datatable-table {
+			width: max-content !important;
+			min-width: 100%;
+		}
+
+		// ─── Cột STT & Thao tác ──────────────────────────────────────────
+		.col-idx {
+			width: 42px !important;
+			min-width: 42px !important;
+			text-align: center;
+		}
+
+		.col-act {
+			width: 50px !important;
+			min-width: 50px !important;
+			text-align: center;
+		}
+
+		// ─── Table 1: Đơn hàng chi tiết (Sales Order Items) ─────────────
+		.col-product,
+		.col-productCode {
+			width: 220px !important;
+			min-width: 220px !important;
+		}
+
+		.col-productName {
+			width: 240px !important;
+			min-width: 240px !important;
+		}
+
+		.col-unit {
+			width: 110px !important;
+			min-width: 110px !important;
+		}
+
+		.col-warehouse {
+			width: 150px !important;
+			min-width: 150px !important;
+		}
+
+		.col-orderedQuantity,
+		.col-deliveredQuantity,
+		.col-cancelledQuantity {
+			width: 70px !important;
+			min-width: 70px !important;
+		}
+
+		.col-unitPrice,
+		.col-amount {
+			width: 130px !important;
+			min-width: 130px !important;
+		}
+
+		.col-discountPercent,
+		.col-taxPercent {
+			width: 100px !important;
+			min-width: 100px !important;
+		}
+
+		.col-discountAmount,
+		.col-taxAmount {
+			width: 120px !important;
+			min-width: 120px !important;
+		}
+
+		.col-totalAmount {
+			width: 135px !important;
+			min-width: 135px !important;
+		}
+
+		.col-expectedDeliveryDate {
+			width: 140px !important;
+			min-width: 140px !important;
+		}
+
+		// ─── Table 2: Kế hoạch thanh toán (Payment Schedules) ───────────
+		.col-scheduleName {
+			width: 200px !important;
+			min-width: 200px !important;
+		}
+
+		.col-paymentPercent {
+			width: 110px !important;
+			min-width: 110px !important;
+		}
+
+		.col-paymentAmount,
+		.col-paidAmount {
+			width: 130px !important;
+			min-width: 130px !important;
+		}
+
+		.col-dueDate {
+			width: 140px !important;
+			min-width: 140px !important;
+		}
+
+		.col-status {
+			width: 150px !important;
+			min-width: 150px !important;
+		}
+
+		// Cột dùng chung
+		.col-description {
+			width: 180px !important;
+			min-width: 180px !important;
+		}
+
+		// Căn lề số tổng footer
+		// .lines__total {
+		// 	.col-orderedQuantity,
+		// 	.col-amount,
+		// 	.col-discountAmount,
+		// 	.col-taxAmount,
+		// 	.col-totalAmount,
+		// 	.col-paymentPercent,
+		// 	.col-paymentAmount,
+		// 	.col-paidAmount {
+		// 		text-align: right;
+		// 	}
+		// }
+	}
+}

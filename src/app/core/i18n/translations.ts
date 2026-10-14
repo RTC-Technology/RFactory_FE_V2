@@ -157,6 +157,9 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'perm.entity.district': { vi: 'quận/huyện', en: 'district' },
 	'perm.entity.ward': { vi: 'xã/phường', en: 'ward' },
 	'perm.entity.currency': { vi: 'tiền tệ', en: 'currency' },
+	'perm.entity.sales-order': { vi: 'đơn bán hàng', en: 'sales order' },
+	'perm.entity.sales-order-item': { vi: 'chi tiết đơn bán hàng', en: 'sales order item' },
+	'perm.entity.sales-order-payment-schedule': { vi: 'đợt thanh toán đơn bán hàng', en: 'sales order payment schedule' },
 	'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
 
 	// ─── Dashboard (demo data) ────────────────────────────────────────────────
@@ -4085,8 +4088,6 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'currency.err.currencyCodeRequired': { vi: 'Mã tiền tệ không được để trống.', en: 'Currency code is required.' },
 	'currency.err.currencyNameRequired': { vi: 'Tên tiền tệ không được để trống.', en: 'Currency name is required.' },
 	'currency.err.currencyCodeTaken': { vi: 'Mã tiền tệ "{currencyCode}" đã tồn tại.', en: 'Currency code "{currencyCode}" already exists.' },
-};
-
 
 	// ─── Permissions (Additional) ───────────────────────────────────────────────────────────────
 	'perm.entity.employee': { vi: 'nhân viên', en: 'employee' },
@@ -4119,19 +4120,19 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'employee.empty': {
 		vi: 'Không có nhân viên nào.',
 		en: 'No employees found.',
-		},
+	},
 	'employee.err.load': {
 		vi: 'Không tải được dữ liệu nhân viên.',
 		en: 'Could not load the employee data.',
-		},
+	},
 	'employee.err.codeRequired': {
 		vi: 'Mã nhân viên không được để trống.',
 		en: 'Employee code is required.',
-		},
+	},
 	'employee.err.nameRequired': {
 		vi: 'Họ và tên không được để trống.',
 		en: 'Full name is required.',
-		},
+	},
 	'employee.err.codeTaken': {
 		vi: 'Mã nhân viên "{code}" đã tồn tại.',
 		en: 'Employee code "{code}" already exists.',
@@ -4143,16 +4144,16 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	},
 	'employee.ok.deleted': {
 		vi: 'Đã xoá nhân viên "{label}".',
-		en: 'Employee deleted "{label}".',
+		en: 'Employee "{label}" deleted.'
 	},
 	'employee.err.saveFailed': {
 		vi: 'Lưu nhân viên thất bại.',
 		en: 'Failed to save employee.',
-		},
+	},
 	'employee.err.deleteFailed': {
 		vi: 'Xoá nhân viên thất bại.',
 		en: 'Failed to delete employee.',
-		},
+	},
 	'employee.status.active': { vi: 'Đang làm việc', en: 'Active' },
 	'employee.status.inactive': { vi: 'Đã nghỉ việc', en: 'Inactive' },
 	'employee.status.pending': { vi: 'Đang chờ', en: 'Pending' },
@@ -4162,7 +4163,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'employee.gender.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
 	'employee.confirm.message': {
 		vi: 'Bạn có chắc chắn muốn xoá nhân viên "{label}"?',
-		en: 'Are you sure you want to delete the employee "{label}"?',
+		en: 'Are you sure you want to delete employee "{label}"?'
 	},
 	'employee.confirm.title': { vi: 'Xác nhận xoá', en: 'Confirm Delete' },
 
@@ -4178,20 +4179,20 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'line.areaHint': {
 		vi: 'Line thuộc đúng một khu vực, và khu vực đó thuộc một nhà máy.',
 		en: 'A line belongs to one area, and that area belongs to one factory.',
-		},
+	},
 	'line.layoutHint': {
 		vi: 'Đường dẫn tới ảnh sơ đồ của line — không bắt buộc.',
 		en: 'Path to the line layout drawing — optional.',
-		},
+	},
 	'line.empty': { vi: 'Chưa có line nào.', en: 'No lines yet.' },
 	'line.err.load': {
 		vi: 'Không tải được danh sách line.',
 		en: 'Could not load the lines.',
-		},
+	},
 	'line.err.noAreas': {
 		vi: 'Chưa có khu vực nào — hãy tạo khu vực ở màn Nhà máy trước.',
 		en: 'There are no areas yet — create one on the Factory screen first.',
-		},
+	},
 
 	// ─── QR Code Generation ───────────────────────────────────────────────────────────────
 	'qr.title': { vi: 'Quản Lý Mã QR & In Nhãn', en: 'QR Code & Label Management' },
@@ -4328,4 +4329,150 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionOrder.ok.bomReset': { vi: 'Đã lấy lại nguyên vật liệu theo BOM thành công', en: 'Materials reset from BOM successfully' },
 	'productionOrder.ok.duplicated': { vi: 'Nhân bản lệnh sản xuất thành công', en: 'Production order duplicated successfully' },
 };
+
+	// ─── Additional Keys ───────────────────────────────────────────────────────────────
+	'bom.active': { vi: 'Đang áp dụng', en: 'Active' },
+	'purchaseOrder.err.ponoRequired': {
+		vi: 'Số PO không được để trống.',
+		en: 'PO number is required.',
+	},
+
+
+
+	// ─── Sales Order ───────────────────────────────────────────────────────────
+	'salesOrder.title': { vi: 'Đơn bán hàng', en: 'Sales Orders' },
+	'salesOrder.lower': { vi: 'đơn bán hàng', en: 'sales order' },
+	'salesOrder.empty': { vi: 'Chưa có đơn bán hàng nào.', en: 'No sales orders found.' },
+	'salesOrder.emptyHint': { vi: 'Nhấn "Thêm" để tạo mới đơn bán hàng.', en: 'Click "Add" to create a sales order.' },
+	'salesOrder.orderNo': { vi: 'Số đơn hàng', en: 'Order No.' },
+	'salesOrder.customer': { vi: 'Khách hàng', en: 'Customer' },
+	'salesOrder.customer.unset': { vi: '— Chọn khách hàng —', en: '— Select customer —' },
+	'salesOrder.parent': { vi: 'Đơn hàng cha', en: 'Parent Order' },
+	'salesOrder.parent.unset': { vi: '— Chọn đơn hàng cha —', en: '— Select parent order —' },
+	'salesOrder.orderDate': { vi: 'Ngày đặt hàng', en: 'Order Date' },
+	'salesOrder.expectedDeliveryDate': { vi: 'Ngày giao dự kiến', en: 'Expected Delivery Date' },
+	'salesOrder.orderType': { vi: 'Loại đơn hàng', en: 'Order Type' },
+	'salesOrder.orderType.unset': { vi: '— Chọn loại đơn hàng —', en: '— Select order type —' },
+	'salesOrder.status': { vi: 'Trạng thái', en: 'Status' },
+	'salesOrder.status.unset': { vi: '— Chọn trạng thái —', en: '— Select status —' },
+	'salesOrder.executionStatus': { vi: 'Tình trạng thực hiện', en: 'Execution Status' },
+	'salesOrder.executionStatus.unset': { vi: '— Chọn tình trạng thực hiện —', en: '— Select execution status —' },
+	'salesOrder.revenueStatus': { vi: 'Ghi nhận doanh thu', en: 'Revenue Status' },
+	'salesOrder.revenueStatus.unset': { vi: '— Chọn tình trạng doanh thu —', en: '— Select revenue status —' },
+	'salesOrder.currency': { vi: 'Tiền tệ', en: 'Currency' },
+	'salesOrder.currency.unset': { vi: '— Chọn loại tiền —', en: '— Select currency —' },
+	'salesOrder.exchangeRate': { vi: 'Tỷ giá', en: 'Exchange Rate' },
+	'salesOrder.totalAmount': { vi: 'Tổng tiền', en: 'Total Amount' },
+	'salesOrder.discountAmount': { vi: 'Tiền chiết khấu', en: 'Discount Amount' },
+	'salesOrder.paidAmount': { vi: 'Đã thanh toán', en: 'Paid Amount' },
+	'salesOrder.outstandingAmount': { vi: 'Còn phải thanh toán', en: 'Outstanding Amount' },
+	'salesOrder.paymentTermDays': { vi: 'Hạn công nợ (ngày)', en: 'Payment Term (Days)' },
+	'salesOrder.paymentDueDate': { vi: 'Hạn thanh toán', en: 'Payment Due Date' },
+	'salesOrder.description': { vi: 'Diễn giải', en: 'Description' },
+
+	'salesOrder.err.load': { vi: 'Không thể tải danh sách đơn bán hàng.', en: 'Failed to load sales orders.' },
+	'salesOrder.err.orderNoRequired': { vi: 'Số đơn hàng không được để trống.', en: 'Order No. is required.' },
+	'salesOrder.err.customerIdRequired': { vi: 'Vui lòng chọn khách hàng.', en: 'Customer is required.' },
+	'salesOrder.err.orderDateRequired': { vi: 'Ngày đặt hàng không được để trống.', en: 'Order date is required.' },
+	'salesOrder.err.orderNoTaken': { vi: 'Số đơn hàng "{orderNo}" đã tồn tại.', en: 'Order No. "{orderNo}" already exists.' },
+
+	// Sales Order - Order Types
+	'salesOrder.type.standard': { vi: 'Tiêu chuẩn', en: 'Standard' },
+	'salesOrder.type.additional': { vi: 'Bổ sung', en: 'Additional' },
+	'salesOrder.type.adjustment': { vi: 'Điều chỉnh', en: 'Adjustment' },
+	'salesOrder.type.scheduledDelivery': { vi: 'Giao theo kế hoạch', en: 'Scheduled Delivery' },
+
+	// Sales Order - Statuses
+	'salesOrder.status.draft': { vi: 'Nháp', en: 'Draft' },
+	'salesOrder.status.confirmed': { vi: 'Đã xác nhận', en: 'Confirmed' },
+	'salesOrder.status.inProgress': { vi: 'Đang thực hiện', en: 'In Progress' },
+	'salesOrder.status.partiallyCompleted': { vi: 'Hoàn thành một phần', en: 'Partially Completed' },
+	'salesOrder.status.completed': { vi: 'Hoàn thành', en: 'Completed' },
+	'salesOrder.status.cancelled': { vi: 'Đã huỷ', en: 'Cancelled' },
+	'salesOrder.status.closed': { vi: 'Đã đóng', en: 'Closed' },
+
+	// Sales Order - Execution Statuses
+	'salesOrder.executionStatus.notStarted': { vi: 'Chưa bắt đầu', en: 'Not Started' },
+	'salesOrder.executionStatus.inProgress': { vi: 'Đang thực hiện', en: 'In Progress' },
+	'salesOrder.executionStatus.partiallyCompleted': { vi: 'Hoàn thành một phần', en: 'Partially Completed' },
+	'salesOrder.executionStatus.completed': { vi: 'Hoàn thành', en: 'Completed' },
+	'salesOrder.executionStatus.cancelled': { vi: 'Đã huỷ', en: 'Cancelled' },
+
+	// Sales Order - Revenue Statuses
+	'salesOrder.revenueStatus.notRecognized': { vi: 'Chưa ghi nhận', en: 'Not Recognized' },
+	'salesOrder.revenueStatus.partiallyRecognized': { vi: 'Ghi nhận một phần', en: 'Partially Recognized' },
+	'salesOrder.revenueStatus.fullyRecognized': { vi: 'Đã ghi nhận toàn bộ', en: 'Fully Recognized' },
+	'salesOrder.revenueStatus.cancelled': { vi: 'Đã huỷ', en: 'Cancelled' },
+
+	// ─── Sales Order Payment Schedule ──────────────────────────────────────────
+	'salesOrderPaymentSchedule.title': { vi: 'Đợt thanh toán', en: 'Payment Schedule' },
+	'salesOrderPaymentSchedule.lower': { vi: 'đợt thanh toán', en: 'payment schedule' },
+	'salesOrderPaymentSchedule.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'salesOrderPaymentSchedule.scheduleNo': { vi: 'Đợt số', en: 'Schedule No.' },
+	'salesOrderPaymentSchedule.scheduleName': { vi: 'Tên đợt', en: 'Schedule Name' },
+	'salesOrderPaymentSchedule.paymentPercent': { vi: 'Tỷ lệ thanh toán (%)', en: 'Payment Percent (%)' },
+	'salesOrderPaymentSchedule.paymentAmount': { vi: 'Giá trị thanh toán', en: 'Payment Amount' },
+	'salesOrderPaymentSchedule.dueDate': { vi: 'Hạn thanh toán', en: 'Due Date' },
+	'salesOrderPaymentSchedule.paidAmount': { vi: 'Đã thanh toán', en: 'Paid Amount' },
+	'salesOrderPaymentSchedule.status': { vi: 'Trạng thái', en: 'Status' },
+	'salesOrderPaymentSchedule.status.unset': { vi: '— Chọn trạng thái —', en: '— Select status —' },
+	'salesOrderPaymentSchedule.description': { vi: 'Diễn giải', en: 'Description' },
+	'salesOrderPaymentSchedule.empty': { vi: 'Đơn hàng này chưa có đợt thanh toán nào.', en: 'This order has no payment schedules yet.' },
+	'salesOrderPaymentSchedule.emptyHint': { vi: 'Chọn một đơn bán hàng ở panel trên để xem đợt thanh toán.', en: 'Pick a sales order above to view payment schedules.' },
+	'salesOrderPaymentSchedule.lineCount': { vi: '({count} đợt)', en: '({count} schedules)' },
+	'salesOrderPaymentSchedule.addLine': { vi: 'Thêm đợt', en: 'Add Schedule' },
+	'salesOrderPaymentSchedule.removeLine': { vi: 'Xoá đợt', en: 'Remove Schedule' },
+	'salesOrderPaymentSchedule.emptyLine': { vi: 'Chưa có đợt thanh toán nào. Nhấn "Thêm đợt" để bắt đầu.', en: 'No payment schedules yet. Click "Add Schedule" to begin.' },
+
+	// Sales Order Payment Schedule - Statuses
+	'salesOrderPaymentSchedule.status.pending': { vi: 'Chờ thanh toán', en: 'Pending' },
+	'salesOrderPaymentSchedule.status.due': { vi: 'Đến hạn', en: 'Due' },
+	'salesOrderPaymentSchedule.status.partiallyPaid': { vi: 'Thanh toán một phần', en: 'Partially Paid' },
+	'salesOrderPaymentSchedule.status.paid': { vi: 'Đã thanh toán', en: 'Paid' },
+	'salesOrderPaymentSchedule.status.overdue': { vi: 'Quá hạn', en: 'Overdue' },
+	'salesOrderPaymentSchedule.status.cancelled': { vi: 'Đã huỷ', en: 'Cancelled' },
+
+	// ─── Sales Order Item ──────────────────────────────────────────────────────
+	'salesOrderItem.title': { vi: 'Chi tiết sản phẩm', en: 'Order Items' },
+	'salesOrderItem.lower': { vi: 'chi tiết sản phẩm', en: 'order item' },
+	'salesOrderItem.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'salesOrderItem.product': { vi: 'Sản phẩm', en: 'Product' },
+	'salesOrderItem.product.unset': { vi: '— Chọn sản phẩm —', en: '— Select product —' },
+	'salesOrderItem.productCode': { vi: 'Mã sản phẩm', en: 'Product Code' },
+	'salesOrderItem.productName': { vi: 'Tên sản phẩm', en: 'Product Name' },
+	'salesOrderItem.unit': { vi: 'Đơn vị tính', en: 'Unit' },
+	'salesOrderItem.unit.unset': { vi: '— Chọn ĐVT —', en: '— Select unit —' },
+	'salesOrderItem.warehouse': { vi: 'Kho xuất', en: 'Warehouse' },
+	'salesOrderItem.warehouse.unset': { vi: '— Chọn kho —', en: '— Select warehouse —' },
+	'salesOrderItem.orderedQuantity': { vi: 'Số lượng đặt', en: 'Ordered Quantity' },
+	'salesOrderItem.deliveredQuantity': { vi: 'Số lượng đã giao', en: 'Delivered Quantity' },
+	'salesOrderItem.cancelledQuantity': { vi: 'Số lượng đã huỷ', en: 'Cancelled Quantity' },
+	'salesOrderItem.unitPrice': { vi: 'Đơn giá', en: 'Unit Price' },
+	'salesOrderItem.amount': { vi: 'Thành tiền', en: 'Amount' },
+	'salesOrderItem.discountPercent': { vi: 'Chiết khấu (%)', en: 'Discount (%)' },
+	'salesOrderItem.discountAmount': { vi: 'Tiền chiết khấu', en: 'Discount Amount' },
+	'salesOrderItem.taxPercent': { vi: 'Thuế suất (%)', en: 'Tax Rate (%)' },
+	'salesOrderItem.taxAmount': { vi: 'Tiền thuế', en: 'Tax Amount' },
+	'salesOrderItem.totalAmount': { vi: 'Tổng tiền', en: 'Total Amount' },
+	'salesOrderItem.expectedDeliveryDate': { vi: 'Ngày giao dự kiến', en: 'Expected Delivery Date' },
+	'salesOrderItem.description': { vi: 'Diễn giải', en: 'Description' },
+	'salesOrderItem.empty': { vi: 'Đơn hàng này chưa có sản phẩm nào.', en: 'This order has no items yet.' },
+	'salesOrderItem.emptyHint': { vi: 'Chọn một đơn bán hàng ở panel trên để xem sản phẩm.', en: 'Pick a sales order above to view items.' },
+	'salesOrderItem.lineCount': { vi: '({count} dòng)', en: '({count} lines)' },
+	'salesOrderItem.addLine': { vi: 'Thêm dòng', en: 'Add Line' },
+	'salesOrderItem.removeLine': { vi: 'Xoá dòng', en: 'Remove Line' },
+	'salesOrderItem.emptyLine': { vi: 'Chưa có sản phẩm nào. Nhấn "Thêm dòng" để bắt đầu.', en: 'No items yet. Click "Add Line" to begin.' },
+
+	// Aliases for saleOrderItem
+	'saleOrderItem.title': { vi: 'Chi tiết sản phẩm', en: 'Order Items' },
+	'saleOrderItem.lower': { vi: 'chi tiết sản phẩm', en: 'order item' },
+	'saleOrderItem.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'saleOrderItem.empty': { vi: 'Đơn hàng này chưa có sản phẩm nào.', en: 'This order has no items yet.' },
+	'saleOrderItem.emptyHint': { vi: 'Chọn một đơn bán hàng ở panel trên để xem sản phẩm.', en: 'Pick a sales order above to view items.' },
+	'saleOrderItem.lineCount': { vi: '({count} dòng)', en: '({count} lines)' },
+	'saleOrderItem.addLine': { vi: 'Thêm dòng', en: 'Add Line' },
+	'saleOrderItem.removeLine': { vi: 'Xoá dòng', en: 'Remove Line' },
+	'saleOrderItem.emptyLine': { vi: 'Chưa có sản phẩm nào. Nhấn "Thêm dòng" để bắt đầu.', en: 'No items yet. Click "Add Line" to begin.' },
+};
+
 

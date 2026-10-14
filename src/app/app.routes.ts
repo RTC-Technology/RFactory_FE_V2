@@ -694,6 +694,21 @@ export const routes: Routes = [
 					permissionMode: 'all',
 				},
 			},
+			//sale-order
+			{
+				path: 'sale-order',
+				loadComponent: () =>
+					import('./pages/sales-order/sales-order.component').then(m => m.SalesOrderComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.salesOrder.view,
+						PERMISSIONS.salesOrderItem.view,
+						PERMISSIONS.salesOrderPaymentSchedule.view,
+					],
+					permissionMode: 'all',
+				},
+			},
 
 
 			// ─── Aliases matching legacy / nested database menu URLs ───

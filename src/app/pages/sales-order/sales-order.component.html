@@ -1,0 +1,899 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('salesOrder.title') }}</h2>
+                    <span class="panel__count">{{ saleOrders().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'salesOrder', perms: perms.salesOrder, canAdd: true, hasSelection: !!selectedOrder(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #orderTable [value]="saleOrders()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.salesOrder"
+                             (onFilter)="onFiltered('salesOrder', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="customerId">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('salesOrder.orderNo') }}</th>
+                                <!-- <th class="col-customer">{{ i18n.t('salesOrder.customer') }}</th> -->
+                                <th class="col-orderDate">{{ i18n.t('salesOrder.orderDate') }}</th>
+                                <th class="col-expectedDeliveryDate">{{ i18n.t('salesOrder.expectedDeliveryDate') }}</th>
+                                <th class="col-orderType">{{ i18n.t('salesOrder.orderType') }}</th>
+                                <th class="col-status">{{ i18n.t('salesOrder.status') }}</th>
+                                <th class="col-executionStatus">{{ i18n.t('salesOrder.executionStatus') }}</th>
+                                <th class="col-revenueStatus">{{ i18n.t('salesOrder.revenueStatus') }}</th>
+                                <th class="col-currency">{{ i18n.t('salesOrder.currency') }}</th>
+                                <th class="col-exchangeRate">{{ i18n.t('salesOrder.exchangeRate') }}</th>
+                                <th class="col-totalAmount">{{ i18n.t('salesOrder.totalAmount') }}</th>
+                                <th class="col-discountAmount">{{ i18n.t('salesOrder.discountAmount') }}</th>
+                                <th class="col-paidAmount">{{ i18n.t('salesOrder.paidAmount') }}</th>
+                                <th class="col-outstandingAmount">{{ i18n.t('salesOrder.outstandingAmount') }}</th>
+                                <th class="col-paymentTermDays">{{ i18n.t('salesOrder.paymentTermDays') }}</th>
+                                <th class="col-paymentDueDate">{{ i18n.t('salesOrder.paymentDueDate') }}</th>
+                                <th class="col-description">{{ i18n.t('salesOrder.description') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="16">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{i18n.t('customer.title')}}: {{ customerLabel(row.customerId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedOrder()?.id === row.id"
+                                (click)="selectOrder(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.orderNo || '—' }}</td>
+                                <!-- <td class="col-customer">{{ customerLabel(row.customerId) || '—' }}</td> -->
+                                <td class="col-orderDate">{{ (row.orderDate|date) || '—' }}</td>
+                                <td class="col-expectedDeliveryDate">{{ (row.expectedDeliveryDate|date) || '—' }}</td>
+                                <td class="col-orderType">{{ typeLabel(row.orderType) || '—' }}</td>
+                                <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
+                                <td class="col-executionStatus">{{ executionStatusLabel(row.executionStatus) || '—' }}</td>
+                                <td class="col-revenueStatus">{{ revenueStatusLabel(row.revenueStatus) || '—' }}</td>
+                                <td class="col-currency">{{ currencyLabel(row.currencyId) || '—' }}</td>
+                                <td class="col-exchangeRate text-right">{{ row.exchangeRate != null ? (row.exchangeRate|number:'1.0-2') : 0 }}</td>
+                                <td class="col-totalAmount text-right">{{ row.totalAmount != null ? (row.totalAmount|number:'1.0-2') : 0 }}</td>
+                                <td class="col-discountAmount text-right">{{ row.discountAmount != null ? (row.discountAmount|number:'1.0-2') : 0 }}</td>
+                                <td class="col-paidAmount text-right">{{ row.paidAmount != null ? (row.paidAmount|number:'1.0-2') : 0 }}</td>
+                                <td class="col-outstandingAmount text-right">{{ row.outstandingAmount != null ? (row.outstandingAmount|number:'1.0-2') : 0 }}</td>
+                                <td class="col-paymentTermDays text-right">{{ row.paymentTermDays != null ? (row.paymentTermDays|number:'1.0-0') : 0 }}</td>
+                                <td class="col-paymentDueDate">{{ (row.paymentDueDate|date) || '—' }}</td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="16">
+                                    <p class="empty">
+                                        {{ selectedOrder() ? i18n.t('salesOrder.empty') :
+                                        i18n.t('salesOrder.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <p-splitter class="workspace__right" layout="horizontal" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                        [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('salesOrderItem.title') }}</h2>
+                            @if (selectedOrder(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('salesOrderItem.scopeOf', { name: t.orderNo || '—' }) }}
+                            </span>
+                            <span class="panel__count">{{ orderItems().length }}</span>
+                            }
+                        </div>
+
+                        <div class="table-scroll">
+                            <p-table #orderItemTable [value]="orderItems()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.salesOrderItem"
+                                     (onFilter)="onFiltered('salesOrderItem', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-product">{{ i18n.t('salesOrderItem.productCode') }}</th>
+                                        <th class="col-productName">{{ i18n.t('salesOrderItem.productName') }}</th>
+                                        <th class="col-unit">{{ i18n.t('salesOrderItem.unit') }}</th>
+                                        <th class="col-warehouse">{{ i18n.t('salesOrderItem.warehouse') }}</th>
+                                        <th class="col-orderedQuantity">{{ i18n.t('salesOrderItem.orderedQuantity') }}</th>
+                                        <th class="col-deliveredQuantity">{{ i18n.t('salesOrderItem.deliveredQuantity') }}</th>
+                                        <th class="col-cancelledQuantity">{{ i18n.t('salesOrderItem.cancelledQuantity') }}</th>
+                                        <th class="col-unitPrice">{{ i18n.t('salesOrderItem.unitPrice') }}</th>
+                                        <th class="col-amount">{{ i18n.t('salesOrderItem.amount') }}</th>
+                                        <th class="col-discountPercent">{{ i18n.t('salesOrderItem.discountPercent') }}</th>
+                                        <th class="col-discountAmount">{{ i18n.t('salesOrderItem.discountAmount') }}</th>
+                                        <th class="col-taxPercent">{{ i18n.t('salesOrderItem.taxPercent') }}</th>
+                                        <th class="col-taxAmount">{{ i18n.t('salesOrderItem.taxAmount') }}</th>
+                                        <th class="col-totalAmount">{{ i18n.t('salesOrderItem.totalAmount') }}</th>
+                                        <th class="col-expectedDeliveryDate">{{ i18n.t('salesOrderItem.expectedDeliveryDate') }}</th>
+                                        <th class="col-description">{{ i18n.t('salesOrderItem.description') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                        (click)="selectItem(row)" (dblclick)="openEdit()">
+                                        <td class="col-product">{{ productLabel(row.productId) || '—' }}</td>
+                                        <td class="col-productName">{{ row.productName || '—' }}</td>
+                                        <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+                                        <td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
+                                        <td class="col-orderedQuantity text-right">{{ row.orderedQuantity != null ? (row.orderedQuantity|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-deliveredQuantity text-right">{{ row.deliveredQuantity != null ? (row.deliveredQuantity|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-cancelledQuantity text-right">{{ row.cancelledQuantity != null ? (row.cancelledQuantity|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-unitPrice text-right">{{ row.unitPrice != null ? (row.unitPrice|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-amount text-right">{{ row.amount != null ? (row.amount|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-discountPercent text-right">{{ row.discountPercent != null ? (row.discountPercent|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-discountAmount text-right">{{ row.discountAmount != null ? (row.discountAmount|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-taxPercent text-right">{{ row.taxPercent != null ? (row.taxPercent|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-taxAmount text-right">{{ row.taxAmount != null ? (row.taxAmount|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-totalAmount text-right">{{ row.totalAmount != null ? (row.totalAmount|number:'1.0-2') : 0 }}</td>
+                                        <td class="col-expectedDeliveryDate">{{ (row.expectedDeliveryDate|date) || '—' }}</td>
+                                        <td class="col-description">{{ row.description || '—' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="16">
+                                            <p class="empty">
+                                                {{ selectedOrder() ? i18n.t('salesOrderItem.empty') :
+                                                i18n.t('salesOrderItem.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+
+                <ng-template #panel>
+                    <section class="panel">
+                        <div class="panel__head">
+                            <h2 class="panel__title">{{ i18n.t('salesOrderPaymentSchedule.title') }}</h2>
+                            @if (selectedOrder(); as t) {
+                            <span class="panel__scope">
+                                {{ i18n.t('salesOrderPaymentSchedule.scopeOf', { name: t.orderNo || '—' })}}
+                            </span>
+                            <span class="panel__count">{{schedules().length }}</span>
+                            }
+                        </div>
+
+                        <div class="table-scroll">
+                            <p-table #orderScheduleTable [value]="schedules()" [showGridlines]="true"
+                                     class="grid" [globalFilterFields]="filterFields.salesOrderPaymentSchedule"
+                                     (onFilter)="onFiltered('salesOrderPaymentSchedule', $event.filteredValue)"
+                                     [scrollable]="true" scrollHeight="flex">
+                                <ng-template #header>
+                                    <tr>
+                                        <th class="col-code">{{ i18n.t('salesOrderPaymentSchedule.scheduleNo') }}</th>
+                                        <th class="col-scheduleName">{{ i18n.t('salesOrderPaymentSchedule.scheduleName') }}</th>
+                                        <th class="col-paymentPercent">{{ i18n.t('salesOrderPaymentSchedule.paymentPercent') }}</th>
+                                        <th class="col-paymentAmount">{{ i18n.t('salesOrderPaymentSchedule.paymentAmount') }}</th>
+                                        <th class="col-dueDate">{{ i18n.t('salesOrderPaymentSchedule.dueDate') }}</th>
+                                        <th class="col-paidAmount">{{ i18n.t('salesOrderPaymentSchedule.paidAmount') }}</th>
+                                        <th class="col-status">{{ i18n.t('salesOrderPaymentSchedule.status') }}</th>
+                                        <th class="col-description">{{ i18n.t('salesOrderPaymentSchedule.description') }}</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-row>
+                                    <tr class="row" [class.row--selected]="selectedSchedule()?.id === row.id"
+                                        (click)="selectSchedule(row)" (dblclick)="openEdit()">
+                                        <td class="col-code">{{ row.scheduleNo || '—' }}</td>
+                                        <td class="col-scheduleName">{{ row.scheduleName || '—' }}</td>
+                                        <td class="col-paymentPercent text-right">{{ row.paymentPercent != null ? (row.paymentPercent|number:'1.0-2') : '—' }}</td>
+                                        <td class="col-paymentAmount text-right">{{ row.paymentAmount != null ? (row.paymentAmount|number:'1.0-2') : '—' }}</td>
+                                        <td class="col-dueDate text-right">{{ row.dueDate != null ? (row.dueDate|date) : '—' }}</td>
+                                        <td class="col-paidAmount text-right">{{ row.paidAmount != null ? (row.paidAmount|number:'1.0-2') : '—' }}</td>
+                                        <td class="col-status">{{ scheduleStatusLabel(row.status) || '—' }}</td>
+                                        <td class="col-description">{{ row.description || '—' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #emptymessage>
+                                    <tr>
+                                        <td colspan="8">
+                                            <p class="empty">
+                                                {{ selectedSchedule() ? i18n.t('salesOrderPaymentSchedule.empty') :
+                                                i18n.t('salesOrderPaymentSchedule.emptyHint') }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </section>
+                </ng-template>
+            </p-splitter>
+
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw',height:'90vh' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="so-customerId">
+                    {{ i18n.t('salesOrder.customer') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="customerOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.customerId"
+                          (ngModelChange)="onCustomerChange($event)"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.customer.unset')" />
+            </div>
+            <div class="field">
+                <label for="so-orderNo">
+                    {{ i18n.t('salesOrder.orderNo') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="so-orderNo" name="orderNo" [(ngModel)]="form.orderNo" autocomplete="off" disabled="true" />
+            </div>
+
+            <div class="field">
+                <label for="so-parent">
+                    {{ i18n.t('salesOrder.parent') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <p-select [options]="saleOrderOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.parentId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.parent.unset')" />
+            </div>
+            <div class="field">
+                <label for="so-orderType">
+                    {{ i18n.t('salesOrder.orderType') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="typeOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.orderType" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.orderType.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="so-orderDate">
+                    {{ i18n.t('salesOrder.orderDate') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="so-orderDate" type="date" name="orderDate"
+                       [(ngModel)]="form.orderDate"
+                       (ngModelChange)="onCalculatePaymentDueDate()" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="so-expectedDeliveryDate">
+                    {{ i18n.t('salesOrder.expectedDeliveryDate') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="so-expectedDeliveryDate" type="date" name="expectedDeliveryDate" [(ngModel)]="form.expectedDeliveryDate" autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="so-status">
+                    {{ i18n.t('salesOrder.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.status.unset')" />
+            </div>
+            <div class="field">
+                <label for="so-executionStatus">
+                    {{ i18n.t('salesOrder.executionStatus') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="executionStatusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.executionStatus"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.executionStatus.unset')" />
+            </div>
+            <div class="field">
+                <label for="so-revenueStatus">
+                    {{ i18n.t('salesOrder.revenueStatus') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="revenueStatusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.revenueStatus"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.revenueStatus.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+
+            <div class="field">
+                <label for="so-currencyId">
+                    {{ i18n.t('salesOrder.currency') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="currencyOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.currencyId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('salesOrder.currency.unset')" />
+            </div>
+            <div class="field">
+                <label for="so-exchangeRate">
+                    {{ i18n.t('salesOrder.exchangeRate') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full" [(ngModel)]="form.exchangeRate" mode="decimal" [showButtons]="true"
+                               [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" />
+            </div>
+
+            <div class="field">
+                <label for="so-paymentTermDays">
+                    {{ i18n.t('salesOrder.paymentTermDays') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="so-paymentTermDays" type="number" name="paymentTermDays"
+                       min="0" [(ngModel)]="form.paymentTermDays"
+                       (ngModelChange)="onCalculatePaymentDueDate()"
+                       autocomplete="off" />
+            </div>
+
+            <div class="field">
+                <label for="so-paymentDueDate">
+                    {{ i18n.t('salesOrder.paymentDueDate') }}
+                    <!-- <span class="req">*</span> -->
+                </label>
+                <input pInputText id="so-paymentDueDate" type="date" name="paymentDueDate" [(ngModel)]="form.paymentDueDate" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="so-totalAmount">
+                    {{ i18n.t('salesOrder.totalAmount') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full" [(ngModel)]="form.totalAmount" (ngModelChange)="onTotalAmountChange($event)"
+                               mode="decimal" [showButtons]="true"
+                               [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US"
+                               [disabled]="itemRows().length > 0" />
+            </div>
+            <div class="field">
+                <label for="so-discountAmount">
+                    {{ i18n.t('salesOrder.discountAmount') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full" [(ngModel)]="form.discountAmount" mode="decimal" [showButtons]="true"
+                               [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US"
+                               [disabled]="itemRows().length > 0" />
+            </div>
+
+            <div class="field">
+                <label for="so-paidAmount">
+                    {{ i18n.t('salesOrder.paidAmount') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full" [(ngModel)]="form.paidAmount" mode="decimal" [showButtons]="true"
+                               [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" disabled="" />
+            </div>
+            <div class="field">
+                <label for="so-outstandingAmount">
+                    {{ i18n.t('salesOrder.outstandingAmount') }}
+                    <span class="req">*</span>
+                </label>
+                <p-inputnumber class="w-full" [(ngModel)]="form.outstandingAmount" mode="decimal" [showButtons]="true"
+                               [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" locale="en-US" disabled="" />
+            </div>
+
+        </div>
+
+        <div class="field">
+            <label for="so-description">{{ i18n.t('salesOrder.description') }}</label>
+            <textarea pInputTextarea id="so-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+        </div>
+
+        <p-tabs [value]="activeTab">
+            <p-tablist>
+                <p-tab value="item">{{i18n.t('salesOrderItem.title')}}</p-tab>
+                <p-tab value="schedule">{{i18n.t('salesOrderPaymentSchedule.title')}}</p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+                <p-tabpanel value="item">
+                    <div class="form">
+                        <!-- @if (formError()) {
+                        <div class="form__error">{{ formError() }}</div>
+                        } -->
+
+                        <section class="panel lines">
+                            <div class="panel__head">
+                                <h2 class="panel__title">{{ i18n.t('salesOrderItem.title') }}</h2>
+                                <span class="panel__scope">
+                                    {{ i18n.t('salesOrderItem.lineCount', { count: itemRows().length || 0 }) }}
+                                </span>
+                                <button type="button" class="lines__add" (click)="addItemRow()">
+                                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="1.8">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    <span>{{ i18n.t('salesOrderItem.addLine') }}</span>
+                                </button>
+                            </div>
+
+                            <div class="lines__scroll">
+                                <p-table [value]="itemRows()"
+                                         [showGridlines]="true"
+                                         class="grid grid--edit"
+                                         scrollable="true"
+                                         scrollHeight="flex"
+                                         [ngStyle]="{height:'25vh'}">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th class="col-idx">#</th>
+                                            <th class="col-product">{{ i18n.t('salesOrderItem.productCode') }}</th>
+                                            <th class="col-productName">{{ i18n.t('salesOrderItem.productName') }}</th>
+                                            <th class="col-unit">{{ i18n.t('salesOrderItem.unit') }}</th>
+                                            <th class="col-warehouse">{{ i18n.t('salesOrderItem.warehouse') }}</th>
+                                            <th class="col-orderedQuantity">{{ i18n.t('salesOrderItem.orderedQuantity') }}</th>
+                                            <th class="col-deliveredQuantity">{{ i18n.t('salesOrderItem.deliveredQuantity') }}</th>
+                                            <th class="col-cancelledQuantity">{{ i18n.t('salesOrderItem.cancelledQuantity') }}</th>
+                                            <th class="col-unitPrice">{{ i18n.t('salesOrderItem.unitPrice') }}</th>
+                                            <th class="col-amount">{{ i18n.t('salesOrderItem.amount') }}</th>
+                                            <th class="col-discountPercent">{{ i18n.t('salesOrderItem.discountPercent') }}</th>
+                                            <th class="col-discountAmount">{{ i18n.t('salesOrderItem.discountAmount') }}</th>
+                                            <th class="col-taxPercent">{{ i18n.t('salesOrderItem.taxPercent') }}</th>
+                                            <th class="col-taxAmount">{{ i18n.t('salesOrderItem.taxAmount') }}</th>
+                                            <th class="col-totalAmount">{{ i18n.t('salesOrderItem.totalAmount') }}</th>
+                                            <th class="col-expectedDeliveryDate">{{ i18n.t('salesOrderItem.expectedDeliveryDate') }}</th>
+                                            <th class="col-description">{{ i18n.t('salesOrderItem.description') }}</th>
+                                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                        </tr>
+                                    </ng-template>
+
+                                    <ng-template #body let-row let-i="rowIndex">
+                                        <tr class="row row--edit">
+                                            <td class="col-idx">{{ i + 1 }}</td>
+                                            <td class="col-product">
+                                                <p-select [options]="productOptions()"
+                                                          optionLabel="label"
+                                                          optionValue="value"
+                                                          [(ngModel)]="row.productId"
+                                                          (ngModelChange)="onProductChange($event,row)"
+                                                          [filter]="true"
+                                                          filterBy="label"
+                                                          [placeholder]="i18n.t('salesOrderItem.product.unset')"
+                                                          appendTo="body"
+                                                          class="w-full">
+                                                    <ng-template #header>
+                                                        <div class="picker-row picker-row--head">
+                                                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                                }}</span>
+                                                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                                }}</span>
+                                                        </div>
+                                                    </ng-template>
+
+                                                    <ng-template #item let-opt>
+                                                        <div class="picker-row">
+                                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                                {{ opt.drawingNo || '—' }}
+                                                            </span>
+                                                            <span class="picker-cell picker-cell--center">
+                                                                @if (opt.statusLabel) {
+                                                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                                       [rounded]="true" />
+                                                                } @else {
+                                                                <span class="picker-cell--muted">—</span>
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </ng-template>
+                                                </p-select>
+
+                                            </td>
+                                            <td class="col-productName">
+                                                <input pInputText class="cell-input w-full" name="productName" [(ngModel)]="row.productName" autocomplete="off" disabled="" />
+                                            </td>
+                                            <td class="col-unit">
+                                                <p-select [options]="unitOptions()"
+                                                          optionLabel="label" optionValue="value" class="w-full"
+                                                          [(ngModel)]="row.unitId"
+                                                          [filter]="true"
+                                                          filterBy="label"
+                                                          appendTo="body"
+                                                          [placeholder]="i18n.t('salesOrderItem.unit.unset')" />
+                                            </td>
+                                            <td class="col-warehouse">
+                                                <p-select [options]="warehouseOptions()"
+                                                          optionLabel="label" optionValue="value" class="w-full"
+                                                          [(ngModel)]="row.warehouseId"
+                                                          [filter]="true"
+                                                          filterBy="label"
+                                                          appendTo="body"
+                                                          [placeholder]="i18n.t('salesOrderItem.warehouse.unset')" />
+                                            </td>
+                                            <td class="col-orderedQuantity">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.orderedQuantity"
+                                                               (ngModelChange)="onCalculateAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-deliveredQuantity">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.deliveredQuantity"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-cancelledQuantity">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.cancelledQuantity"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-unitPrice">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.unitPrice"
+                                                               (ngModelChange)="onCalculateAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-amount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.amount" disabled
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-discountPercent">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.discountPercent"
+                                                               (ngModelChange)="onCalculateAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-discountAmount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.discountAmount" disabled
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-taxPercent">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.taxPercent"
+                                                               (ngModelChange)="onCalculateAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-taxAmount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.taxAmount" disabled
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-totalAmount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.totalAmount" disabled
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-expectedDeliveryDate">
+                                                <input pInputText class="cell-input w-full" type="date" name="expectedDeliveryDate" [(ngModel)]="row.expectedDeliveryDate" autocomplete="off" />
+                                            </td>
+
+                                            <td class="col-description">
+                                                <textarea pInputTextarea name="description" class="w-full" [(ngModel)]="row.description" autocomplete="off"
+                                                          [rows]="2"></textarea>
+                                            </td>
+                                            <td class="col-act">
+                                                <button type="button"
+                                                        class="row-del"
+                                                        [title]="i18n.t('salesOrderItem.removeLine')"
+                                                        [attr.aria-label]="i18n.t('salesOrderItem.removeLine')"
+                                                        (click)="removeItemRow(row)">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #footer>
+                                        <tr class="lines__total">
+                                            <td colspan="5">{{ i18n.t('salesOrderItem.orderedQuantity') }}</td>
+                                            <td class="col-orderedQuantity">{{ orderOrderedQuantity() | number: '1.0-2' }}</td>
+
+                                            <td colspan="3" class="text-right">{{ i18n.t('salesOrderItem.amount') }}</td>
+                                            <td class="col-amount">{{ orderAmount() | number: '1.0-2' }}</td>
+
+                                            <td colspan="1" class="text-right">{{ i18n.t('salesOrderItem.discountAmount') }}</td>
+                                            <td class="col-discountAmount ">{{ orderTotalDiscountAmount() | number: '1.0-2' }}</td>
+
+                                            <td colspan="1" class="text-right">{{ i18n.t('salesOrderItem.taxAmount') }}</td>
+                                            <td class="col-taxAmount ">{{ orderTotalTaxAmount() | number: '1.0-2' }}</td>
+
+                                            <td class="col-totalAmount text-right">{{ orderTotalAmount() | number: '1.0-2' }}</td>
+                                            <td colspan="3"></td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #emptymessage>
+                                        <tr>
+                                            <td colspan="18">
+                                                <p class="empty">{{ i18n.t('salesOrderItem.emptyLine') }}</p>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        </section>
+                    </div>
+                </p-tabpanel>
+
+                <p-tabpanel value="schedule">
+                    <div class="form">
+                        <!-- @if (formError()) {
+                                        <div class="form__error">{{ formError() }}</div>
+                                        } -->
+                        <section class="panel lines">
+                            <div class="panel__head">
+                                <h2 class="panel__title">{{ i18n.t('salesOrderPaymentSchedule.title') }}</h2>
+                                <span class="panel__scope">
+                                    {{ i18n.t('salesOrderPaymentSchedule.lineCount', { count: scheduleRows().length || 0 }) }}
+                                </span>
+                                <button type="button" class="lines__add" (click)="addScheduleRow()">
+                                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="1.8">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    <span>{{ i18n.t('salesOrderPaymentSchedule.addLine') }}</span>
+                                </button>
+                            </div>
+
+                            <div class="lines__scroll">
+                                <p-table [value]="scheduleRows()"
+                                         [showGridlines]="true"
+                                         class="grid grid--edit"
+                                         scrollable="true"
+                                         scrollHeight="flex"
+                                         [ngStyle]="{height:'25vh'}">
+                                    <ng-template #header>
+                                        <tr>
+                                            <th class="col-idx">#</th>
+                                            <th class="col-scheduleName">{{ i18n.t('salesOrderPaymentSchedule.scheduleName') }}</th>
+                                            <th class="col-paymentPercent">{{ i18n.t('salesOrderPaymentSchedule.paymentPercent') }}</th>
+                                            <th class="col-paymentAmount">{{ i18n.t('salesOrderPaymentSchedule.paymentAmount') }}</th>
+                                            <th class="col-dueDate">{{ i18n.t('salesOrderPaymentSchedule.dueDate') }}</th>
+                                            <th class="col-paidAmount">{{ i18n.t('salesOrderPaymentSchedule.paidAmount') }}</th>
+                                            <th class="col-status">{{ i18n.t('salesOrderPaymentSchedule.status') }}</th>
+                                            <th class="col-description">{{ i18n.t('salesOrderPaymentSchedule.description') }}</th>
+                                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                                        </tr>
+                                    </ng-template>
+
+                                    <ng-template #body let-row let-i="rowIndex">
+                                        <tr class="row row--edit">
+                                            <td class="col-idx">{{ i + 1 }}</td>
+                                            <td class="col-scheduleName">
+                                                <input pInputText class="cell-input w-full" name="scheduleName" [(ngModel)]="row.scheduleName" autocomplete="off" />
+                                            </td>
+                                            <td class="col-paymentPercent">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.paymentPercent"
+                                                               (ngModelChange)="onCalculatePaymentAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-paymentAmount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.paymentAmount" disabled=""
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-dueDate">
+                                                <input pInputText class="cell-input w-full" type="date" name="dueDate" [(ngModel)]="row.dueDate" (ngModelChange)="onChangePaymentDueDate(row)" autocomplete="off" />
+                                            </td>
+                                            <td class="col-paidAmount">
+                                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                                               [(ngModel)]="row.paidAmount"
+                                                               (ngModelChange)="onCalculatePaidAmount(row)"
+                                                               mode="decimal"
+                                                               [showButtons]="true"
+                                                               [min]="0"
+                                                               [minFractionDigits]="2"
+                                                               [maxFractionDigits]="2"
+                                                               locale="en-US" />
+                                            </td>
+                                            <td class="col-status">
+                                                <p-select [options]="scheduleStatusOptions()"
+                                                          optionLabel="label" optionValue="value" class="w-full"
+                                                          [(ngModel)]="row.status"
+                                                          [filter]="true"
+                                                          filterBy="label"
+                                                          appendTo="body"
+                                                          [placeholder]="i18n.t('salesOrderPaymentSchedule.status.unset')" />
+                                            </td>
+                                            <td class="col-description">
+                                                <textarea pInputTextarea name="description" class="w-full" [(ngModel)]="row.description" autocomplete="off"
+                                                          [rows]="2"></textarea>
+                                            </td>
+
+                                            <td class="col-act">
+                                                <button type="button"
+                                                        class="row-del"
+                                                        [title]="i18n.t('salesOrderPaymentSchedule.removeLine')"
+                                                        [attr.aria-label]="i18n.t('salesOrderPaymentSchedule.removeLine')"
+                                                        (click)="removeScheduleRow(row)">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #footer>
+                                        <tr class="lines__total">
+                                            <td colspan="2"></td>
+                                            <td class="col-paymentPercent text-right">{{ scheduleTotalPaymentPercent() | number: '1.0-2' }}</td>
+                                            <td class="col-paymentAmount text-right">{{ scheduleTotalPaymentAmount() | number: '1.0-2' }}</td>
+
+                                            <td class="text-right">{{ i18n.t('salesOrderPaymentSchedule.paidAmount') }}</td>
+                                            <td class="col-paidAmount">{{ scheduleTotalPaidAmount() | number: '1.0-2' }}</td>
+
+                                            <!-- <td colspan="2" class="col-amount text-right">{{ i18n.t('salesOrderPaymentSchedule.discountAmount') }}</td>
+                                                            <td class="col-totalAmount ">{{ orderTotalDiscountAmount() | number: '1.0-2' }}</td>
+                                                            <td colspan="2" class="col-amount text-right">{{ i18n.t('salesOrderPaymentSchedule.taxAmount') }}</td>
+                                                            <td class="col-taxAmount ">{{ orderTotalTaxAmount() | number: '1.0-2' }}</td>
+                                                            <td class="col-totalAmount text-right">{{ orderTotalAmount() | number: '1.0-2' }}</td>-->
+                                            <td colspan="5"></td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template #emptymessage>
+                                        <tr>
+                                            <td colspan="9">
+                                                <p class="empty">{{ i18n.t('salesOrderPaymentSchedule.emptyLine') }}</p>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        </section>
+
+                    </div>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />
