@@ -29,8 +29,8 @@ import { forkJoin, Observable, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { productStatusOf } from '../../domain/models/product.model';
 import { AuthService } from '../../core/services/auth.service';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { InspectionExecutionComponent } from '../inspection-execution/inspection-execution.component';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'inspectionPlan' | 'inspectionItem' | 'inspectionExecution' | 'inspectionResult';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -87,7 +87,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 	private readonly unitApi = inject(UnitApiService);
 	private readonly routingApi = inject(RoutingApiService);
 	private readonly authService = inject(AuthService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -138,10 +138,10 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 		return samplingPlan ? `${samplingPlan.samplingPlanCode} · ${samplingPlan.samplingPlanName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	readonly typeOptions = computed(() =>
@@ -280,7 +280,7 @@ export class InspectionPlanComponent extends PermissionAwarePage implements OnIn
 			specs: this.specApi.load(),
 			specItems: this.specItemApi.load(),
 			specProducts: this.specProductApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			units: this.unitApi.load(),
 			samplingPlans: this.samplingPlanApi.load(),
 		}).subscribe({

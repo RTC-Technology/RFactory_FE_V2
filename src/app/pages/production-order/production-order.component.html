@@ -15,21 +15,19 @@
 
     <div class="page-header__actions">
       <p-button
-        icon="pi pi-refresh"
-        [label]="i18n.t('common.reload')"
-        severity="secondary"
-        [outlined]="true"
-        [loading]="loading()"
-        (onClick)="refresh()"
-      ></p-button>
+                icon="pi pi-refresh"
+                [label]="i18n.t('common.reload')"
+                severity="secondary"
+                [outlined]="true"
+                [loading]="loading()"
+                (onClick)="refresh()"></p-button>
 
       <p-button
-        *appHasPermission="'production-order.add'"
-        icon="pi pi-plus"
-        [label]="i18n.t('common.add')"
-        severity="primary"
-        (onClick)="openCreate()"
-      ></p-button>
+                *appHasPermission="'production-order.add'"
+                icon="pi pi-plus"
+                [label]="i18n.t('common.add')"
+                severity="primary"
+                (onClick)="openCreate()"></p-button>
     </div>
   </header>
 
@@ -79,28 +77,26 @@
         <span class="p-input-icon-left w-full">
           <i class="pi pi-search"></i>
           <input
-            pInputText
-            type="text"
-            class="w-full"
-            [placeholder]="i18n.t('common.search') + ' mã lệnh, sản phẩm, số lô...'"
-            [ngModel]="searchKeyword()"
-            (ngModelChange)="searchKeyword.set($event)"
-          />
+                 pInputText
+                 type="text"
+                 class="w-full"
+                 [placeholder]="i18n.t('common.search') + ' mã lệnh, sản phẩm, số lô...'"
+                 [ngModel]="searchKeyword()"
+                 (ngModelChange)="searchKeyword.set($event)" />
         </span>
       </div>
 
       <!-- Order Type Filter -->
       <div class="filter-item">
         <p-select
-          [options]="orderTypeOptions"
-          optionLabel="labelKey"
-          optionValue="value"
-          [showClear]="true"
-          [placeholder]="i18n.t('productionOrder.orderType')"
-          [ngModel]="filterOrderType()"
-          (ngModelChange)="filterOrderType.set($event)"
-          styleClass="w-full"
-        >
+                  [options]="orderTypeOptions"
+                  optionLabel="labelKey"
+                  optionValue="value"
+                  [showClear]="true"
+                  [placeholder]="i18n.t('productionOrder.orderType')"
+                  [ngModel]="filterOrderType()"
+                  (ngModelChange)="filterOrderType.set($event)"
+                  styleClass="w-full">
           <ng-template pTemplate="selectedItem" let-selected>
             <span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
           </ng-template>
@@ -113,15 +109,14 @@
       <!-- Status Filter -->
       <div class="filter-item">
         <p-select
-          [options]="statusOptions"
-          optionLabel="labelKey"
-          optionValue="value"
-          [showClear]="true"
-          [placeholder]="i18n.t('productionOrder.status')"
-          [ngModel]="filterStatus()"
-          (ngModelChange)="filterStatus.set($event)"
-          styleClass="w-full"
-        >
+                  [options]="statusOptions"
+                  optionLabel="labelKey"
+                  optionValue="value"
+                  [showClear]="true"
+                  [placeholder]="i18n.t('productionOrder.status')"
+                  [ngModel]="filterStatus()"
+                  (ngModelChange)="filterStatus.set($event)"
+                  styleClass="w-full">
           <ng-template pTemplate="selectedItem" let-selected>
             <span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
           </ng-template>
@@ -134,15 +129,14 @@
       <!-- Priority Filter -->
       <div class="filter-item">
         <p-select
-          [options]="priorityOptions"
-          optionLabel="labelKey"
-          optionValue="value"
-          [showClear]="true"
-          [placeholder]="i18n.t('productionOrder.priority')"
-          [ngModel]="filterPriority()"
-          (ngModelChange)="filterPriority.set($event)"
-          styleClass="w-full"
-        >
+                  [options]="priorityOptions"
+                  optionLabel="labelKey"
+                  optionValue="value"
+                  [showClear]="true"
+                  [placeholder]="i18n.t('productionOrder.priority')"
+                  [ngModel]="filterPriority()"
+                  (ngModelChange)="filterPriority.set($event)"
+                  styleClass="w-full">
           <ng-template pTemplate="selectedItem" let-selected>
             <span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
           </ng-template>
@@ -155,17 +149,16 @@
       <!-- Product Filter -->
       <div class="filter-item">
         <p-select
-          [options]="productApi.items()"
-          optionLabel="productName"
-          optionValue="id"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="productCode,productName"
-          [placeholder]="i18n.t('productionOrder.product')"
-          [ngModel]="filterProductId()"
-          (ngModelChange)="filterProductId.set($event)"
-          styleClass="w-full"
-        >
+                  [options]="productApi.items()"
+                  optionLabel="productName"
+                  optionValue="id"
+                  [showClear]="true"
+                  [filter]="true"
+                  filterBy="productCode,productName"
+                  [placeholder]="i18n.t('productionOrder.product')"
+                  [ngModel]="filterProductId()"
+                  (ngModelChange)="filterProductId.set($event)"
+                  styleClass="w-full">
           <ng-template pTemplate="item" let-prod>
             <span>{{ prod.productCode }} - {{ prod.productName }}</span>
           </ng-template>
@@ -175,15 +168,14 @@
       <!-- Line Filter -->
       <div class="filter-item">
         <p-select
-          [options]="lineApi.items()"
-          optionLabel="lineName"
-          optionValue="id"
-          [showClear]="true"
-          [placeholder]="i18n.t('productionOrder.line')"
-          [ngModel]="filterLineId()"
-          (ngModelChange)="filterLineId.set($event)"
-          styleClass="w-full"
-        ></p-select>
+                  [options]="lineApi.items()"
+                  optionLabel="lineName"
+                  optionValue="id"
+                  [showClear]="true"
+                  [placeholder]="i18n.t('productionOrder.line')"
+                  [ngModel]="filterLineId()"
+                  (ngModelChange)="filterLineId.set($event)"
+                  styleClass="w-full"></p-select>
       </div>
     </div>
   </section>
@@ -191,14 +183,13 @@
   <!-- ── Data Table ────────────────────────────────────────────────────── -->
   <main class="table-card">
     <p-table
-      [value]="filteredOrders()"
-      [loading]="loading()"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-sm p-datatable-striped"
-      [tableStyle]="{ 'min-width': '1100px' }"
-    >
+             [value]="filteredOrders()"
+             [loading]="loading()"
+             [paginator]="true"
+             [rows]="10"
+             [rowsPerPageOptions]="[10, 25, 50]"
+             styleClass="p-datatable-sm p-datatable-striped"
+             [tableStyle]="{ 'min-width': '1100px' }">
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 160px">{{ i18n.t('productionOrder.orderNo') }}</th>
@@ -271,14 +262,13 @@
               </div>
               <div class="progress-bar-wrap">
                 <div
-                  class="progress-bar-fill"
-                  [style.width.%]="order.progressPercentage"
-                  [ngClass]="{
+                     class="progress-bar-fill"
+                     [style.width.%]="order.progressPercentage"
+                     [ngClass]="{
                     'fill--low': order.progressPercentage < 30,
                     'fill--mid': order.progressPercentage >= 30 && order.progressPercentage < 80,
                     'fill--high': order.progressPercentage >= 80
-                  }"
-                ></div>
+                  }"></div>
               </div>
               <div class="progress-footer">
                 <span class="percent-label">{{ order.progressPercentage }}%</span>
@@ -310,17 +300,15 @@
           <!-- Priority -->
           <td>
             <p-tag
-              [severity]="priorityInfo(order.priority).severity"
-              [value]="i18n.t(priorityInfo(order.priority).labelKey)"
-            ></p-tag>
+                   [severity]="priorityInfo(order.priority).severity"
+                   [value]="i18n.t(priorityInfo(order.priority).labelKey)"></p-tag>
           </td>
 
           <!-- Status -->
           <td>
             <p-tag
-              [severity]="statusInfo(order.status).severity"
-              [value]="i18n.t(statusInfo(order.status).labelKey)"
-            ></p-tag>
+                   [severity]="statusInfo(order.status).severity"
+                   [value]="i18n.t(statusInfo(order.status).labelKey)"></p-tag>
           </td>
 
           <!-- Actions -->
@@ -328,124 +316,114 @@
             <div class="row-actions">
               <!-- Approve / Release (if Draft) -->
               <p-button
-                *ngIf="order.status === 1"
-                icon="pi pi-check"
-                severity="info"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.release')"
-                (onClick)="release(order)"
-              ></p-button>
+                        *ngIf="order.status === 1"
+                        icon="pi pi-check"
+                        severity="info"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.release')"
+                        (onClick)="release(order)"></p-button>
 
               <!-- Start (if Released) -->
               <p-button
-                *ngIf="order.status === 2"
-                icon="pi pi-play"
-                severity="warn"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.start')"
-                (onClick)="start(order)"
-              ></p-button>
+                        *ngIf="order.status === 2"
+                        icon="pi pi-play"
+                        severity="warn"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.start')"
+                        (onClick)="start(order)"></p-button>
 
               <!-- Pause (if InProgress) -->
               <p-button
-                *ngIf="order.status === 3"
-                icon="pi pi-pause"
-                severity="secondary"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.pause')"
-                (onClick)="pause(order)"
-              ></p-button>
+                        *ngIf="order.status === 3"
+                        icon="pi pi-pause"
+                        severity="secondary"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.pause')"
+                        (onClick)="pause(order)"></p-button>
 
               <!-- Resume (if Paused) -->
               <p-button
-                *ngIf="order.status === 7"
-                icon="pi pi-play"
-                severity="warn"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.resume')"
-                (onClick)="start(order)"
-              ></p-button>
+                        *ngIf="order.status === 7"
+                        icon="pi pi-play"
+                        severity="warn"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.resume')"
+                        (onClick)="start(order)"></p-button>
 
               <!-- Record Output / Progress -->
               <p-button
-                *ngIf="order.status === 2 || order.status === 3 || order.status === 7"
-                icon="pi pi-plus-circle"
-                severity="success"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.recordProgress')"
-                (onClick)="openProgress(order)"
-              ></p-button>
+                        *ngIf="order.status === 2 || order.status === 3 || order.status === 7"
+                        icon="pi pi-plus-circle"
+                        severity="success"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.recordProgress')"
+                        (onClick)="openProgress(order)"></p-button>
 
               <!-- Complete (if InProgress) -->
               <p-button
-                *ngIf="order.status === 3"
-                icon="pi pi-verified"
-                severity="success"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.complete')"
-                (onClick)="complete(order)"
-              ></p-button>
+                        *ngIf="order.status === 3"
+                        icon="pi pi-verified"
+                        severity="success"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.complete')"
+                        (onClick)="complete(order)"></p-button>
 
               <!-- Edit / Details -->
               <p-button
-                *appHasPermission="'production-order.edit'"
-                icon="pi pi-pencil"
-                severity="secondary"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('common.edit')"
-                (onClick)="openEdit(order)"
-              ></p-button>
+                        *appHasPermission="'production-order.edit'"
+                        icon="pi pi-pencil"
+                        severity="secondary"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('common.edit')"
+                        (onClick)="openEdit(order)"></p-button>
 
               <!-- Duplicate -->
               <p-button
-                *appHasPermission="'production-order.add'"
-                icon="pi pi-copy"
-                severity="secondary"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.duplicate')"
-                (onClick)="duplicate(order)"
-              ></p-button>
+                        *appHasPermission="'production-order.add'"
+                        icon="pi pi-copy"
+                        severity="secondary"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.duplicate')"
+                        (onClick)="duplicate(order)"></p-button>
 
               <!-- Cancel (if Draft or Released) -->
               <p-button
-                *ngIf="order.status === 1 || order.status === 2"
-                icon="pi pi-ban"
-                severity="danger"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [pTooltip]="i18n.t('productionOrder.action.cancel')"
-                (onClick)="cancel(order)"
-              ></p-button>
+                        *ngIf="order.status === 1 || order.status === 2"
+                        icon="pi pi-ban"
+                        severity="danger"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [pTooltip]="i18n.t('productionOrder.action.cancel')"
+                        (onClick)="cancel(order)"></p-button>
 
               <!-- Delete -->
               <p-button
-                *appHasPermission="'production-order.delete'"
-                icon="pi pi-trash"
-                severity="danger"
-                [text]="true"
-                [rounded]="true"
-                size="small"
-                [disabled]="order.status === 3"
-                [pTooltip]="i18n.t('common.delete')"
-                (onClick)="askDelete(order)"
-              ></p-button>
+                        *appHasPermission="'production-order.delete'"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        [disabled]="order.status === 3"
+                        [pTooltip]="i18n.t('common.delete')"
+                        (onClick)="askDelete(order)"></p-button>
             </div>
           </td>
         </tr>
@@ -468,14 +446,13 @@
 
   <!-- ── Create / Edit Dialog with AMIS Tabs ───────────────────────────── -->
   <p-dialog
-    [(visible)]="showDialog"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [style]="{ width: '920px', maxWidth: '96vw', maxHeight: '92vh' }"
-    styleClass="custom-dialog"
-    [header]="dialogMode() === 'create' ? i18n.t('productionOrder.dialog.add') : i18n.t('productionOrder.dialog.edit')"
-  >
+            [(visible)]="showDialog"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [style]="{ width: '920px', maxWidth: '96vw', maxHeight: '92vh' }"
+            styleClass="custom-dialog"
+            [header]="dialogMode() === 'create' ? i18n.t('productionOrder.dialog.add') : i18n.t('productionOrder.dialog.edit')">
     <div class="dialog-content-tabs">
       <p-tabs [value]="activeDialogTab()" (valueChange)="onTabChange($event)">
         <p-tablist>
@@ -504,13 +481,12 @@
                 <div class="form-group">
                   <label class="form-label required">{{ i18n.t('productionOrder.orderType') }}</label>
                   <p-select
-                    [options]="orderTypeOptions"
-                    optionLabel="labelKey"
-                    optionValue="value"
-                    [ngModel]="formOrderType()"
-                    (ngModelChange)="formOrderType.set($event)"
-                    styleClass="w-full"
-                  >
+                            [options]="orderTypeOptions"
+                            optionLabel="labelKey"
+                            optionValue="value"
+                            [ngModel]="formOrderType()"
+                            (ngModelChange)="formOrderType.set($event)"
+                            styleClass="w-full">
                     <ng-template pTemplate="selectedItem" let-selected>
                       <span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
                     </ng-template>
@@ -524,30 +500,28 @@
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.orderNo') }}</label>
                   <input
-                    pInputText
-                    type="text"
-                    class="w-full"
-                    [placeholder]="i18n.t('productionOrder.orderNoPlaceholder')"
-                    [disabled]="dialogMode() === 'edit'"
-                    [ngModel]="formOrderNo()"
-                    (ngModelChange)="formOrderNo.set($event)"
-                  />
+                         pInputText
+                         type="text"
+                         class="w-full"
+                         [placeholder]="i18n.t('productionOrder.orderNoPlaceholder')"
+                         [disabled]="dialogMode() === 'edit'"
+                         [ngModel]="formOrderNo()"
+                         (ngModelChange)="formOrderNo.set($event)" />
                 </div>
 
                 <!-- Product Selection -->
                 <div class="form-group">
                   <label class="form-label required">{{ i18n.t('productionOrder.product') }}</label>
                   <p-select
-                    [options]="productApi.items()"
-                    optionLabel="productName"
-                    optionValue="id"
-                    [filter]="true"
-                    filterBy="productCode,productName"
-                    placeholder="Chọn sản phẩm..."
-                    [ngModel]="formProductId()"
-                    (ngModelChange)="onProductChange($event)"
-                    styleClass="w-full"
-                  >
+                            [options]="productApi.items()"
+                            optionLabel="productName"
+                            optionValue="id"
+                            [filter]="true"
+                            filterBy="productCode,productName"
+                            placeholder="Chọn sản phẩm..."
+                            [ngModel]="formProductId()"
+                            (ngModelChange)="onProductChange($event)"
+                            styleClass="w-full">
                     <ng-template pTemplate="selectedItem" let-selected>
                       <div *ngIf="selected" class="select-prod-item">
                         <span class="code-pill">{{ selected.productCode }}</span>
@@ -567,26 +541,24 @@
                 <div class="form-group">
                   <label class="form-label required">{{ i18n.t('productionOrder.plannedQty') }}</label>
                   <p-inputnumber
-                    class="w-full"
-                    [min]="1"
-                    [ngModel]="formPlannedQty()"
-                    (ngModelChange)="onPlannedQtyChange($event)"
-                  ></p-inputnumber>
+                                 class="w-full"
+                                 [min]="1"
+                                 [ngModel]="formPlannedQty()"
+                                 (ngModelChange)="onPlannedQtyChange($event)"></p-inputnumber>
                 </div>
 
                 <!-- BOM Selection -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.bom') }}</label>
                   <p-select
-                    [options]="bomApi.items()"
-                    optionLabel="bomName"
-                    optionValue="id"
-                    [showClear]="true"
-                    placeholder="Chọn định mức BOM..."
-                    [ngModel]="formBomId()"
-                    (ngModelChange)="onBomChange($event)"
-                    styleClass="w-full"
-                  >
+                            [options]="bomApi.items()"
+                            optionLabel="bomName"
+                            optionValue="id"
+                            [showClear]="true"
+                            placeholder="Chọn định mức BOM..."
+                            [ngModel]="formBomId()"
+                            (ngModelChange)="onBomChange($event)"
+                            styleClass="w-full">
                     <ng-template pTemplate="item" let-b>
                       <span>{{ b.bomCode }} - {{ b.bomName }} (v{{ b.version }})</span>
                     </ng-template>
@@ -597,15 +569,14 @@
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.routing') }}</label>
                   <p-select
-                    [options]="routingApi.items()"
-                    optionLabel="version"
-                    optionValue="id"
-                    [showClear]="true"
-                    placeholder="Chọn quy trình công nghệ..."
-                    [ngModel]="formRoutingId()"
-                    (ngModelChange)="onRoutingChange($event)"
-                    styleClass="w-full"
-                  >
+                            [options]="routingApi.items()"
+                            optionLabel="version"
+                            optionValue="id"
+                            [showClear]="true"
+                            placeholder="Chọn quy trình công nghệ..."
+                            [ngModel]="formRoutingId()"
+                            (ngModelChange)="onRoutingChange($event)"
+                            styleClass="w-full">
                     <ng-template pTemplate="item" let-r>
                       <span>Routing v{{ r.version }}</span>
                     </ng-template>
@@ -616,42 +587,39 @@
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.line') }}</label>
                   <p-select
-                    [options]="lineApi.items()"
-                    optionLabel="lineName"
-                    optionValue="id"
-                    [showClear]="true"
-                    placeholder="Chọn dây chuyền sản xuất..."
-                    [ngModel]="formLineId()"
-                    (ngModelChange)="formLineId.set($event)"
-                    styleClass="w-full"
-                  ></p-select>
+                            [options]="lineApi.items()"
+                            optionLabel="lineName"
+                            optionValue="id"
+                            [showClear]="true"
+                            placeholder="Chọn dây chuyền sản xuất..."
+                            [ngModel]="formLineId()"
+                            (ngModelChange)="formLineId.set($event)"
+                            styleClass="w-full"></p-select>
                 </div>
 
                 <!-- Work Center / Tổ sản xuất -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.workCenter') }}</label>
                   <p-select
-                    [options]="workCenterApi.items()"
-                    optionLabel="workCenterName"
-                    optionValue="id"
-                    [showClear]="true"
-                    placeholder="Chọn tổ / phân xưởng..."
-                    [ngModel]="formWorkCenterId()"
-                    (ngModelChange)="formWorkCenterId.set($event)"
-                    styleClass="w-full"
-                  ></p-select>
+                            [options]="workCenterApi.items()"
+                            optionLabel="workCenterName"
+                            optionValue="id"
+                            [showClear]="true"
+                            placeholder="Chọn tổ / phân xưởng..."
+                            [ngModel]="formWorkCenterId()"
+                            (ngModelChange)="formWorkCenterId.set($event)"
+                            styleClass="w-full"></p-select>
                 </div>
 
                 <!-- Planned Start Date -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.plannedStartDate') }}</label>
                   <input
-                    pInputText
-                    type="datetime-local"
-                    class="w-full"
-                    [ngModel]="formPlannedStartDate()"
-                    (ngModelChange)="formPlannedStartDate.set($event)"
-                  />
+                         pInputText
+                         type="datetime-local"
+                         class="w-full"
+                         [ngModel]="formPlannedStartDate()"
+                         (ngModelChange)="formPlannedStartDate.set($event)" />
                 </div>
 
                 <!-- Planned End Date (Hạn sản xuất) -->
@@ -663,25 +631,23 @@
                     </span>
                   </div>
                   <input
-                    pInputText
-                    type="datetime-local"
-                    class="w-full"
-                    [ngModel]="formPlannedEndDate()"
-                    (ngModelChange)="formPlannedEndDate.set($event)"
-                  />
+                         pInputText
+                         type="datetime-local"
+                         class="w-full"
+                         [ngModel]="formPlannedEndDate()"
+                         (ngModelChange)="formPlannedEndDate.set($event)" />
                 </div>
 
                 <!-- Priority -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.priority') }}</label>
                   <p-select
-                    [options]="priorityOptions"
-                    optionLabel="labelKey"
-                    optionValue="value"
-                    [ngModel]="formPriority()"
-                    (ngModelChange)="formPriority.set($event)"
-                    styleClass="w-full"
-                  >
+                            [options]="priorityOptions"
+                            optionLabel="labelKey"
+                            optionValue="value"
+                            [ngModel]="formPriority()"
+                            (ngModelChange)="formPriority.set($event)"
+                            styleClass="w-full">
                     <ng-template pTemplate="selectedItem" let-selected>
                       <p-tag *ngIf="selected" [severity]="selected.severity" [value]="i18n.t(selected.labelKey)"></p-tag>
                     </ng-template>
@@ -695,41 +661,38 @@
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.customer') }}</label>
                   <p-select
-                    [options]="customerApi.items()"
-                    optionLabel="customerName"
-                    optionValue="id"
-                    [showClear]="true"
-                    placeholder="Khách hàng đặt hàng..."
-                    [ngModel]="formCustomerId()"
-                    (ngModelChange)="formCustomerId.set($event)"
-                    styleClass="w-full"
-                  ></p-select>
+                            [options]="customerApi.items()"
+                            optionLabel="customerName"
+                            optionValue="id"
+                            [showClear]="true"
+                            placeholder="Khách hàng đặt hàng..."
+                            [ngModel]="formCustomerId()"
+                            (ngModelChange)="formCustomerId.set($event)"
+                            styleClass="w-full"></p-select>
                 </div>
 
                 <!-- Batch No (Lot) -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.batchNo') }}</label>
                   <input
-                    pInputText
-                    type="text"
-                    class="w-full"
-                    placeholder="Số lô thành phẩm (VD: LOT-20261013-01)..."
-                    [ngModel]="formBatchNo()"
-                    (ngModelChange)="formBatchNo.set($event)"
-                  />
+                         pInputText
+                         type="text"
+                         class="w-full"
+                         placeholder="Số lô thành phẩm (VD: LOT-20261013-01)..."
+                         [ngModel]="formBatchNo()"
+                         (ngModelChange)="formBatchNo.set($event)" />
                 </div>
 
                 <!-- Sales Order No -->
                 <div class="form-group">
                   <label class="form-label">{{ i18n.t('productionOrder.salesOrderNo') }}</label>
                   <input
-                    pInputText
-                    type="text"
-                    class="w-full"
-                    placeholder="Mã đơn hàng bán tham chiếu (SO-xxx)..."
-                    [ngModel]="formSalesOrderNo()"
-                    (ngModelChange)="formSalesOrderNo.set($event)"
-                  />
+                         pInputText
+                         type="text"
+                         class="w-full"
+                         placeholder="Mã đơn hàng bán tham chiếu (SO-xxx)..."
+                         [ngModel]="formSalesOrderNo()"
+                         (ngModelChange)="formSalesOrderNo.set($event)" />
                 </div>
               </div>
 
@@ -737,26 +700,24 @@
               <div class="form-group mt-3">
                 <label class="form-label">{{ i18n.t('productionOrder.description') }}</label>
                 <input
-                  pInputText
-                  type="text"
-                  class="w-full"
-                  placeholder="Mô tả tóm tắt lệnh sản xuất..."
-                  [ngModel]="formDescription()"
-                  (ngModelChange)="formDescription.set($event)"
-                />
+                       pInputText
+                       type="text"
+                       class="w-full"
+                       placeholder="Mô tả tóm tắt lệnh sản xuất..."
+                       [ngModel]="formDescription()"
+                       (ngModelChange)="formDescription.set($event)" />
               </div>
 
               <!-- Remark -->
               <div class="form-group mt-3">
                 <label class="form-label">{{ i18n.t('productionOrder.remark') }}</label>
                 <textarea
-                  pTextarea
-                  rows="2"
-                  class="w-full"
-                  placeholder="Ghi chú yêu cầu kỹ thuật, lưu ý sản xuất..."
-                  [ngModel]="formRemark()"
-                  (ngModelChange)="formRemark.set($event)"
-                ></textarea>
+                          pTextarea
+                          rows="2"
+                          class="w-full"
+                          placeholder="Ghi chú yêu cầu kỹ thuật, lưu ý sản xuất..."
+                          [ngModel]="formRemark()"
+                          (ngModelChange)="formRemark.set($event)"></textarea>
               </div>
             </div>
           </p-tabpanel>
@@ -774,31 +735,28 @@
 
               <div class="tab-toolbar">
                 <p-button
-                  icon="pi pi-sync"
-                  [label]="i18n.t('productionOrder.materials.resetBom')"
-                  severity="secondary"
-                  [outlined]="true"
-                  size="small"
-                  [disabled]="!formBomId()"
-                  (onClick)="resetMaterialsToBom()"
-                ></p-button>
+                          icon="pi pi-sync"
+                          [label]="i18n.t('productionOrder.materials.resetBom')"
+                          severity="secondary"
+                          [outlined]="true"
+                          size="small"
+                          [disabled]="!formBomId()"
+                          (onClick)="resetMaterialsToBom()"></p-button>
 
                 <p-button
-                  icon="pi pi-plus"
-                  [label]="i18n.t('productionOrder.materials.addRow')"
-                  severity="primary"
-                  [outlined]="true"
-                  size="small"
-                  (onClick)="addMaterialRow()"
-                ></p-button>
+                          icon="pi pi-plus"
+                          [label]="i18n.t('productionOrder.materials.addRow')"
+                          severity="primary"
+                          [outlined]="true"
+                          size="small"
+                          (onClick)="addMaterialRow()"></p-button>
               </div>
 
               <div class="detail-table-wrap">
                 <p-table
-                  [value]="formMaterials()"
-                  styleClass="p-datatable-sm p-datatable-gridlines"
-                  [tableStyle]="{ 'min-width': '800px' }"
-                >
+                         [value]="formMaterials()"
+                         styleClass="p-datatable-sm p-datatable-gridlines"
+                         [tableStyle]="{ 'min-width': '800px' }">
                   <ng-template pTemplate="header">
                     <tr>
                       <th style="width: 40px">#</th>
@@ -817,15 +775,14 @@
                       <td>{{ ri + 1 }}</td>
                       <td>
                         <p-select
-                          [options]="productApi.items()"
-                          optionLabel="productName"
-                          optionValue="id"
-                          [filter]="true"
-                          filterBy="productCode,productName"
-                          [(ngModel)]="mat.productId"
-                          (ngModelChange)="onMaterialProductSelected(mat, $event)"
-                          styleClass="w-full p-inputtext-sm"
-                        >
+                                  [options]="productApi.items()"
+                                  optionLabel="productName"
+                                  optionValue="id"
+                                  [filter]="true"
+                                  filterBy="productCode,productName"
+                                  [(ngModel)]="mat.productId"
+                                  (ngModelChange)="onMaterialProductSelected(mat, $event)"
+                                  styleClass="w-full p-inputtext-sm">
                           <ng-template pTemplate="selectedItem" let-selected>
                             <span *ngIf="selected" class="font-medium text-xs">{{ selected.productCode }} - {{ selected.productName }}</span>
                           </ng-template>
@@ -836,64 +793,58 @@
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="number"
-                          step="0.0001"
-                          class="w-full text-right p-inputtext-sm"
-                          [(ngModel)]="mat.normQuantity"
-                          (ngModelChange)="onNormQtyChange(mat)"
-                        />
+                               pInputText
+                               type="number"
+                               step="0.0001"
+                               class="w-full text-right p-inputtext-sm"
+                               [(ngModel)]="mat.normQuantity"
+                               (ngModelChange)="onNormQtyChange(mat)" />
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="number"
-                          step="0.01"
-                          class="w-full text-right font-semibold p-inputtext-sm text-primary"
-                          [(ngModel)]="mat.requiredQuantity"
-                        />
+                               pInputText
+                               type="number"
+                               step="0.01"
+                               class="w-full text-right font-semibold p-inputtext-sm text-primary"
+                               [(ngModel)]="mat.requiredQuantity" />
                       </td>
                       <td>
                         <span
-                          class="stock-pill"
-                          [ngClass]="{
+                              class="stock-pill"
+                              [ngClass]="{
                             'stock-pill--ok': (mat.currentStock || 0) >= (mat.requiredQuantity || 0),
                             'stock-pill--warn': (mat.currentStock || 0) < (mat.requiredQuantity || 0) && (mat.currentStock || 0) > 0,
                             'stock-pill--zero': !(mat.currentStock > 0)
-                          }"
-                        >
+                          }">
                           {{ (mat.currentStock || 0) | number }}
                         </span>
                       </td>
                       <td>
                         <p-select
-                          [options]="warehouseApi.items()"
-                          optionLabel="warehouseName"
-                          optionValue="id"
-                          [showClear]="true"
-                          [(ngModel)]="mat.warehouseId"
-                          styleClass="w-full p-inputtext-sm"
-                          placeholder="Chọn kho..."
-                        ></p-select>
+                                  [options]="warehouseApi.items()"
+                                  optionLabel="warehouseName"
+                                  optionValue="id"
+                                  [showClear]="true"
+                                  [(ngModel)]="mat.warehouseId"
+                                  styleClass="w-full p-inputtext-sm"
+                                  placeholder="Chọn kho..."></p-select>
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="text"
-                          class="w-full p-inputtext-sm"
-                          [(ngModel)]="mat.remark"
-                          placeholder="Ghi chú..."
-                        />
+                               pInputText
+                               type="text"
+                               class="w-full p-inputtext-sm"
+                               [(ngModel)]="mat.remark"
+                               placeholder="Ghi chú..." />
                       </td>
                       <td style="text-align: center">
                         <p-button
-                          icon="pi pi-trash"
-                          severity="danger"
-                          [text]="true"
-                          [rounded]="true"
-                          size="small"
-                          (onClick)="removeMaterialRow(ri)"
-                        ></p-button>
+                                  icon="pi pi-trash"
+                                  severity="danger"
+                                  [text]="true"
+                                  [rounded]="true"
+                                  size="small"
+                                  (onClick)="removeMaterialRow(ri)"></p-button>
                       </td>
                     </tr>
                   </ng-template>
@@ -922,21 +873,19 @@
 
               <div class="tab-toolbar">
                 <p-button
-                  icon="pi pi-plus"
-                  [label]="i18n.t('productionOrder.operations.addRow')"
-                  severity="primary"
-                  [outlined]="true"
-                  size="small"
-                  (onClick)="addOperationRow()"
-                ></p-button>
+                          icon="pi pi-plus"
+                          [label]="i18n.t('productionOrder.operations.addRow')"
+                          severity="primary"
+                          [outlined]="true"
+                          size="small"
+                          (onClick)="addOperationRow()"></p-button>
               </div>
 
               <div class="detail-table-wrap">
                 <p-table
-                  [value]="formOperations()"
-                  styleClass="p-datatable-sm p-datatable-gridlines"
-                  [tableStyle]="{ 'min-width': '840px' }"
-                >
+                         [value]="formOperations()"
+                         styleClass="p-datatable-sm p-datatable-gridlines"
+                         [tableStyle]="{ 'min-width': '840px' }">
                   <ng-template pTemplate="header">
                     <tr>
                       <th style="width: 50px">STT</th>
@@ -956,78 +905,70 @@
                       <td class="text-center font-bold">{{ op.sequence || (ri + 1) }}</td>
                       <td>
                         <input
-                          pInputText
-                          type="text"
-                          class="w-full p-inputtext-sm font-mono"
-                          [(ngModel)]="op.operationCode"
-                        />
+                               pInputText
+                               type="text"
+                               class="w-full p-inputtext-sm font-mono"
+                               [(ngModel)]="op.operationCode" />
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="text"
-                          class="w-full p-inputtext-sm"
-                          [(ngModel)]="op.operationName"
-                        />
+                               pInputText
+                               type="text"
+                               class="w-full p-inputtext-sm"
+                               [(ngModel)]="op.operationName" />
                       </td>
                       <td>
                         <p-select
-                          [options]="workCenterApi.items()"
-                          optionLabel="workCenterName"
-                          optionValue="id"
-                          [showClear]="true"
-                          [(ngModel)]="op.workCenterId"
-                          styleClass="w-full p-inputtext-sm"
-                          placeholder="Chọn tổ..."
-                        ></p-select>
+                                  [options]="workCenterApi.items()"
+                                  optionLabel="workCenterName"
+                                  optionValue="id"
+                                  [showClear]="true"
+                                  [(ngModel)]="op.workCenterId"
+                                  styleClass="w-full p-inputtext-sm"
+                                  placeholder="Chọn tổ..."></p-select>
                       </td>
                       <td>
                         <p-select
-                          [options]="machineApi.items()"
-                          optionLabel="machineName"
-                          optionValue="id"
-                          [showClear]="true"
-                          [(ngModel)]="op.machineId"
-                          styleClass="w-full p-inputtext-sm"
-                          placeholder="Chọn máy..."
-                        ></p-select>
+                                  [options]="machineApi.items()"
+                                  optionLabel="machineName"
+                                  optionValue="id"
+                                  [showClear]="true"
+                                  [(ngModel)]="op.machineId"
+                                  styleClass="w-full p-inputtext-sm"
+                                  placeholder="Chọn máy..."></p-select>
                       </td>
                       <td>
                         <p-select
-                          [options]="userApi.items()"
-                          optionLabel="fullName"
-                          optionValue="id"
-                          [showClear]="true"
-                          [(ngModel)]="op.assignedEmployeeId"
-                          styleClass="w-full p-inputtext-sm"
-                          placeholder="Người làm..."
-                        ></p-select>
+                                  [options]="employeeApi.items()"
+                                  optionLabel="fullName"
+                                  optionValue="id"
+                                  [showClear]="true"
+                                  [(ngModel)]="op.assignedEmployeeId"
+                                  styleClass="w-full p-inputtext-sm"
+                                  placeholder="Người làm..."></p-select>
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="datetime-local"
-                          class="w-full p-inputtext-sm"
-                          [(ngModel)]="op.plannedStartDate"
-                        />
+                               pInputText
+                               type="datetime-local"
+                               class="w-full p-inputtext-sm"
+                               [(ngModel)]="op.plannedStartDate" />
                       </td>
                       <td>
                         <input
-                          pInputText
-                          type="datetime-local"
-                          class="w-full p-inputtext-sm"
-                          [(ngModel)]="op.plannedEndDate"
-                        />
+                               pInputText
+                               type="datetime-local"
+                               class="w-full p-inputtext-sm"
+                               [(ngModel)]="op.plannedEndDate" />
                       </td>
                       <td style="text-align: center">
                         <p-button
-                          icon="pi pi-trash"
-                          severity="danger"
-                          [text]="true"
-                          [rounded]="true"
-                          size="small"
-                          (onClick)="removeOperationRow(ri)"
-                        ></p-button>
+                                  icon="pi pi-trash"
+                                  severity="danger"
+                                  [text]="true"
+                                  [rounded]="true"
+                                  size="small"
+                                  (onClick)="removeOperationRow(ri)"></p-button>
                       </td>
                     </tr>
                   </ng-template>
@@ -1049,30 +990,27 @@
 
     <ng-template pTemplate="footer">
       <p-button
-        [label]="i18n.t('common.cancel')"
-        severity="secondary"
-        [text]="true"
-        (onClick)="showDialog.set(false)"
-      ></p-button>
+                [label]="i18n.t('common.cancel')"
+                severity="secondary"
+                [text]="true"
+                (onClick)="showDialog.set(false)"></p-button>
       <p-button
-        [label]="i18n.t('common.save')"
-        severity="primary"
-        icon="pi pi-check"
-        (onClick)="save()"
-      ></p-button>
+                [label]="i18n.t('common.save')"
+                severity="primary"
+                icon="pi pi-check"
+                (onClick)="save()"></p-button>
     </ng-template>
   </p-dialog>
 
   <!-- ── Record Output & Scrap Dialog ───────────────────────────────────── -->
   <p-dialog
-    [(visible)]="showProgressDialog"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [style]="{ width: '480px', maxWidth: '95vw' }"
-    styleClass="custom-dialog"
-    [header]="i18n.t('productionOrder.dialog.progress')"
-  >
+            [(visible)]="showProgressDialog"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [style]="{ width: '480px', maxWidth: '95vw' }"
+            styleClass="custom-dialog"
+            [header]="i18n.t('productionOrder.dialog.progress')">
     <div *ngIf="selectedOrder() as order" class="progress-dialog-content">
       <div class="order-summary-box">
         <div class="order-summary-header">
@@ -1090,62 +1028,56 @@
         <div class="form-group">
           <label class="form-label required">Số lượng đạt vừa sản xuất (+)</label>
           <p-inputnumber
-            class="w-full"
-            [min]="0"
-            [ngModel]="progressCompletedDelta()"
-            (ngModelChange)="progressCompletedDelta.set($event)"
-          ></p-inputnumber>
+                         class="w-full"
+                         [min]="0"
+                         [ngModel]="progressCompletedDelta()"
+                         (ngModelChange)="progressCompletedDelta.set($event)"></p-inputnumber>
         </div>
 
         <div class="form-group">
           <label class="form-label">Số lượng phế phẩm / lỗi (+)</label>
           <p-inputnumber
-            class="w-full"
-            [min]="0"
-            [ngModel]="progressScrapDelta()"
-            (ngModelChange)="progressScrapDelta.set($event)"
-          ></p-inputnumber>
+                         class="w-full"
+                         [min]="0"
+                         [ngModel]="progressScrapDelta()"
+                         (ngModelChange)="progressScrapDelta.set($event)"></p-inputnumber>
         </div>
       </div>
 
       <div class="form-group mt-3">
         <label class="form-label">{{ i18n.t('productionOrder.batchNo') }}</label>
         <input
-          pInputText
-          type="text"
-          class="w-full"
-          placeholder="Cập nhật số lô..."
-          [ngModel]="progressBatchNo()"
-          (ngModelChange)="progressBatchNo.set($event)"
-        />
+               pInputText
+               type="text"
+               class="w-full"
+               placeholder="Cập nhật số lô..."
+               [ngModel]="progressBatchNo()"
+               (ngModelChange)="progressBatchNo.set($event)" />
       </div>
 
       <div class="form-group mt-3">
         <label class="form-label">{{ i18n.t('productionOrder.remark') }}</label>
         <textarea
-          pTextarea
-          rows="2"
-          class="w-full"
-          placeholder="Ghi chú đợt sản xuất (ca, người vận hành)..."
-          [ngModel]="progressRemark()"
-          (ngModelChange)="progressRemark.set($event)"
-        ></textarea>
+                  pTextarea
+                  rows="2"
+                  class="w-full"
+                  placeholder="Ghi chú đợt sản xuất (ca, người vận hành)..."
+                  [ngModel]="progressRemark()"
+                  (ngModelChange)="progressRemark.set($event)"></textarea>
       </div>
     </div>
 
     <ng-template pTemplate="footer">
       <p-button
-        [label]="i18n.t('common.cancel')"
-        severity="secondary"
-        [text]="true"
-        (onClick)="showProgressDialog.set(false)"
-      ></p-button>
+                [label]="i18n.t('common.cancel')"
+                severity="secondary"
+                [text]="true"
+                (onClick)="showProgressDialog.set(false)"></p-button>
       <p-button
-        [label]="i18n.t('common.save')"
-        severity="success"
-        icon="pi pi-check"
-        (onClick)="saveProgress()"
-      ></p-button>
+                [label]="i18n.t('common.save')"
+                severity="success"
+                icon="pi pi-check"
+                (onClick)="saveProgress()"></p-button>
     </ng-template>
   </p-dialog>
 </div>

@@ -84,7 +84,7 @@
                                 <td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
                                 <td class="col-pickingPlan">{{ pickingPlanLabel(row.pickingPlanId) || '—' }}</td>
                                 <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
-                                <td class="col-checkedBy">{{ userLabel(row.checkedBy) || '—' }}</td>
+                                <td class="col-checkedBy">{{ employeeLabel(row.checkedBy) || '—' }}</td>
                                 <td class="col-startedAt">{{ row.startedAt ? (row.startedAt | date) : '—' }}</td>
                                 <td class="col-completedAt">{{ row.completedAt ? (row.completedAt | date) : '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
@@ -235,7 +235,7 @@
                                         </td>
                                         <td class="col-status">{{statusPackageLabel(row.status) || '—'}}</td>
                                         <td class="col-packedAt">{{row.packedAt ? (row.packedAt | date) : '—'}}</td>
-                                        <td class="col-packedBy">{{userLabel(row.packedBy) || '—'}}</td>
+                                        <td class="col-packedBy">{{employeeLabel(row.packedBy) || '—'}}</td>
                                         <td class="col-remark">{{row.remark || '—'}}</td>
                                     </tr>
                                 </ng-template>
@@ -331,7 +331,7 @@
                                 {{ i18n.t('packingCheck.checkedBy') }}
                                 <span class="req">*</span>
                             </label>
-                            <p-select [options]="userOptions()"
+                            <p-select [options]="employeeOptions()"
                                       optionLabel="label" optionValue="value"
                                       [(ngModel)]="form.checkedBy"
                                       [filter]="true"
@@ -761,7 +761,7 @@
                                             {{ i18n.t('packingPackage.quantity') }}
                                             <span class="req">*</span>
                                         </label>
-                                        <p-select [options]="userOptions()"
+                                        <p-select [options]="employeeOptions()"
                                                   optionLabel="label" optionValue="value"
                                                   [(ngModel)]="pack.packedBy"
                                                   [filter]="true"
@@ -930,7 +930,7 @@
                                                         <input pInputText type="datetime-local" name="scannedAt" [(ngModel)]="row.scannedAt" autocomplete="off" />
                                                     </td>
                                                     <td class="col-scannedBy">
-                                                        <p-select [options]="userOptions()"
+                                                        <p-select [options]="employeeOptions()"
                                                                   optionLabel="label"
                                                                   optionValue="value"
                                                                   [(ngModel)]="row.scannedBy"

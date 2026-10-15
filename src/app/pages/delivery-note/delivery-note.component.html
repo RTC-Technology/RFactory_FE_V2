@@ -106,7 +106,7 @@
                                         <td class="col-transportMethod">{{ transportMethodLabel(row.transportMethod) || '—' }}</td>
                                         <td class="col-weight text-right">{{ row.weight != null ? (row.weight | number:'1.0-2') : 0 }}</td>
                                         <td class="col-volume text-right">{{ row.volume != null ? (row.volume | number:'1.0-2') : 0 }}</td>
-                                        <td class="col-picker">{{ userLabel(row.pickerId) || '—' }}</td>
+                                        <td class="col-picker">{{ employeeLabel(row.pickerId) || '—' }}</td>
                                         <td class="col-startedAt">{{ row.startedAt | date }}</td>
                                         <td class="col-completedAt">{{ row.completedAt | date }}</td>
                                         <td class="col-remark">{{ row.remark || '—' }}</td>
@@ -354,7 +354,7 @@
                                     {{ i18n.t('deliveryNote.picker') }}
                                     <span class="req">*</span>
                                 </label>
-                                <p-select inputId="d-picker" [options]="userOptions()" optionLabel="label" optionValue="value"
+                                <p-select inputId="d-picker" [options]="employeeOptions()" optionLabel="label" optionValue="value"
                                           [(ngModel)]="form.pickerId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
                                           [placeholder]="i18n.t('deliveryNote.picker.unset')" />
                             </div>

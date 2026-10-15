@@ -34,8 +34,8 @@ import { GoodsIssueApiService, GoodsIssueDetailApiService } from '../../core/ser
 import { GOODS_ISSUE_STATUSES } from '../../domain/models/goods-issue.model';
 import { productStatusOf } from '../../domain/models/product.model';
 import { PickingPlanApiService, PickingPlanItemApiService, PickingPlanItemSourceApiService, PickingPlanSourceApiService, PickingTicketApiService, PickingTicketItemApiService } from '../../core/services/picking-plan-api.service';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { PERMISSIONS } from '../../core/auth/permissions';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'pickingPlan' | 'planSources' | 'pickingPlanItem' | 'pickingTicket';
 
@@ -114,7 +114,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 	private readonly productApi = inject(ProductApiService);
 	private readonly unitApi = inject(UnitApiService);
 	private readonly locationApi = inject(WarehouseLocationApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 	private readonly goodsIssueApi = inject(GoodsIssueApiService);
 	private readonly goodsIssueDetailApi = inject(GoodsIssueDetailApiService);
 
@@ -148,9 +148,9 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 		return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+	employeeLabel(id?: number | null): string {
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	sourceTypeLabel(id?: number | null): string {
@@ -259,8 +259,8 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 	readonly ticketStatusOptions = computed(() =>
 		PICKING_TICKET_STATUSES.map(s => ({ label: this.i18n.t(s.labelKey), value: s.value })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly planItemOptions = computed(() =>
 		this.pickingPlanItems().map(s => ({ label: this.productLabel(s.productId), value: s.uId })));
@@ -430,7 +430,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 			pickingTicketItems: this.pickingTicketItemApi.load(),
 
 			warehouses: this.warehouseApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			locations: this.locationApi.load(),
 			products: this.productApi.load(),
 			units: this.unitApi.load(),

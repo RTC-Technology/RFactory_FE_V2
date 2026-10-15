@@ -27,9 +27,9 @@ import { MAINTENANCE_ORDER_CHECKLIST_ITEM_RESULT, MAINTENANCE_ORDER_CHECKLIST_IT
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { TabsModule } from 'primeng/tabs';
 import { PanelModule } from 'primeng/panel';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'maintenanceOrder' | 'maintenanceOrderChecklist' | 'maintenanceOrderChecklistItem';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -72,7 +72,7 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 	readonly maintenancePlanApi = inject(MaintenancePlanApiService);
 	readonly maintenanceTypeApi = inject(MaintenanceTypeApiService);
 	readonly machineApi = inject(MachineApiService);
-	readonly employeeApi = inject(UserApiService);
+	readonly employeeApi = inject(EmployeeApiService);
 
 	readonly maintenanceChecklistApi = inject(MaintenanceChecklistApiService);
 	readonly maintenanceChecklistItemApi = inject(MaintenanceChecklistItemApiService);
@@ -112,7 +112,7 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
 		const employee = this.employeeApi.items().find(u => u.id === id);
-		return employee ? `${employee.code} · ${employee.fullName}` : '';
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	maintenanceChecklistLabel(id?: number | null): string {
@@ -179,7 +179,7 @@ export class MaintenanceOrderComponent extends PermissionAwarePage implements On
 		this.machineApi.items().map(u => ({ label: `${u.machineCode} · ${u.machineName}`, value: u.id })));
 
 	readonly employeeOptions = computed(() =>
-		this.employeeApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly maintenanceChecklistOptions = computed(() =>
 		this.maintenanceChecklistApi.items().map(u => ({ label: `${u.checklistCode} · ${u.checklistName}`, value: u.id })));

@@ -627,6 +627,10 @@
 /* ─── PrimeNG surface alignment ───────────────────────────────────────────── */
 :host ::ng-deep {
 
+	.p-datatable-scrollable-table>.p-datatable-tbody>.p-datatable-row-group-header {
+		background-color: #dee2e6 !important;
+	}
+
 	/* Rows here are edited in place, not selected, so drop the pointer affordance and
           the hover tint that would fight the focused input. */
 	.grid--edit {

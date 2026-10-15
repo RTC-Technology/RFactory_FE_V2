@@ -18,7 +18,7 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { FactoryApiService } from '../../core/services/master-data-api.service';
 import { I18nService } from '../../core/services/i18n.service';
-import { CompanyApiService, WorkshopApiService, UserApiService, WorkCenterApiService, ProductionTeamApiService, ProductionTeamEmployeeApiService, DepartmentApiService } from '../../core/services/organization-api.service';
+import { CompanyApiService, WorkshopApiService, WorkCenterApiService, ProductionTeamApiService, ProductionTeamEmployeeApiService, DepartmentApiService } from '../../core/services/organization-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { ProductionTeamDto, ProductionTeamEmployeeDto, ProductionTeamRequest, WorkCenterDto, workCenterStatusOf } from '../../domain/models/organization.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
@@ -27,6 +27,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Tab, Tabs, TabsModule } from 'primeng/tabs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'productionTeam' | 'productionTeamEmployee';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -64,7 +65,7 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 	private readonly factoryApi = inject(FactoryApiService);
 	private readonly workshopApi = inject(WorkshopApiService);
 	private readonly departmentApi = inject(DepartmentApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly teamApi = inject(ProductionTeamApiService);
 	private readonly teamEmployeeApi = inject(ProductionTeamEmployeeApiService);
@@ -100,10 +101,10 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 		return department ? `${department.departmentCode} · ${department.departmentName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 
@@ -119,8 +120,8 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 	readonly departmentOptions = computed(() =>
 		this.departmentApi.items().map(u => ({ label: `${u.departmentCode} · ${u.departmentName}`, value: u.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly teamOptions = computed(() =>
 		this.teamApi.items().map(u => ({ label: `${u.teamCode} · ${u.teamName}`, value: u.id })));
@@ -205,7 +206,7 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 			workshops: this.workshopApi.load(),
 			factories: this.factoryApi.load(),
 			department: this.departmentApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('productionTeam.err.load'), err),
 		});
@@ -324,7 +325,7 @@ export class ProductionTeamComponent extends PermissionAwarePage implements OnIn
 
 		const label = kind === 'productionTeam'
 			? (row as ProductionTeamDto).teamCode
-			: this.userLabel((row as ProductionTeamEmployeeDto).employeeId);
+			: this.employeeLabel((row as ProductionTeamEmployeeDto).employeeId);
 
 		this.confirm.confirm({
 			header: this.i18n.t('plant.confirm.title', { entity: this.i18n.t(kind === 'productionTeam' ? 'productionTeam.lower' : 'productionTeamEmployee.lower') }),

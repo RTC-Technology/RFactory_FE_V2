@@ -88,7 +88,7 @@
                         <td class="col-workshopName">{{ row.workshopName || '—' }}</td>
                         <td class="col-shortName">{{ row.shortName || '—' }}</td>
                         <td class="col-englishName">{{ row.englishName || '—' }}</td>
-                        <td class="col-manager">{{ userLabel(row.managerId) || '—' }}</td>
+                        <td class="col-manager">{{ employeeLabel(row.managerId) || '—' }}</td>
                         <td class="col-phone">{{ row.phone || '—' }}</td>
                         <td class="col-email">{{ row.email || '—' }}</td>
                         <td class="col-location">{{ row.location || '—' }}</td>
@@ -192,7 +192,7 @@
                     {{ i18n.t('workshop.manager') }}
                     <span class="req">*</span>
                 </label>
-                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.managerId" [filter]="true" filterBy="label" appendTo="body" class="w-full"
                           [placeholder]="i18n.t('workshop.manager.unset')" />
             </div>

@@ -112,7 +112,7 @@
                                 <td class="col-sampleSize">{{ row.sampleSize || '—' }}</td>
                                 <td class="col-startedAt">{{ (row.startedAt|date) || '—' }}</td>
                                 <td class="col-completedAt">{{ (row.completedAt|date) || '—' }}</td>
-                                <td class="col-inspector">{{ userLabel(row.inspectorId) || '—' }}</td>
+                                <td class="col-inspector">{{ employeeLabel(row.inspectorId) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
                             </tr>
                         </ng-template>
@@ -183,7 +183,7 @@
                                 </td>
                                 <td class="col-defect">{{ defectLabel(row.defectId) || '—' }}</td>
                                 <td class="col-inspectionTime">{{ (row.inspectionTime|date) || '—' }}</td>
-                                <td class="col-inspector">{{ userLabel(row.inspectorId) || '—' }}</td>
+                                <td class="col-inspector">{{ employeeLabel(row.inspectorId) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
                             </tr>
                         </ng-template>
@@ -362,7 +362,7 @@
                     {{ i18n.t('inspectionExecution.inspector') }}
                     <!-- <span class="req">*</span> -->
                 </label>
-                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.inspectorId"
                           [filter]="true" filterBy="label" [showClear]="false"
                           appendTo="body" class="w-full" [placeholder]="i18n.t('inspectionExecution.inspector.unset')" />
@@ -474,7 +474,7 @@
                                 <input pInputText type="datetime-local" class="cell-input cell-input--text" name="inspectionTime" [(ngModel)]="row.inspectionTime" autocomplete="off" />
                             </td>
                             <td class="col-inspector">
-                                <p-select [options]="userOptions()"
+                                <p-select [options]="employeeOptions()"
                                           optionLabel="label" optionValue="value" class="w-full"
                                           [(ngModel)]="row.inspectorId"
                                           [filter]="true"

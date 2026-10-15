@@ -15,7 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { CompanyApiService, UserApiService, WorkshopApiService } from '../../core/services/organization-api.service';
+import { CompanyApiService, WorkshopApiService } from '../../core/services/organization-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { FactoryApiService } from '../../core/services/master-data-api.service';
@@ -24,6 +24,7 @@ import { PERMISSIONS } from '../../core/auth/permissions';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'workshop';
 
@@ -56,7 +57,7 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 
 	private readonly companyApi = inject(CompanyApiService);
 	private readonly factoryApi = inject(FactoryApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -77,10 +78,10 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 		return factory ? `${factory.factoryCode} · ${factory.factoryName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	readonly companyOptions = computed(() =>
@@ -89,8 +90,8 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 	readonly factoryOptions = computed(() =>
 		this.factoryApi.items().map(u => ({ label: `${u.factoryCode} · ${u.factoryName}`, value: u.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
 	readonly selectedWorkshop = signal<WorkshopDto | null>(null);
@@ -146,7 +147,7 @@ export class WorkshopComponent extends PermissionAwarePage implements OnInit {
 			workshops: this.workshopApi.load(),
 			companies: this.companyApi.load(),
 			factories: this.factoryApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('workshop.err.load'), err),
 		});

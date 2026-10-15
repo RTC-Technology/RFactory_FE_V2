@@ -25,7 +25,6 @@ import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PackingCheckApiService, PackingCheckItemApiService, PackingPackageApiService, PackingPackageItemApiService } from '../../core/services/packing-api.service';
 import { GoodsIssueApiService, GoodsIssueDetailApiService } from '../../core/services/goods-issue-api.service';
 import { I18nService } from '../../core/services/i18n.service';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { WarehouseApiService } from '../../core/services/warehouse-api.service';
@@ -35,6 +34,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { productStatusOf } from '../../domain/models/product.model';
 import { PickingTicketItemDto } from '../../domain/models/picking-plan.model';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'packingCheck' | 'packingCheckItem' | 'packingPackage' | 'packingPackageItem';
 const DATETIME_LOCAL = "yyyy-MM-dd'T'HH:mm";
@@ -98,7 +98,7 @@ export class PackingComponent extends PermissionAwarePage implements OnInit {
 	private readonly warehouseApi = inject(WarehouseApiService);
 	private readonly productApi = inject(ProductApiService);
 	private readonly unitApi = inject(UnitApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 
 	private readonly messages = inject(MessageService);
@@ -133,10 +133,10 @@ export class PackingComponent extends PermissionAwarePage implements OnInit {
 		return unit ? (unit.symbol || unit.unitCode) : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const user = this.employeeApi.items().find(u => u.id === id);
+		return user ? `${user.employeeCode} · ${user.fullName}` : '';
 	}
 
 	pickingPlanLabel(id?: number | null): string {
@@ -210,8 +210,8 @@ export class PackingComponent extends PermissionAwarePage implements OnInit {
 	readonly lotOptions = computed(() =>
 		this.unitApi.items().map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly packingCheckItemOptions = computed(() =>
 		this.formItems().map(s => ({ label: `${s.uId} | ${s.productId}`, value: s.uId })));
@@ -340,7 +340,7 @@ export class PackingComponent extends PermissionAwarePage implements OnInit {
 			packageItems: this.packingPackageItemApi.load(),
 
 			warehouses: this.warehouseApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			products: this.productApi.load(),
 			units: this.unitApi.load(),
 			pickingPlans: this.pickingPlanApi.load(),

@@ -19,7 +19,7 @@ import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { I18nService } from '../../core/services/i18n.service';
 import { MachineApiService } from '../../core/services/equipment-api.service';
 import { CustomerApiService, LineApiService } from '../../core/services/master-data-api.service';
-import { UserApiService, WorkCenterApiService } from '../../core/services/organization-api.service';
+import { WorkCenterApiService } from '../../core/services/organization-api.service';
 import { BomApiService, ProductApiService, RoutingApiService, UnitApiService } from '../../core/services/product-api.service';
 import { ProductionOrderApiService } from '../../core/services/production-order-api.service';
 import { WarehouseApiService } from '../../core/services/warehouse-api.service';
@@ -39,6 +39,7 @@ import {
   ProductionOrderProgressRequest,
   ProductionOrderUpdateRequest,
 } from '../../domain/models/production-order.model';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 @Component({
   selector: 'app-production-order',
@@ -73,7 +74,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
   readonly workCenterApi = inject(WorkCenterApiService);
   readonly machineApi = inject(MachineApiService);
   readonly warehouseApi = inject(WarehouseApiService);
-  readonly userApi = inject(UserApiService);
+  readonly employeeApi = inject(EmployeeApiService);
   readonly customerApi = inject(CustomerApiService);
   readonly unitApi = inject(UnitApiService);
 
@@ -218,7 +219,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
     this.workCenterApi.load().subscribe();
     this.machineApi.load().subscribe();
     this.warehouseApi.load().subscribe();
-    this.userApi.load().subscribe();
+    this.employeeApi.load().subscribe();
     this.customerApi.load().subscribe();
     this.unitApi.load().subscribe();
   }

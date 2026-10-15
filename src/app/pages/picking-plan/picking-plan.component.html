@@ -265,7 +265,7 @@
                                         <td class="col-ticketNo">{{ row.ticketNo || '—' }}</td>
                                         <td class="col-warehouse">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
                                         <td class="col-status">{{ ticketStatusLabel(row.status) || '—' }}</td>
-                                        <td class="col-assignedTo">{{ userLabel(row.assignedTo) || '—' }}</td>
+                                        <td class="col-assignedTo">{{ employeeLabel(row.assignedTo) || '—' }}</td>
                                         <td class="col-startedAt">{{ row.startedAt | date }}</td>
                                         <td class="col-completedAt">{{ row.completedAt |date }}</td>
                                         <td class="col-remark">{{ row.remark || '—' }}</td>
@@ -880,7 +880,7 @@
                                     <div class="field-row">
                                         <div class="field">
                                             <label for="ticket-assignedTo">{{ i18n.t('pickingTicket.assignedTo') }} <span class="req">*</span></label>
-                                            <p-select [options]="userOptions()"
+                                            <p-select [options]="employeeOptions()"
                                                       optionLabel="label" optionValue="value"
                                                       [(ngModel)]="ticket.assignedTo"
                                                       [filter]="true"

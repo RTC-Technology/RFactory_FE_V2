@@ -22,7 +22,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { I18nService } from '../../core/services/i18n.service';
-import { CompanyApiService, UserApiService } from '../../core/services/organization-api.service';
+import { CompanyApiService } from '../../core/services/organization-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -33,6 +33,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { ImageModule } from 'primeng/image';
 import { FileSelectEvent, FileUpload, FileUploadEvent, FileUploadModule, } from 'primeng/fileupload';
 import { ProvinceApiService, DistrictApiService, WardApiService, CurrencyApiService } from '../../core/services/master-data-api.service';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'company';
 
@@ -71,7 +72,7 @@ type EntityKind = 'company';
 })
 export class CompanyComponent extends PermissionAwarePage implements OnInit {
 	private readonly companyApi = inject(CompanyApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly provinceApi = inject(ProvinceApiService);
 	private readonly districtApi = inject(DistrictApiService);
@@ -86,10 +87,10 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 	readonly loading = computed(() => false);
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const user = this.employeeApi.items().find(u => u.id === id);
+		return user ? `${user.employeeCode} · ${user.fullName}` : '';
 	}
 
 	provinceLabel(id?: number | null): string {
@@ -116,8 +117,8 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 	// 	return currency ? `${currency.currencyCode} · ${currency.currencyName}` : '';
 	// }
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly provinceOptions = computed(() =>
 		this.provinceApi.items().map(u => ({ label: `${u.provinceCode} · ${u.provinceName}`, value: u.id })));
@@ -191,7 +192,7 @@ export class CompanyComponent extends PermissionAwarePage implements OnInit {
 	reload(): void {
 		forkJoin({
 			companies: this.companyApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			provinces: this.provinceApi.load(),
 			districts: this.districtApi.load(),
 			wards: this.wardApi.load(),

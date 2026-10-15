@@ -24,11 +24,12 @@ import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { MAINTENANCE_PLAN_FREQUENCY_UNIT, MAINTENANCE_PLAN_STATUS, MAINTENANCE_TYPE_PRIORITY, MaintenancePlanDto, MaintenancePlanRequest, planStatusOf, priorityOf } from '../../domain/models/master-data.model';
 import { MachineApiService } from '../../core/services/equipment-api.service';
-import { DepartmentApiService, UserApiService, WorkCenterApiService } from '../../core/services/organization-api.service';
+import { DepartmentApiService, WorkCenterApiService } from '../../core/services/organization-api.service';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MaintenanceOrderComponent } from '../maintenance-order/maintenance-order.component';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'maintenancePlan';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -70,7 +71,7 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 	private readonly workCenterApi = inject(WorkCenterApiService);
 	private readonly checklistApi = inject(MaintenanceChecklistApiService);
 	private readonly departmentApi = inject(DepartmentApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -112,10 +113,10 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 		return dept ? `${dept.departmentCode} · ${dept.departmentName}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	frequencyUnitLabel(value?: number | null): string {
@@ -151,8 +152,8 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 	readonly departmentOptions = computed(() =>
 		this.departmentApi.items().map(u => ({ label: `${u.departmentCode} · ${u.departmentName}`, value: u.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly frequencyUnitOptions = computed(() =>
 		MAINTENANCE_PLAN_FREQUENCY_UNIT.map(u => ({ label: `${this.i18n.t(u.labelKey)}`, value: u.value })));
@@ -221,7 +222,7 @@ export class MaintenancePlanComponent extends PermissionAwarePage implements OnI
 			workCenters: this.workCenterApi.load(),
 			checklists: this.checklistApi.load(),
 			departments: this.departmentApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 		}).subscribe({
 			error: (err: HttpErrorResponse) => this._fail(this.i18n.t('maintenancePlan.err.load'), err),
 		});

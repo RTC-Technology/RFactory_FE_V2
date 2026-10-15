@@ -16,7 +16,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ConfirmationService, MessageService, TreeNode } from 'primeng/api';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
-import { CompanyApiService, DepartmentApiService, UserApiService, WorkshopApiService } from '../../core/services/organization-api.service';
+import { CompanyApiService, DepartmentApiService, WorkshopApiService } from '../../core/services/organization-api.service';
 import { FactoryApiService } from '../../core/services/master-data-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
@@ -26,6 +26,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TreeTableModule } from 'primeng/treetable';
 import { TreeSelectModule } from 'primeng/treeselect';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'department';
 
@@ -59,7 +60,7 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 	private readonly companyApi = inject(CompanyApiService);
 	private readonly factoryApi = inject(FactoryApiService);
 	private readonly workshopApi = inject(WorkshopApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly departmentApi = inject(DepartmentApiService);
 
@@ -70,10 +71,10 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 	readonly loading = computed(() => false);
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const employee = this.employeeApi.items().find(u => u.id === id);
+		return employee ? `${employee.employeeCode} · ${employee.fullName}` : '';
 	}
 
 	companyLabel(id?: number | null): string {
@@ -94,8 +95,8 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 		return workshop ? `${workshop.workshopCode} · ${workshop.workshopName}` : '';
 	}
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly companyOptions = computed(() =>
 		this.companyApi.items().map(u => ({ label: `${u.companyCode} · ${u.companyName}`, value: u.id })));
@@ -174,7 +175,7 @@ export class DepartmentComponent extends PermissionAwarePage implements OnInit {
 	reload(): void {
 		forkJoin({
 			departments: this.departmentApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			workshops: this.workshopApi.load(),
 			factories: this.factoryApi.load(),
 			companies: this.companyApi.load(),

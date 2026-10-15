@@ -24,7 +24,6 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { DeliveryNoteApiService, DeliveryNoteItemApiService, DeliveryNoteReceiverApiService, DeliveryNoteSenderApiService, DeliveryNoteSourceApiService } from '../../core/services/delivery-note-api.service';
 import { GoodsIssueApiService, GoodsIssueDetailApiService } from '../../core/services/goods-issue-api.service';
 import { I18nService } from '../../core/services/i18n.service';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { WarehouseApiService } from '../../core/services/warehouse-api.service';
@@ -35,6 +34,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'deliveryNote' | 'deliveryNoteSources' | 'deliveryNoteItem';
 
@@ -112,7 +112,7 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 	private readonly warehouseApi = inject(WarehouseApiService);
 	private readonly productApi = inject(ProductApiService);
 	private readonly unitApi = inject(UnitApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 	private readonly goodsIssueApi = inject(GoodsIssueApiService);
 	private readonly goodsIssueDetailApi = inject(GoodsIssueDetailApiService);
 
@@ -143,10 +143,10 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 		return unit ? (unit.symbol || unit.unitCode) : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const user = this.employeeApi.items().find(u => u.id === id);
+		return user ? `${user.employeeCode} · ${user.fullName}` : '';
 	}
 
 	goodsIssueLabel(id?: number | null): string {
@@ -247,8 +247,8 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 	readonly unitOptions = computed(() =>
 		this.unitApi.items().map(u => ({ label: `${u.unitCode} · ${u.unitName}`, value: u.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	// ─── Selection ──────────────────────────────────────────────────────────────
 	readonly selectedDelivery = signal<DeliveryNoteDto | null>(null);
@@ -353,7 +353,7 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 			deliverySources: this.deliveryNoteSourceApi.load(),
 
 			warehouses: this.warehouseApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			products: this.productApi.load(),
 			units: this.unitApi.load(),
 			goodsIssues: this.goodsIssueApi.load(),

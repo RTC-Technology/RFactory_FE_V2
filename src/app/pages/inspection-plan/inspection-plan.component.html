@@ -128,7 +128,7 @@
                                 <td class="col-status">{{ statusLabel(row.status) || '—' }}</td>
                                 <td class="col-effectiveFrom">{{ (row.effectiveFrom|date) || '—' }}</td>
                                 <td class="col-effectiveTo">{{ (row.effectiveTo|date) || '—' }}</td>
-                                <td class="col-approvedBy">{{ userLabel(row.approvedBy) || '—' }}</td>
+                                <td class="col-approvedBy">{{ employeeLabel(row.approvedBy) || '—' }}</td>
                                 <td class="col-approvedAt">{{ (row.approvedAt|date) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
                             </tr>

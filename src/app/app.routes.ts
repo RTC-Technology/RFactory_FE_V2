@@ -796,6 +796,22 @@ export const routes: Routes = [
 				pathMatch: 'full',
 			},
 
+			//employee
+			{
+				// Employee master data. Organization is carried through the payload but not
+				// edited here yet, so the screen only needs its own four codes.
+				path: 'employees',
+				loadComponent: () =>
+					import('./pages/employee/employee.component').then(m => m.EmployeeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.employee.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			{
 				path: 'forbidden',
 				loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
