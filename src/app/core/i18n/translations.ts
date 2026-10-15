@@ -4328,7 +4328,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionOrder.action.resume': { vi: 'Tiếp tục', en: 'Resume' },
 	'productionOrder.ok.bomReset': { vi: 'Đã lấy lại nguyên vật liệu theo BOM thành công', en: 'Materials reset from BOM successfully' },
 	'productionOrder.ok.duplicated': { vi: 'Nhân bản lệnh sản xuất thành công', en: 'Production order duplicated successfully' },
-};
+
 
 	// ─── Additional Keys ───────────────────────────────────────────────────────────────
 	'bom.active': { vi: 'Đang áp dụng', en: 'Active' },

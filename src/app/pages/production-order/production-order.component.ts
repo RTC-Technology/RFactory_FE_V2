@@ -314,14 +314,14 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
   loadBomMaterialsPreview(bomId: number, qty: number): void {
     this.api.previewBom(bomId, qty).subscribe({
       next: mats => this.formMaterials.set(mats),
-      error: () => {},
+      error: () => { },
     });
   }
 
   loadRoutingOperationsPreview(routingId: number): void {
     this.api.previewRouting(routingId).subscribe({
       next: ops => this.formOperations.set(ops),
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -369,7 +369,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
     if (prod) {
       row.productId = prod.id;
       row.productCode = prod.productCode;
-      row.productName = prod.ProductName ?? prod.productName;
+      row.productName = prod.productName ?? row.productName;
       if (prod.defaultUnitId) row.unitId = prod.defaultUnitId;
       if (prod.defaultWarehouseId) row.warehouseId = prod.defaultWarehouseId;
     }
