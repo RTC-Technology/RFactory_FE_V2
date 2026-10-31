@@ -812,6 +812,48 @@ export const routes: Routes = [
 				},
 			},
 
+			//positions
+			{
+				path: 'positions',
+				loadComponent: () =>
+					import('./pages/position/position.component').then(m => m.PositionComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.position.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//skills
+			{
+				path: 'skills',
+				loadComponent: () =>
+					import('./pages/skill/skill.component').then(m => m.SkillComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.skill.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//production-request
+			{
+				path: 'production-request',
+				loadComponent: () =>
+					import('./pages/production-request/production-request.component').then(m => m.ProductionRequestComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.productionRequest.view,
+						PERMISSIONS.productionRequestItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			{
 				path: 'forbidden',
 				loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),

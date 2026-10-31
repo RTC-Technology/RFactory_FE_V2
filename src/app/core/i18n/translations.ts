@@ -160,6 +160,8 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'perm.entity.sales-order': { vi: 'đơn bán hàng', en: 'sales order' },
 	'perm.entity.sales-order-item': { vi: 'chi tiết đơn bán hàng', en: 'sales order item' },
 	'perm.entity.sales-order-payment-schedule': { vi: 'đợt thanh toán đơn bán hàng', en: 'sales order payment schedule' },
+	'perm.entity.production-request': { vi: 'yêu cầu sản xuất', en: 'production request' },
+	'perm.entity.production-request-item': { vi: 'chi tiết yêu cầu sản xuất', en: 'production request item' },
 	'perm.entity.settings': { vi: 'cài đặt', en: 'settings' },
 
 	// ─── Dashboard (demo data) ────────────────────────────────────────────────
@@ -4473,6 +4475,87 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'saleOrderItem.addLine': { vi: 'Thêm dòng', en: 'Add Line' },
 	'saleOrderItem.removeLine': { vi: 'Xoá dòng', en: 'Remove Line' },
 	'saleOrderItem.emptyLine': { vi: 'Chưa có sản phẩm nào. Nhấn "Thêm dòng" để bắt đầu.', en: 'No items yet. Click "Add Line" to begin.' },
+
+	// ─── Production Request ────────────────────────────────────────────────────
+	'productionRequest.title': { vi: 'Yêu cầu sản xuất', en: 'Production Requests' },
+	'productionRequest.lower': { vi: 'yêu cầu sản xuất', en: 'production request' },
+	'productionRequest.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'productionRequest.empty': { vi: 'Chưa có yêu cầu sản xuất nào.', en: 'No production requests found.' },
+	'productionRequest.emptyHint': { vi: 'Nhấn "Thêm" để tạo mới yêu cầu sản xuất.', en: 'Click "Add" to create a production request.' },
+	'productionRequest.requestNo': { vi: 'Số yêu cầu', en: 'Request No.' },
+	'productionRequest.salesOrder': { vi: 'Đơn bán hàng', en: 'Sales Order' },
+	'productionRequest.salesOrder.unset': { vi: '— Chọn đơn bán hàng —', en: '— Select sales order —' },
+	'productionRequest.salesOrderNo': { vi: 'Số đơn bán hàng', en: 'Sales Order No.' },
+	'productionRequest.customer': { vi: 'Khách hàng', en: 'Customer' },
+	'productionRequest.customer.unset': { vi: '— Chọn khách hàng —', en: '— Select customer —' },
+	'productionRequest.requestDate': { vi: 'Ngày yêu cầu', en: 'Request Date' },
+	'productionRequest.requiredDate': { vi: 'Ngày cần', en: 'Required Date' },
+	'productionRequest.receiptMaterialDate': { vi: 'Ngày nhận vật tư', en: 'Material Receipt Date' },
+	'productionRequest.priority': { vi: 'Độ ưu tiên', en: 'Priority' },
+	'productionRequest.priority.unset': { vi: '— Chọn độ ưu tiên —', en: '— Select priority —' },
+	'productionRequest.status': { vi: 'Trạng thái', en: 'Status' },
+	'productionRequest.status.unset': { vi: '— Chọn trạng thái —', en: '— Select status —' },
+	'productionRequest.description': { vi: 'Diễn giải', en: 'Description' },
+	'productionRequest.remark': { vi: 'Ghi chú', en: 'Remark' },
+
+	'productionRequest.err.load': { vi: 'Không thể tải danh sách yêu cầu sản xuất.', en: 'Failed to load production requests.' },
+	'productionRequest.err.requestNoRequired': { vi: 'Số yêu cầu không được để trống.', en: 'Request No. is required.' },
+	'productionRequest.err.customerIdRequired': { vi: 'Vui lòng chọn khách hàng.', en: 'Customer is required.' },
+	'productionRequest.err.requestDateRequired': { vi: 'Ngày yêu cầu không được để trống.', en: 'Request date is required.' },
+	'productionRequest.err.requiredDateRequired': { vi: 'Ngày cần không được để trống.', en: 'Required date is required.' },
+	'productionRequest.err.receiptMaterialDateRequired': { vi: 'Ngày nhận vật tư không được để trống.', en: 'Material receipt date is required.' },
+	'productionRequest.err.priorityRequired': { vi: 'Vui lòng chọn độ ưu tiên.', en: 'Priority is required.' },
+	'productionRequest.err.requestNoTaken': { vi: 'Số yêu cầu "{requestNo}" đã tồn tại.', en: 'Request No. "{requestNo}" already exists.' },
+
+	// Production Request - Priorities
+	'productionRequest.priority.urgent': { vi: 'Khẩn cấp', en: 'Urgent' },
+	'productionRequest.priority.high': { vi: 'Cao', en: 'High' },
+	'productionRequest.priority.normal': { vi: 'Bình thường', en: 'Normal' },
+	'productionRequest.priority.low': { vi: 'Thấp', en: 'Low' },
+
+	// Production Request - Statuses
+	'productionRequest.status.draft': { vi: 'Nháp', en: 'Draft' },
+	'productionRequest.status.pendingApproval': { vi: 'Chờ duyệt', en: 'Pending Approval' },
+	'productionRequest.status.approved': { vi: 'Đã duyệt', en: 'Approved' },
+	'productionRequest.status.rejected': { vi: 'Từ chối', en: 'Rejected' },
+	'productionRequest.status.cancelled': { vi: 'Đã hủy', en: 'Cancelled' },
+	'productionRequest.status.closed': { vi: 'Đã đóng', en: 'Closed' },
+
+	// ─── Production Request Item ───────────────────────────────────────────────
+	'productionRequestItem.title': { vi: 'Chi tiết sản phẩm yêu cầu', en: 'Request Items' },
+	'productionRequestItem.lower': { vi: 'chi tiết yêu cầu sản xuất', en: 'request item' },
+	'productionRequestItem.scopeOf': { vi: 'của {name}', en: 'of {name}' },
+	'productionRequestItem.sortOrder': { vi: 'Thứ tự', en: 'Sort Order' },
+	'productionRequestItem.salesOrderItem': { vi: 'Mục đơn bán hàng', en: 'Sales Order Item' },
+	'productionRequestItem.salesOrderItem.unset': { vi: '— Chọn mục đơn bán hàng —', en: '— Select sales order item —' },
+	'productionRequestItem.product': { vi: 'Sản phẩm', en: 'Product' },
+	'productionRequestItem.product.unset': { vi: '— Chọn sản phẩm —', en: '— Select product —' },
+	'productionRequestItem.productCode': { vi: 'Mã sản phẩm', en: 'Product Code' },
+	'productionRequestItem.productName': { vi: 'Tên sản phẩm', en: 'Product Name' },
+	'productionRequestItem.unit': { vi: 'Đơn vị tính', en: 'Unit' },
+	'productionRequestItem.unit.unset': { vi: '— Chọn ĐVT —', en: '— Select unit —' },
+	'productionRequestItem.requestedQuantity': { vi: 'Số lượng yêu cầu', en: 'Requested Quantity' },
+	'productionRequestItem.plannedQuantity': { vi: 'Số lượng kế hoạch', en: 'Planned Quantity' },
+	'productionRequestItem.producedQuantity': { vi: 'Số lượng đã sản xuất', en: 'Produced Quantity' },
+	'productionRequestItem.requiredDate': { vi: 'Ngày cần', en: 'Required Date' },
+	'productionRequestItem.status': { vi: 'Trạng thái', en: 'Status' },
+	'productionRequestItem.status.unset': { vi: '— Chọn trạng thái —', en: '— Select status —' },
+	'productionRequestItem.remark': { vi: 'Ghi chú', en: 'Remark' },
+	'productionRequestItem.empty': { vi: 'Yêu cầu sản xuất này chưa có chi tiết nào.', en: 'This production request has no items yet.' },
+	'productionRequestItem.emptyHint': { vi: 'Chọn một yêu cầu sản xuất ở panel trên để xem chi tiết.', en: 'Pick a production request above to view items.' },
+	'productionRequestItem.lineCount': { vi: '({count} dòng)', en: '({count} lines)' },
+	'productionRequestItem.addLine': { vi: 'Thêm dòng', en: 'Add Line' },
+	'productionRequestItem.removeLine': { vi: 'Xoá dòng', en: 'Remove Line' },
+	'productionRequestItem.emptyLine': { vi: 'Chưa có chi tiết nào. Nhấn "Thêm dòng" để bắt đầu.', en: 'No items yet. Click "Add Line" to begin.' },
+
+	// Production Request Item - Statuses
+	'productionRequestItem.status.pending': { vi: 'Chờ xử lý', en: 'Pending' },
+	'productionRequestItem.status.partiallyPlanned': { vi: 'Lập kế hoạch 1 phần', en: 'Partially Planned' },
+	'productionRequestItem.status.planned': { vi: 'Đã lập kế hoạch', en: 'Planned' },
+	'productionRequestItem.status.inProgress': { vi: 'Đang sản xuất', en: 'In Progress' },
+	'productionRequestItem.status.completed': { vi: 'Hoàn thành', en: 'Completed' },
+	'productionRequestItem.status.cancelled': { vi: 'Đã hủy', en: 'Cancelled' },
 };
+
 
 

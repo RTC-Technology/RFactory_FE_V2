@@ -1,0 +1,537 @@
+<!-- Toolbar shared by every CRUD list: the product list and the detail modal tabs. -->
+<ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
+             let-showReload="showReload">
+    <div class="toolbar">
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openCreate()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="12" height="14" rx="1.5" />
+                <line x1="19" y1="9" x2="19" y2="17" />
+                <line x1="15" y1="13" x2="23" y2="13" />
+            </svg>
+            <span>{{ i18n.t('common.add') }}</span>
+        </button>
+        <button *appHasPermission="perms.edit" type="button" class="tool" [disabled]="!hasSelection"
+                (click)="openEdit()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 3h9l4 4v3" />
+                <path d="M4 3v18h13v-6" />
+                <path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+            </svg>
+            <span>{{ i18n.t('common.edit') }}</span>
+        </button>
+        <button *appHasPermission="perms.delete" type="button" class="tool tool--danger" [disabled]="!hasSelection"
+                (click)="askDelete()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+            <span>{{ i18n.t('common.delete') }}</span>
+        </button>
+
+        @if (showReload) {
+        <span class="tool__sep"></span>
+        <button type="button" class="tool" [disabled]="loading()" (click)="reload()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>{{ i18n.t('common.reload') }}</span>
+        </button>
+        }
+
+        <span class="tool__sep"></span>
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openOrder()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polygon points="6 3 20 12 6 21 6 3" />
+            </svg>
+            <span>{{ i18n.t('productionOrder.title') }}</span>
+        </button>
+
+        <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
+               [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
+    </div>
+</ng-template>
+
+<div class="page">
+    <p-splitter class="workspace__right" layout="vertical" [panelSizes]="split.sizes('product:split-y', [42,58])"
+                [minSizes]="[20, 20]" [gutterSize]="6" (onResizeEnd)="split.save('product:split-y', $event.sizes)">
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('productionRequest.title') }}</h2>
+                    @if (_saleOrderDto(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('productionRequest.scopeOf', { name: t.orderNo || '—' }) }}
+                    </span>
+                    }
+                    <span class="panel__count">{{ productionRequests().length }}</span>
+                </div>
+                <ng-container
+                              *ngTemplateOutlet="toolbar; context: { kind: 'productionRequest', perms: perms.productionRequest, canAdd: true, hasSelection: !!selectedRequest(), showReload: true }" />
+
+                <div class="table-scroll">
+                    <p-table #requestTable [value]="productionRequests()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.productionRequest"
+                             (onFilter)="onFiltered('productionRequest', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('productionRequest.requestNo') }}</th>
+                                <th class="col-code">{{ i18n.t('productionRequest.salesOrderNo') }}</th>
+                                <th class="col-customer">{{ i18n.t('productionRequest.customer') }}</th>
+                                <th class="col-requestDate">{{ i18n.t('productionRequest.requestDate') }}</th>
+                                <th class="col-requiredDate">{{ i18n.t('productionRequest.requiredDate') }}</th>
+                                <th class="col-receiptMaterialDate">{{ i18n.t('productionRequest.receiptMaterialDate') }}</th>
+                                <th class="col-priority">{{ i18n.t('productionRequest.priority') }}</th>
+                                <th class="col-status">{{ i18n.t('productionRequest.status') }}</th>
+                                <th class="col-description">{{ i18n.t('productionRequest.description') }}</th>
+                                <th class="col-remark">{{ i18n.t('productionRequest.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <!-- <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="16">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold"> {{i18n.t('customer.title')}}: {{ customerLabel(row.customerId) || '—' }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template> -->
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedRequest()?.id === row.id"
+                                (click)="selectRequest(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.requestNo || '—' }}</td>
+                                <td class="col-code">{{ row.salesOrderNo || '—' }}</td>
+                                <td class="col-customer">{{ customerLabel(row.customerId) || '—' }}</td>
+                                <td class="col-requestDate">{{ (row.requestDate|date) || '—' }}</td>
+                                <td class="col-requiredDate">{{ (row.requiredDate|date) || '—' }}</td>
+                                <td class="col-receiptMaterialDate">{{ (row.receiptMaterialDate|date) || '—' }}</td>
+                                <td class="col-priority">
+                                    @if (row.priority) {
+                                    <p-tag [severity]="prioritySeverity(row.priority)?.severity" [value]="priorityLabel(row.priority)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="statusSeverity(row.status)?.severity" [value]="statusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-description">{{ row.description || '—' }}</td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="10">
+                                    <p class="empty">
+                                        {{ selectedRequest() ? i18n.t('productionRequest.empty') :
+                                        i18n.t('productionRequest.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+
+        <ng-template #panel>
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title">{{ i18n.t('productionRequestItem.title') }}</h2>
+                    @if (selectedRequest(); as t) {
+                    <span class="panel__scope">
+                        {{ i18n.t('productionRequestItem.scopeOf', { name: t.requestNo || '—' }) }}
+                    </span>
+                    <span class="panel__count">{{ productionRequestItems().length }}</span>
+                    }
+                </div>
+
+                <div class="table-scroll">
+                    <p-table #itemTable [value]="productionRequestItems()" [showGridlines]="true"
+                             class="grid" [globalFilterFields]="filterFields.productionRequestItem"
+                             (onFilter)="onFiltered('productionRequestItem', $event.filteredValue)"
+                             [scrollable]="true" scrollHeight="flex">
+                        <ng-template #header>
+                            <tr>
+                                <th class="col-code">{{ i18n.t('productionRequestItem.sortOrder') }}</th>
+                                <th class="col-productCode">{{ i18n.t('productionRequestItem.productCode') }}</th>
+                                <th class="col-productName">{{ i18n.t('productionRequestItem.productName') }}</th>
+                                <th class="col-unit">{{ i18n.t('productionRequestItem.unit') }}</th>
+                                <th class="col-requestedQuantity">{{ i18n.t('productionRequestItem.requestedQuantity') }}</th>
+                                <th class="col-plannedQuantity">{{ i18n.t('productionRequestItem.plannedQuantity') }}</th>
+                                <th class="col-producedQuantity">{{ i18n.t('productionRequestItem.producedQuantity') }}</th>
+                                <th class="col-requiredDate">{{ i18n.t('productionRequestItem.requiredDate') }}</th>
+                                <th class="col-status">{{ i18n.t('productionRequestItem.status') }}</th>
+                                <th class="col-remark">{{ i18n.t('productionRequestItem.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr class="row" [class.row--selected]="selectedItem()?.id === row.id"
+                                (click)="selectItem(row)" (dblclick)="openEdit()">
+                                <td class="col-code">{{ row.sortOrder || '—' }}</td>
+                                <td class="col-product">{{ row.productCode || '—' }}</td>
+                                <td class="col-productName">{{ row.productName || '—' }}</td>
+                                <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
+                                <td class="col-requestedQuantity text-right">{{ row.requestedQuantity != null ? (row.requestedQuantity|number:'1.0-2') : 0 }}</td>
+                                <td class="col-plannedQuantity text-right">{{ row.plannedQuantity != null ? (row.plannedQuantity|number:'1.0-2') : 0 }}</td>
+                                <td class="col-producedQuantity text-right">{{ row.producedQuantity != null ? (row.producedQuantity|number:'1.0-2') : 0 }}</td>
+                                <td class="col-requiredDate">{{ (row.requiredDate|date) || '—' }}</td>
+                                <td class="col-status">
+                                    @if (row.status) {
+                                    <p-tag [severity]="itemStatusSeverity(row.status)?.severity" [value]="itemStatusLabel(row.status)" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td class="col-remark">{{ row.remark || '—' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="10">
+                                    <p class="empty">
+                                        {{ selectedRequest() ? i18n.t('productionRequestItem.empty') :
+                                        i18n.t('productionRequestItem.emptyHint') }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </section>
+        </ng-template>
+    </p-splitter>
+</div>
+
+<p-dialog [header]="dialogTitle()" [visible]="dialogOpen()" (visibleChange)="dialogOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false" [style]="{ width: '90vw',height:'90vh' }">
+
+    <div class="form">
+        @if (formError()) {
+        <div class="form__error">{{ formError() }}</div>
+        }
+
+        <div class="field-row">
+            <div class="field">
+                <label for="pr-customerId">
+                    {{ i18n.t('productionRequest.customer') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="customerOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.customerId"
+                          [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('productionRequest.customer.unset')" />
+            </div>
+            <div class="field">
+                <label for="pr-orderNo">
+                    {{ i18n.t('productionRequest.requestNo') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="pr-requestNo" name="requestNo" [(ngModel)]="form.requestNo" autocomplete="off" disabled="true" />
+            </div>
+
+            <div class="field">
+                <label for="pr-salesOrderId">
+                    {{ i18n.t('productionRequest.salesOrder') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="saleOrderOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.salesOrderId" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('productionRequest.salesOrder.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="pr-status">
+                    {{ i18n.t('productionRequest.status') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="statusOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.status" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('productionRequest.status.unset')" />
+            </div>
+            <div class="field">
+                <label for="pr-priority">
+                    {{ i18n.t('productionRequest.priority') }}
+                    <span class="req">*</span>
+                </label>
+                <p-select [options]="priorityOptions()" optionLabel="label" optionValue="value"
+                          [(ngModel)]="form.priority" [filter]="true" filterBy="label" [showClear]="false"
+                          appendTo="body" class="w-full" [placeholder]="i18n.t('productionRequest.priority.unset')" />
+            </div>
+        </div>
+
+        <div class="field-row">
+
+            <div class="field">
+                <label for="pr-requestDate">
+                    {{ i18n.t('productionRequest.requestDate') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="pr-requestDate" type="date" name="requestDate" [(ngModel)]="form.requestDate" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="pr-requiredDate">
+                    {{ i18n.t('productionRequest.requiredDate') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="pr-requiredDate" type="date" name="requiredDate" [(ngModel)]="form.requiredDate" autocomplete="off" />
+            </div>
+            <div class="field">
+                <label for="pr-receiptMaterialDate">
+                    {{ i18n.t('productionRequest.receiptMaterialDate') }}
+                    <span class="req">*</span>
+                </label>
+                <input pInputText id="pr-receiptMaterialDate" type="date" name="receiptMaterialDate" [(ngModel)]="form.receiptMaterialDate" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="pr-description">{{ i18n.t('productionRequest.description') }}</label>
+                <textarea pInputTextarea id="pr-description" name="description" [(ngModel)]="form.description" autocomplete="off" [rows]="2"></textarea>
+            </div>
+            <div class="field">
+                <label for="pr-remark">{{ i18n.t('productionRequest.remark') }}</label>
+                <textarea pInputTextarea id="pr-remark" name="remark" [(ngModel)]="form.remark" autocomplete="off" [rows]="2"></textarea>
+            </div>
+        </div>
+
+        <section class="panel lines">
+            <div class="panel__head">
+                <h2 class="panel__title">{{ i18n.t('productionRequestItem.title') }}</h2>
+                <span class="panel__scope">
+                    {{ i18n.t('productionRequestItem.lineCount', { count: itemRows().length || 0 }) }}
+                </span>
+                <button type="button" class="lines__add" (click)="addItemRow()">
+                    <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    <span>{{ i18n.t('productionRequestItem.addLine') }}</span>
+                </button>
+            </div>
+
+            <div class="lines__scroll">
+                <p-table [value]="itemRows()"
+                         [showGridlines]="true"
+                         class="grid grid--edit"
+                         scrollable="true"
+                         scrollHeight="flex">
+                    <ng-template #header>
+                        <tr>
+                            <th class="col-idx">#</th>
+                            <th class="col-salesOrderItem">{{ i18n.t('productionRequestItem.salesOrderItem') }}</th>
+                            <th class="col-product">{{ i18n.t('productionRequestItem.product') }}</th>
+                            <th class="col-productCode">{{ i18n.t('productionRequestItem.productCode') }}</th>
+                            <th class="col-productName">{{ i18n.t('productionRequestItem.productName') }}</th>
+                            <th class="col-unit">{{ i18n.t('productionRequestItem.unit') }}</th>
+                            <th class="col-requestedQuantity">{{ i18n.t('productionRequestItem.requestedQuantity') }}</th>
+                            <th class="col-plannedQuantity">{{ i18n.t('productionRequestItem.plannedQuantity') }}</th>
+                            <th class="col-producedQuantity">{{ i18n.t('productionRequestItem.producedQuantity') }}</th>
+                            <th class="col-requiredDate">{{ i18n.t('productionRequestItem.requiredDate') }}</th>
+                            <th class="col-status">{{ i18n.t('productionRequestItem.status') }}</th>
+                            <th class="col-remark">{{ i18n.t('productionRequestItem.remark') }}</th>
+                            <th class="col-act">{{ i18n.t('common.actions') }}</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template #body let-row let-i="rowIndex">
+                        <tr class="row row--edit">
+                            <td class="col-idx">{{ i + 1 }}</td>
+
+                            <td class="col-salesOrderItem">
+                                <p-select [options]="saleOrderItemOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.salesOrderItemId"
+                                          (ngModelChange)="onSalesOrderItemChange($event,row)"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('productionRequestItem.salesOrderItem.unset')" />
+                            </td>
+                            <td class="col-product">
+                                <p-select [options]="productOptions()"
+                                          optionLabel="label"
+                                          optionValue="value"
+                                          [(ngModel)]="row.productId"
+                                          (ngModelChange)="onProductChange($event,row)"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          [placeholder]="i18n.t('productionRequestItem.product.unset')"
+                                          appendTo="body"
+                                          class="w-full">
+                                    <ng-template #header>
+                                        <div class="picker-row picker-row--head">
+                                            <span class="picker-cell">{{ i18n.t('product.code') }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.name') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+                                                }}</span>
+                                            <span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+                                                }}</span>
+                                        </div>
+                                    </ng-template>
+
+                                    <ng-template #item let-opt>
+                                        <div class="picker-row">
+                                            <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+                                            <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+                                            <span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+                                            <span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+                                                {{ opt.drawingNo || '—' }}
+                                            </span>
+                                            <span class="picker-cell picker-cell--center">
+                                                @if (opt.statusLabel) {
+                                                <p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+                                                       [rounded]="true" />
+                                                } @else {
+                                                <span class="picker-cell--muted">—</span>
+                                                }
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                </p-select>
+
+                            </td>
+                            <td class="col-productCode">
+                                <input pInputText class="cell-input w-full" name="productCode" [(ngModel)]="row.productCode" autocomplete="off" />
+                            </td>
+                            <td class="col-productName">
+                                <input pInputText class="cell-input w-full" name="productName" [(ngModel)]="row.productName" autocomplete="off" />
+                            </td>
+                            <td class="col-unit">
+                                <p-select [options]="unitOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.unitId"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('productionRequestItem.unit.unset')" />
+                            </td>
+
+                            <td class="col-requestedQuantity">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.requestedQuantity"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-plannedQuantity">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.plannedQuantity"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-producedQuantity">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" class="w-full"
+                                               [(ngModel)]="row.producedQuantity"
+                                               mode="decimal"
+                                               [showButtons]="true"
+                                               [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+
+                            <td class="col-requiredDate">
+                                <input pInputText class="cell-input w-full" type="date" name="requiredDate" [(ngModel)]="row.requiredDate" autocomplete="off" />
+                            </td>
+
+                            <td class="col-status">
+                                <p-select [options]="itemStatusOptions()"
+                                          optionLabel="label" optionValue="value" class="w-full"
+                                          [(ngModel)]="row.status"
+                                          [filter]="true"
+                                          filterBy="label"
+                                          appendTo="body"
+                                          [placeholder]="i18n.t('productionRequestItem.status.unset')" />
+                            </td>
+
+                            <td class="col-remark">
+                                <textarea pInputTextarea name="remark" class="w-full" [(ngModel)]="row.remark" autocomplete="off"
+                                          [rows]="2"></textarea>
+                            </td>
+                            <td class="col-act">
+                                <button type="button"
+                                        class="row-del"
+                                        [title]="i18n.t('productionRequestItem.removeLine')"
+                                        [attr.aria-label]="i18n.t('productionRequestItem.removeLine')"
+                                        (click)="removeItemRow(row)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <!-- <ng-template #footer>
+                        <tr class="lines__total">
+                            <td colspan="5">{{ i18n.t('salesOrderItem.orderedQuantity') }}</td>
+                            <td class="col-orderedQuantity">{{ orderOrderedQuantity() | number: '1.0-2' }}</td>
+
+                            <td colspan="3" class="text-right">{{ i18n.t('salesOrderItem.amount') }}</td>
+                            <td class="col-amount">{{ orderAmount() | number: '1.0-2' }}</td>
+
+                            <td colspan="1" class="text-right">{{ i18n.t('salesOrderItem.discountAmount') }}</td>
+                            <td class="col-discountAmount ">{{ orderTotalDiscountAmount() | number: '1.0-2' }}</td>
+
+                            <td colspan="1" class="text-right">{{ i18n.t('salesOrderItem.taxAmount') }}</td>
+                            <td class="col-taxAmount ">{{ orderTotalTaxAmount() | number: '1.0-2' }}</td>
+
+                            <td class="col-totalAmount text-right">{{ orderTotalAmount() | number: '1.0-2' }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </ng-template> -->
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="13">
+                                <p class="empty">{{ i18n.t('productionRequestItem.emptyLine') }}</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </section>
+    </div>
+
+    <ng-template #footer>
+        <button pButton type="button" severity="secondary" text [disabled]="saving()" (click)="dialogOpen.set(false)">
+            <span pButtonLabel>{{ i18n.t('common.cancel') }}</span>
+        </button>
+        <button pButton type="button" [disabled]="saving()" (click)="save()">
+            <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
+        </button>
+    </ng-template>
+</p-dialog>
+
+<p-dialog [visible]="orderOpen()" (visibleChange)="orderOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: '100vw', height: '100vh', margin: '0' }"
+          [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+    @if (orderOpen()) {
+    <app-production-order [_productionRequestDto]="selectedRequest()"></app-production-order>
+    }
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast position="top-right" />

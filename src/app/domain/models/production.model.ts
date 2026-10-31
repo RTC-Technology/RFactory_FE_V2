@@ -115,3 +115,126 @@ export const SALES_ORDER_PAYMENT_SCHEDULE_STATUSES_ENUM = {
     CANCELLED: 6,
 };
 //#endregion
+
+//#region Production Request
+export interface ProductionRequestDto {
+    id: number;
+    requestNo: string;
+    salesOrderId?: number | null;
+    salesOrderNo?: string | null;
+    customerId?: number | null;
+    requestDate: string;
+    requiredDate: string;
+    receiptMaterialDate: string;
+    priority: number;
+    status: number;
+    description?: string | null;
+    remark?: string | null;
+
+}
+
+export interface ProductionRequestItemDto {
+    id: number;
+    productionRequestId?: number | null;
+    salesOrderItemId?: number | null;
+    productId: number;
+    productCode?: string | null;
+    productName?: string | null;
+    unitId?: number | null;
+    requestedQuantity: number;
+    plannedQuantity: number;
+    producedQuantity: number;
+    requiredDate?: string | null;
+    status: number;
+    sortOrder: number;
+    remark?: string | null;
+}
+
+export type ProductionRequestRequest = Omit<ProductionRequestDto, 'id'> & {
+    productionRequestItems?: ProductionRequestItemRequest[] | null;
+};
+export type ProductionRequestItemRequest = Omit<ProductionRequestItemDto, 'id'>;
+
+// Enums
+export enum PRODUCTION_REQUEST_PRIORITY_ENUM {
+    URGENT = 1,
+    HIGH = 2,
+    NORMAL = 3,
+    LOW = 4,
+}
+
+export enum PRODUCTION_REQUEST_STATUS_ENUM {
+    DRAFT = 1,
+    PENDING_APPROVAL = 2,
+    APPROVED = 3,
+    REJECTED = 4,
+    CANCELLED = 5,
+    CLOSED = 6,
+}
+
+export enum PRODUCTION_REQUEST_ITEM_STATUS_ENUM {
+    PENDING = 1,
+    PARTIALLY_PLANNED = 2,
+    PLANNED = 3,
+    IN_PROGRESS = 4,
+    COMPLETED = 5,
+    CANCELLED = 6,
+}
+
+// Status & Priority Select Options
+export const PRODUCTION_REQUEST_PRIORITIES = [
+    { labelKey: 'productionRequest.priority.urgent', value: 1, severity: 'danger' as const },
+    { labelKey: 'productionRequest.priority.high', value: 2, severity: 'warn' as const },
+    { labelKey: 'productionRequest.priority.normal', value: 3, severity: 'info' as const },
+    { labelKey: 'productionRequest.priority.low', value: 4, severity: 'secondary' as const },
+];
+
+export const PRODUCTION_REQUEST_STATUSES = [
+    { labelKey: 'productionRequest.status.draft', value: 1, severity: 'secondary' as const },
+    { labelKey: 'productionRequest.status.pendingApproval', value: 2, severity: 'warn' as const },
+    { labelKey: 'productionRequest.status.approved', value: 3, severity: 'success' as const },
+    { labelKey: 'productionRequest.status.rejected', value: 4, severity: 'danger' as const },
+    { labelKey: 'productionRequest.status.cancelled', value: 5, severity: 'danger' as const },
+    { labelKey: 'productionRequest.status.closed', value: 6, severity: 'contrast' as const },
+];
+
+export const PRODUCTION_REQUEST_STATUSES_ENUM = {
+    DRAFT: 1,
+    PENDING_APPROVAL: 2,
+    APPROVED: 3,
+    REJECTED: 4,
+    CANCELLED: 5,
+    CLOSED: 6,
+};
+
+export const PRODUCTION_REQUEST_ITEM_STATUSES = [
+    { labelKey: 'productionRequestItem.status.pending', value: 1, severity: 'secondary' as const },
+    { labelKey: 'productionRequestItem.status.partiallyPlanned', value: 2, severity: 'info' as const },
+    { labelKey: 'productionRequestItem.status.planned', value: 3, severity: 'warn' as const },
+    { labelKey: 'productionRequestItem.status.inProgress', value: 4, severity: 'warn' as const },
+    { labelKey: 'productionRequestItem.status.completed', value: 5, severity: 'success' as const },
+    { labelKey: 'productionRequestItem.status.cancelled', value: 6, severity: 'danger' as const },
+];
+
+export const PRODUCTION_REQUEST_ITEM_STATUSES_ENUM = {
+    PENDING: 1,
+    PARTIALLY_PLANNED: 2,
+    PLANNED: 3,
+    IN_PROGRESS: 4,
+    COMPLETED: 5,
+    CANCELLED: 6,
+};
+
+// Helper functions
+export function getStatusOf(value: number) {
+    return PRODUCTION_REQUEST_STATUSES.find(x => x.value === value);
+}
+
+export function getPriorityOf(value: number) {
+    return PRODUCTION_REQUEST_PRIORITIES.find(s => s.value === value);
+}
+
+export function getItemStatusOf(value: number) {
+    return PRODUCTION_REQUEST_ITEM_STATUSES.find(s => s.value === value);
+}
+//#endregion
