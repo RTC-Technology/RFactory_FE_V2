@@ -138,6 +138,9 @@ export const PERMISSIONS = {
   salesOrderItem: crud('sales-order-item'),
   salesOrderPaymentSchedule: crud('sales-order-payment-schedule'),
 
+  productionRequest: crud('production-request'),
+  productionRequestItem: crud('production-request-item'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',

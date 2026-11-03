@@ -97,7 +97,7 @@
                         <td class="col-shortName">{{ row.shortName || '—' }}</td>
                         <td class="col-englishName">{{ row.englishName || '—' }}</td>
                         <td class="col-type">{{ typeLabel(row.workCenterType) || '—' }}</td>
-                        <td class="col-manager">{{ userLabel(row.managerId) || '—' }}</td>
+                        <td class="col-manager">{{ employeeLabel(row.managerId) || '—' }}</td>
                         <td class="col-location">{{ row.location || '—' }}</td>
                         <td class="col-description">{{ row.description || '—' }}</td>
                         <td class="col-status text-center">
@@ -207,7 +207,7 @@
                     {{ i18n.t('workcenter.manager') }}
                     <!-- <span class="req">*</span> -->
                 </label>
-                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.managerId" [filter]="true" filterBy="label" [showClear]="false" appendTo="body"
                           class="w-full" [placeholder]="i18n.t('workcenter.manager.unset')" />
             </div>

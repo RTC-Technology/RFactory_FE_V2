@@ -41,6 +41,15 @@
         </button>
         }
 
+        <span class="tool__sep"></span>
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+                (click)="openOrder()">
+            <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polygon points="6 3 20 12 6 21 6 3" />
+            </svg>
+            <span>{{ i18n.t('productionRequest.title') }}</span>
+        </button>
+
         <input class="tool-search" type="search" [placeholder]="i18n.t('common.search')"
                [attr.aria-label]="i18n.t('common.search')" (input)="applyFilter(kind, $any($event.target).value)" />
     </div>
@@ -893,6 +902,15 @@
             <span pButtonLabel>{{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}</span>
         </button>
     </ng-template>
+</p-dialog>
+
+<p-dialog [visible]="orderOpen()" (visibleChange)="orderOpen.set($event)" [modal]="true"
+          [draggable]="false" [resizable]="false"
+          [style]="{ width: '100vw', height: '100vh', margin: '0' }"
+          [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+    @if (orderOpen()) {
+    <app-production-request [_saleOrderDto]="selectedOrder()"></app-production-request>
+    }
 </p-dialog>
 
 <p-confirmDialog />

@@ -30,6 +30,7 @@ import { productStatusOf } from '../../domain/models/product.model';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ProductionRequestComponent } from '../production-request/production-request.component';
 
 type EntityKind = 'salesOrder' | 'salesOrderItem' | 'salesOrderPaymentSchedule';
 const DATETIME_LOCAL = "yyyy-MM-dd";
@@ -66,7 +67,8 @@ interface ProductOption {
 		TagModule,
 		TabsModule,
 		CheckboxModule,
-		ToggleButtonModule
+		ToggleButtonModule,
+		ProductionRequestComponent
 	],
 	providers: [MessageService, ConfirmationService],
 	standalone: true,
@@ -313,6 +315,7 @@ export class SalesOrderComponent extends PermissionAwarePage implements OnInit {
 
 	// ─── Dialog ─────────────────────────────────────────────────────────────────
 	readonly dialogOpen = signal(false);
+	readonly orderOpen = signal(false);
 	readonly editingId = signal<number | null>(null);
 	readonly saving = signal(false);
 	readonly formError = signal('');
@@ -346,6 +349,10 @@ export class SalesOrderComponent extends PermissionAwarePage implements OnInit {
 		this.scheduleRows.set([this._emptyScheduleRow()]);
 
 		this.dialogOpen.set(true);
+	}
+
+	openOrder(): void {
+		this.orderOpen.set(true);
 	}
 
 	openEdit(): void {

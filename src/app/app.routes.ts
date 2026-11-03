@@ -796,6 +796,64 @@ export const routes: Routes = [
 				pathMatch: 'full',
 			},
 
+			//employee
+			{
+				// Employee master data. Organization is carried through the payload but not
+				// edited here yet, so the screen only needs its own four codes.
+				path: 'employees',
+				loadComponent: () =>
+					import('./pages/employee/employee.component').then(m => m.EmployeeComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.employee.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//positions
+			{
+				path: 'positions',
+				loadComponent: () =>
+					import('./pages/position/position.component').then(m => m.PositionComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.position.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
+			//skills
+			{
+				path: 'skills',
+				loadComponent: () =>
+					import('./pages/skill/skill.component').then(m => m.SkillComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.skill.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+			//production-request
+			{
+				path: 'production-request',
+				loadComponent: () =>
+					import('./pages/production-request/production-request.component').then(m => m.ProductionRequestComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.productionRequest.view,
+						PERMISSIONS.productionRequestItem.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			{
 				path: 'forbidden',
 				loadComponent: () => import('./pages/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
