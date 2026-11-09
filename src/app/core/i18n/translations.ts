@@ -4472,7 +4472,27 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'saleOrderItem.lineCount': { vi: '({count} dòng)', en: '({count} lines)' },
 	'saleOrderItem.addLine': { vi: 'Thêm dòng', en: 'Add Line' },
 	'saleOrderItem.removeLine': { vi: 'Xoá dòng', en: 'Remove Line' },
-	'saleOrderItem.emptyLine': { vi: 'Chưa có sản phẩm nào. Nhấn "Thêm dòng" để bắt đầu.', en: 'No items yet. Click "Add Line" to begin.' },
+	// Detailed Production Plan (Kế hoạch sản xuất chi tiết)
+	'detailedProductionPlan.title': { vi: 'Kế hoạch sản xuất chi tiết', en: 'Detailed Production Plan' },
+	'detailedProductionPlan.code': { vi: 'Số kế hoạch', en: 'Plan Code' },
+	'detailedProductionPlan.name': { vi: 'Tên kế hoạch', en: 'Plan Name' },
+	'detailedProductionPlan.masterPlan': { vi: 'Kế hoạch tổng thể', en: 'Master Production Plan' },
+	'detailedProductionPlan.workshop': { vi: 'Phân xưởng', en: 'Workshop' },
+	'detailedProductionPlan.line': { vi: 'Dây chuyền', en: 'Production Line' },
+	'detailedProductionPlan.period': { vi: 'Kỳ kế hoạch', en: 'Planning Period' },
+	'detailedProductionPlan.periodType': { vi: 'Chế độ phân bổ', en: 'Allocation Mode' },
+	'detailedProductionPlan.byDay': { vi: 'Theo Ngày', en: 'By Day' },
+	'detailedProductionPlan.byShift': { vi: 'Theo Ca', en: 'By Shift' },
+	'detailedProductionPlan.forward': { vi: 'Phân bổ tiến (Forward)', en: 'Forward Allocation' },
+	'detailedProductionPlan.backward': { vi: 'Phân bổ lùi (Backward)', en: 'Backward Allocation' },
+	'detailedProductionPlan.status': { vi: 'Trạng thái', en: 'Status' },
+	'detailedProductionPlan.requiredQty': { vi: 'Nhu cầu', en: 'Required Qty' },
+	'detailedProductionPlan.plannedQty': { vi: 'Đã lập KH', en: 'Planned Qty' },
+	'detailedProductionPlan.ordersCount': { vi: 'Số lệnh SX', en: 'Orders Generated' },
+	'detailedProductionPlan.calculate': { vi: 'Tính toán kế hoạch', en: 'Auto Calculate' },
+	'detailedProductionPlan.workCalendar': { vi: 'Thiết lập lịch làm việc', en: 'Work Calendar' },
+	'detailedProductionPlan.validateQty': { vi: 'Kiểm tra SL sản xuất', en: 'Check Quantities' },
+	'detailedProductionPlan.generateOrders': { vi: 'Lập Lệnh sản xuất', en: 'Generate Orders' },
 };
 
 

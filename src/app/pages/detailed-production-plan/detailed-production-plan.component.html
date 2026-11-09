@@ -1,0 +1,1290 @@
+<div class="detailed-plan-page">
+  <p-toast position="top-right" />
+  <p-confirmDialog />
+
+  <!-- ─── Header & Top Actions ─────────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="page-header__title-group">
+      <div class="page-header__breadcrumb">
+        <span>Sản xuất</span>
+        <span class="sep">/</span>
+        <span class="current">Kế hoạch chi tiết</span>
+      </div>
+      <h1 class="page-header__title">
+        <i class="pi pi-calendar-plus title-icon"></i>
+        Lập Kế hoạch chi tiết
+      </h1>
+      <p class="page-header__subtitle">
+        Quy trình chuẩn AMIS: Chọn tham số &rarr; Tổng hợp nhu cầu &rarr; Phân bổ ma trận Ngày/Ca &rarr; Lập lệnh sản xuất
+      </p>
+    </div>
+
+    <div class="page-header__actions">
+      <button
+        pButton
+        icon="pi pi-refresh"
+        label="Tải lại"
+        class="p-button-outlined p-button-secondary"
+        (click)="loadPlans()"
+        [loading]="loading()"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-plus"
+        label="Lập kế hoạch chi tiết"
+        class="p-button-primary p-button-raised"
+        (click)="openCreateWizard()"
+        *appHasPermission="PERMISSIONS.detailedProductionPlan.add"
+      ></button>
+    </div>
+  </header>
+
+  <!-- ─── Filters Bar ───────────────────────────────────────────────────────── -->
+  <section class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item">
+        <label>Tìm kiếm</label>
+        <div class="p-input-icon-left w-full">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            placeholder="Mã KH, Tên KH, KHTT..."
+            [(ngModel)]="filterKeyword"
+            (keyup.enter)="loadPlans()"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="filter-item">
+        <label>Phân xưởng</label>
+        <p-select
+          [options]="workshops()"
+          optionLabel="workshopName"
+          optionValue="id"
+          [(ngModel)]="filterWorkshopId"
+          (onChange)="loadPlans()"
+          placeholder="Tất cả phân xưởng"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-select>
+      </div>
+
+      <div class="filter-item">
+        <label>Trạng thái</label>
+        <p-select
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="filterStatus"
+          (onChange)="loadPlans()"
+          placeholder="Tất cả trạng thái"
+          styleClass="w-full"
+        ></p-select>
+      </div>
+
+      <div class="filter-item">
+        <label>Từ ngày</label>
+        <input
+          pInputText
+          type="date"
+          [(ngModel)]="filterFromDate"
+          (change)="loadPlans()"
+          class="w-full"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label>Đến ngày</label>
+        <input
+          pInputText
+          type="date"
+          [(ngModel)]="filterToDate"
+          (change)="loadPlans()"
+          class="w-full"
+        />
+      </div>
+
+      <div class="filter-item filter-actions">
+        <button
+          pButton
+          icon="pi pi-filter-slash"
+          label="Đặt lại"
+          class="p-button-text p-button-secondary"
+          (click)="resetFilters()"
+        ></button>
+        <button
+          pButton
+          icon="pi pi-search"
+          label="Lọc"
+          class="p-button-info"
+          (click)="loadPlans()"
+        ></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Plans List Table ──────────────────────────────────────────────────── -->
+  <section class="table-card">
+    <p-table
+      [value]="plans()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      styleClass="p-datatable-gridlines p-datatable-striped"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 140px">Số kế hoạch</th>
+          <th>Tên kế hoạch</th>
+          <th style="width: 150px">Kế hoạch tổng thể</th>
+          <th style="width: 150px">Phân xưởng / Line</th>
+          <th style="width: 170px">Kỳ lập (Từ - Đến)</th>
+          <th style="width: 110px">Chế độ</th>
+          <th style="width: 180px">Tiến độ (Nhu cầu / Đã lập)</th>
+          <th style="width: 110px; text-align: center">Lệnh SX</th>
+          <th style="width: 130px; text-align: center">Trạng thái</th>
+          <th style="width: 200px; text-align: center">Thao tác</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-plan>
+        <tr>
+          <td>
+            <a class="plan-code-link" (click)="viewDetail(plan)">
+              <i class="pi pi-file-edit mr-1"></i>
+              <strong>{{ plan.planCode }}</strong>
+            </a>
+          </td>
+          <td>
+            <div class="font-medium text-900">{{ plan.planName }}</div>
+            <small class="text-500" *ngIf="plan.remark">{{ plan.remark }}</small>
+          </td>
+          <td>
+            <span *ngIf="plan.masterPlanCode" class="master-plan-badge">
+              <i class="pi pi-compass mr-1"></i>
+              {{ plan.masterPlanCode }}
+            </span>
+            <span *ngIf="!plan.masterPlanCode" class="text-400 italic">Trực tiếp</span>
+          </td>
+          <td>
+            <div>{{ plan.workshopName || '—' }}</div>
+            <small class="text-500" *ngIf="plan.lineName">{{ plan.lineName }}</small>
+          </td>
+          <td>
+            <div class="text-sm">
+              <i class="pi pi-calendar mr-1 text-primary"></i>
+              {{ plan.fromDate | date: 'dd/MM/yyyy' }} &rarr; {{ plan.toDate | date: 'dd/MM/yyyy' }}
+            </div>
+          </td>
+          <td>
+            <p-tag
+              [value]="plan.periodType === 'SHIFT' ? 'Theo Ca' : 'Theo Ngày'"
+              [severity]="plan.periodType === 'SHIFT' ? 'info' : 'secondary'"
+            ></p-tag>
+          </td>
+          <td>
+            <div class="flex justify-content-between mb-1 text-xs">
+              <span>Đã lập: <strong>{{ plan.totalPlannedQuantity | number:'1.0-2' }}</strong></span>
+              <span>/ {{ plan.totalRequiredQuantity | number:'1.0-2' }}</span>
+            </div>
+            <p-progressBar
+              [value]="getProgressPercent(plan)"
+              [showValue]="true"
+              styleClass="plan-progress"
+            ></p-progressBar>
+          </td>
+          <td style="text-align: center">
+            <span class="order-count-pill" [class.has-orders]="plan.productionOrderCount > 0">
+              <i class="pi pi-box mr-1"></i>
+              {{ plan.productionOrderCount }}
+            </span>
+          </td>
+          <td style="text-align: center">
+            <p-tag
+              [value]="plan.statusName"
+              [severity]="getStatusTagSeverity(plan.status)"
+            ></p-tag>
+          </td>
+          <td style="text-align: center">
+            <div class="action-buttons-group">
+              <!-- View Detail -->
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-info"
+                pTooltip="Xem chi tiết kế hoạch"
+                (click)="viewDetail(plan)"
+              ></button>
+
+              <!-- Generate Production Order -->
+              <button
+                pButton
+                icon="pi pi-cog"
+                class="p-button-rounded p-button-text p-button-success"
+                pTooltip="Lập Lệnh sản xuất"
+                (click)="openGenerateOrdersModal(plan)"
+                *appHasPermission="PERMISSIONS.detailedProductionPlan.approve"
+              ></button>
+
+              <!-- Export CSV -->
+              <button
+                pButton
+                icon="pi pi-file-excel"
+                class="p-button-rounded p-button-text p-button-secondary"
+                pTooltip="Xuất Excel/CSV"
+                (click)="exportPlanToCsv(plan)"
+              ></button>
+
+              <!-- Edit (Draft or InProgress) -->
+              <ng-container *appHasPermission="PERMISSIONS.detailedProductionPlan.edit">
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-warning"
+                  pTooltip="Chỉnh sửa"
+                  (click)="openEditWizard(plan)"
+                  *ngIf="plan.status === 1 || plan.status === 3"
+                ></button>
+              </ng-container>
+
+              <!-- Delete (Draft) -->
+              <ng-container *appHasPermission="PERMISSIONS.detailedProductionPlan.delete">
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger"
+                  pTooltip="Xóa kế hoạch"
+                  (click)="askDelete(plan)"
+                  *ngIf="plan.status === 1"
+                ></button>
+              </ng-container>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="empty-state">
+            <div class="empty-state__icon">
+              <i class="pi pi-calendar-times"></i>
+            </div>
+            <div class="empty-state__title">Chưa có kế hoạch sản xuất chi tiết nào</div>
+            <p class="empty-state__desc">Nhấn "Lập kế hoạch chi tiết" để bắt đầu quy trình lập kế hoạch theo chuẩn AMIS.</p>
+            <button
+              pButton
+              icon="pi pi-plus"
+              label="Lập kế hoạch chi tiết"
+              class="p-button-primary mt-2"
+              (click)="openCreateWizard()"
+              *appHasPermission="PERMISSIONS.detailedProductionPlan.add"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- WIZARD MODAL: AMIS 3-STEP DETAILED PRODUCTION PLAN                          -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showWizard"
+    [modal]="true"
+    [maximizable]="true"
+    [style]="{ width: '92vw', maxWidth: '1440px', height: '90vh' }"
+    [header]="wizardMode() === 'create' ? 'Lập Kế hoạch sản xuất chi tiết' : 'Chỉnh sửa Kế hoạch sản xuất chi tiết'"
+    styleClass="p-dialog-wizard"
+  >
+    <!-- Stepper Navigation Header -->
+    <div class="wizard-stepper">
+      <div
+        class="step-item"
+        [class.active]="currentStep() === 1"
+        [class.completed]="currentStep() > 1"
+        (click)="goToStep(1)"
+      >
+        <div class="step-badge">1</div>
+        <div class="step-label">
+          <span class="step-name">Bước 1</span>
+          <span class="step-desc">Chọn tham số</span>
+        </div>
+      </div>
+
+      <div class="step-divider" [class.completed]="currentStep() > 1"></div>
+
+      <div
+        class="step-item"
+        [class.active]="currentStep() === 2"
+        [class.completed]="currentStep() > 2"
+        (click)="goToStep(2)"
+      >
+        <div class="step-badge">2</div>
+        <div class="step-label">
+          <span class="step-name">Bước 2</span>
+          <span class="step-desc">Tổng hợp nhu cầu</span>
+        </div>
+      </div>
+
+      <div class="step-divider" [class.completed]="currentStep() > 2"></div>
+
+      <div
+        class="step-item"
+        [class.active]="currentStep() === 3"
+        (click)="goToStep(3)"
+      >
+        <div class="step-badge">3</div>
+        <div class="step-label">
+          <span class="step-name">Bước 3</span>
+          <span class="step-desc">Lập kế hoạch (Ma trận Ngày/Ca)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BƯỚC 1: CHỌN THAM SỐ ────────────────────────────────────────────── -->
+    <div class="wizard-step-content" *ngIf="currentStep() === 1">
+      <div class="step-intro-alert">
+        <i class="pi pi-info-circle mr-2"></i>
+        <span>Chọn nguồn lập (từ Kế hoạch tổng thể hoặc trực tiếp), xác định phân xưởng thực hiện và kỳ thời gian để tạo ma trận phân bổ.</span>
+      </div>
+
+      <div class="step-form-grid">
+        <!-- Nguồn lập -->
+        <div class="form-group col-span-2">
+          <label class="form-label font-bold">Nguồn lập kế hoạch</label>
+          <div class="flex gap-4 mt-1">
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="sourceType"
+                value="MASTER_PLAN"
+                [(ngModel)]="formSourceType"
+              />
+              <span>Lập từ Kế hoạch tổng thể (MTS)</span>
+            </label>
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="sourceType"
+                value="DIRECT"
+                [(ngModel)]="formSourceType"
+              />
+              <span>Lập trực tiếp / Theo đơn đặt hàng</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Chọn Kế hoạch tổng thể nếu có -->
+        <div class="form-group col-span-2" *ngIf="formSourceType() === 'MASTER_PLAN'">
+          <label class="form-label font-bold text-primary">Kế hoạch tổng thể nguồn *</label>
+          <p-select
+            [options]="masterPlans()"
+            optionLabel="planName"
+            optionValue="id"
+            [(ngModel)]="formMasterPlanId"
+            (onChange)="onMasterPlanSelected($event.value)"
+            placeholder="-- Chọn Kế hoạch tổng thể --"
+            styleClass="w-full"
+          >
+            <ng-template pTemplate="item" let-mp>
+              <div class="flex justify-content-between align-items-center w-full">
+                <span><strong>{{ mp.planCode }}</strong> - {{ mp.planName }}</span>
+                <span class="text-xs text-500">Tổng: {{ mp.totalQuantity | number }} SP</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Phân xưởng & Line -->
+        <div class="form-group">
+          <label class="form-label font-bold">Đơn vị / Phân xưởng thực hiện *</label>
+          <p-select
+            [options]="workshops()"
+            optionLabel="workshopName"
+            optionValue="id"
+            [(ngModel)]="formWorkshopId"
+            placeholder="-- Chọn phân xưởng --"
+            styleClass="w-full"
+          ></p-select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dây chuyền sản xuất (Line)</label>
+          <p-select
+            [options]="lines()"
+            optionLabel="lineName"
+            optionValue="id"
+            [(ngModel)]="formLineId"
+            placeholder="-- Chọn dây chuyền (tùy chọn) --"
+            [showClear]="true"
+            styleClass="w-full"
+          ></p-select>
+        </div>
+
+        <!-- Kỳ thời gian -->
+        <div class="form-group">
+          <label class="form-label font-bold">Từ ngày *</label>
+          <input
+            pInputText
+            type="date"
+            [(ngModel)]="formFromDate"
+            class="w-full"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label font-bold">Đến ngày *</label>
+          <input
+            pInputText
+            type="date"
+            [(ngModel)]="formToDate"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Số & Tên kế hoạch -->
+        <div class="form-group">
+          <label class="form-label">Số kế hoạch (Mã)</label>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="formPlanCode"
+            placeholder="Hệ thống tự sinh (VD: KHCT-202610-001)"
+            class="w-full"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label font-bold">Tên kế hoạch chi tiết *</label>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="formPlanName"
+            placeholder="Nhập tên kế hoạch chi tiết..."
+            class="w-full"
+          />
+        </div>
+
+        <!-- Chế độ phân bổ & Phương pháp mặc định -->
+        <div class="form-group">
+          <label class="form-label font-bold">Chế độ phân bổ ma trận *</label>
+          <div class="flex gap-4 mt-1">
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="periodType"
+                value="DAY"
+                [(ngModel)]="formPeriodType"
+              />
+              <span><strong>Theo Ngày</strong> (1 dòng / sản phẩm)</span>
+            </label>
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="periodType"
+                value="SHIFT"
+                [(ngModel)]="formPeriodType"
+              />
+              <span><strong>Theo Ca</strong> (Ca 1, Ca 2, Ca 3)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label font-bold">Phương pháp phân bổ mặc định</label>
+          <div class="flex gap-4 mt-1">
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="allocMethod"
+                value="FORWARD"
+                [(ngModel)]="formAllocationMethod"
+              />
+              <span>Phân bổ tiến (Forward)</span>
+            </label>
+            <label class="radio-label">
+              <input
+                type="radio"
+                name="allocMethod"
+                value="BACKWARD"
+                [(ngModel)]="formAllocationMethod"
+              />
+              <span>Phân bổ lùi (Backward)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Ghi chú -->
+        <div class="form-group col-span-2">
+          <label class="form-label">Ghi chú</label>
+          <textarea
+            pTextarea
+            [(ngModel)]="formRemark"
+            rows="2"
+            placeholder="Ghi chú kế hoạch..."
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BƯỚC 2: TỔNG HỢP NHU CẦU ────────────────────────────────────────── -->
+    <div class="wizard-step-content" *ngIf="currentStep() === 2">
+      <div class="step-toolbar">
+        <div class="step-toolbar__info">
+          <i class="pi pi-list mr-1"></i>
+          <span>Danh sách sản phẩm và số lượng nhu cầu cần sản xuất trong kỳ</span>
+        </div>
+        <div class="step-toolbar__actions">
+          <button
+            pButton
+            icon="pi pi-plus"
+            label="Thêm dòng sản phẩm"
+            class="p-button-outlined p-button-primary p-button-sm"
+            (click)="addEmptyItemRow()"
+          ></button>
+        </div>
+      </div>
+
+      <div class="demand-table-wrap">
+        <table class="custom-demand-table">
+          <thead>
+            <tr>
+              <th style="width: 45px; text-align: center">STT</th>
+              <th style="width: 280px">Sản phẩm *</th>
+              <th style="width: 100px">ĐVT</th>
+              <th style="width: 150px">Nhu cầu cần SX *</th>
+              <th style="width: 130px">Tồn kho hiện tại</th>
+              <th style="width: 160px">Công suất định mức/ngày</th>
+              <th style="width: 150px">Đơn đặt hàng</th>
+              <th>Ghi chú</th>
+              <th style="width: 60px; text-align: center">Xóa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of formItems(); let i = index">
+              <td style="text-align: center">{{ i + 1 }}</td>
+              <td>
+                <p-select
+                  [options]="products()"
+                  optionLabel="productName"
+                  optionValue="id"
+                  [ngModel]="item.productId"
+                  (onChange)="onProductChanged(item, $event.value)"
+                  placeholder="-- Chọn sản phẩm --"
+                  [filter]="true"
+                  styleClass="w-full table-select"
+                >
+                  <ng-template pTemplate="selectedItem" let-selected>
+                    <span *ngIf="selected"><strong>{{ selected.productCode }}</strong> - {{ selected.productName }}</span>
+                  </ng-template>
+                  <ng-template pTemplate="item" let-prod>
+                    <span><strong>{{ prod.productCode }}</strong> - {{ prod.productName }}</span>
+                  </ng-template>
+                </p-select>
+              </td>
+              <td>
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="item.unitName"
+                  placeholder="ĐVT"
+                  class="w-full text-center"
+                />
+              </td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.requiredQuantity"
+                  [min]="0"
+                  mode="decimal"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full text-right"
+                ></p-inputNumber>
+              </td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.currentStock"
+                  [min]="0"
+                  mode="decimal"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full text-right text-500"
+                ></p-inputNumber>
+              </td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.dailyCapacity"
+                  [min]="1"
+                  mode="decimal"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full text-right"
+                  pTooltip="Công suất sản xuất định mức của sản phẩm này trong 1 ngày"
+                ></p-inputNumber>
+              </td>
+              <td>
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="item.salesOrderNo"
+                  placeholder="Mã đơn hàng"
+                  class="w-full"
+                />
+              </td>
+              <td>
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="item.remark"
+                  placeholder="Ghi chú..."
+                  class="w-full"
+                />
+              </td>
+              <td style="text-align: center">
+                <button
+                  pButton
+                  icon="pi pi-times"
+                  class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                  (click)="removeItemRow(i)"
+                ></button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="summary-footer-row">
+              <td colspan="3" class="text-right font-bold">Tổng cộng:</td>
+              <td class="text-right font-bold text-primary">
+                {{ totalDemandRequired() | number:'1.0-2' }}
+              </td>
+              <td colspan="5"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── BƯỚC 3: LẬP KẾ HOẠCH (MA TRẬN PHÂN BỔ NGÀY / CA) ──────────────── -->
+    <div class="wizard-step-content" *ngIf="currentStep() === 3">
+      <!-- Toolbar các hành động theo chuẩn AMIS -->
+      <div class="matrix-actions-bar">
+        <div class="matrix-actions-bar__left">
+          <!-- Tính toán kế hoạch -->
+          <button
+            pButton
+            icon="pi pi-calculator"
+            label="Tính toán kế hoạch"
+            class="p-button-raised p-button-success"
+            (click)="openAutoCalc()"
+            pTooltip="Tự động phân bổ số lượng sản xuất theo thuật toán Tiến hoặc Lùi"
+          ></button>
+
+          <!-- Thiết lập lịch làm việc -->
+          <button
+            pButton
+            icon="pi pi-calendar"
+            label="Thiết lập lịch làm việc"
+            class="p-button-outlined p-button-info"
+            (click)="openWorkCalendar()"
+            pTooltip="Cấu hình ngày nghỉ cuối tuần, lễ, hoặc ngày làm thêm tăng ca"
+          ></button>
+
+          <!-- Kiểm tra SL sản xuất -->
+          <button
+            pButton
+            icon="pi pi-check-circle"
+            label="Kiểm tra SL sản xuất"
+            class="p-button-outlined p-button-warning"
+            (click)="validateQuantities()"
+            pTooltip="So sánh tổng số lượng đã phân bổ với nhu cầu từng sản phẩm"
+          ></button>
+        </div>
+
+        <div class="matrix-actions-bar__right">
+          <div class="demand-vs-planned-stats">
+            <span class="stat-badge demand">
+              Nhu cầu: <strong>{{ totalDemandRequired() | number:'1.0-2' }}</strong>
+            </span>
+            <span class="stat-badge planned" [class.matched]="totalDemandPlanned() === totalDemandRequired()">
+              Đã phân bổ: <strong>{{ totalDemandPlanned() | number:'1.0-2' }}</strong>
+            </span>
+            <span
+              class="stat-badge diff"
+              [class.negative]="totalDemandPlanned() < totalDemandRequired()"
+              [class.positive]="totalDemandPlanned() > totalDemandRequired()"
+            >
+              Chênh lệch: <strong>{{ (totalDemandPlanned() - totalDemandRequired()) | number:'1.0-2' }}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Ma trận phân bổ sản xuất -->
+      <div class="allocation-matrix-wrap">
+        <table class="allocation-matrix-table">
+          <thead>
+            <tr>
+              <th class="sticky-col col-product" style="min-width: 220px">Sản phẩm</th>
+              <th class="sticky-col col-shift" *ngIf="formPeriodType() === 'SHIFT'" style="min-width: 80px">Ca</th>
+              <th class="sticky-col col-req" style="min-width: 90px; text-align: right">Nhu cầu</th>
+              <th class="sticky-col col-plan" style="min-width: 95px; text-align: right">Đã lập</th>
+              <th class="sticky-col col-diff" style="min-width: 95px; text-align: right">Chênh lệch</th>
+
+              <!-- Cột Ngày -->
+              <th
+                *ngFor="let col of matrixColumns()"
+                class="date-header-cell"
+                [class.is-day-off]="col.isDayOff"
+                [class.is-sunday]="col.isSunday"
+              >
+                <div class="date-header-label">{{ col.headerLabel }}</div>
+                <div class="date-header-sub">{{ col.subLabel }}</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of matrixRows()">
+              <!-- Cột cố định thông tin sản phẩm -->
+              <td class="sticky-col col-product">
+                <div class="font-bold text-sm">{{ row.productCode }}</div>
+                <div class="text-xs text-600 truncate">{{ row.productName }}</div>
+              </td>
+
+              <td class="sticky-col col-shift" *ngIf="formPeriodType() === 'SHIFT'">
+                <p-tag [value]="row.shiftName || 'Ca 1'" severity="secondary"></p-tag>
+              </td>
+
+              <td class="sticky-col col-req text-right font-semibold">
+                {{ row.requiredQuantity | number:'1.0-2' }}
+              </td>
+
+              <td class="sticky-col col-plan text-right font-bold text-primary">
+                {{ getRowTotalPlanned(row) | number:'1.0-2' }}
+              </td>
+
+              <td
+                class="sticky-col col-diff text-right font-bold"
+                [class.text-danger]="getRowDifference(row) < 0"
+                [class.text-success]="getRowDifference(row) === 0"
+                [class.text-warning]="getRowDifference(row) > 0"
+              >
+                <span *ngIf="getRowDifference(row) === 0" class="match-tag">Khớp</span>
+                <span *ngIf="getRowDifference(row) !== 0">
+                  {{ getRowDifference(row) | number:'1.0-2' }}
+                </span>
+              </td>
+
+              <!-- Ô phân bổ theo từng ngày -->
+              <td
+                *ngFor="let col of matrixColumns()"
+                class="matrix-cell"
+                [class.cell-day-off]="row.cells[col.dateStr]?.isDayOff"
+                [class.cell-overtime]="row.cells[col.dateStr]?.isOvertime"
+                [class.cell-has-value]="(row.cells[col.dateStr]?.plannedQuantity || 0) > 0"
+              >
+                <input
+                  type="number"
+                  min="0"
+                  class="matrix-cell-input"
+                  [ngModel]="row.cells[col.dateStr]?.plannedQuantity"
+                  (ngModelChange)="onCellQuantityChange(row, col.dateStr, $event)"
+                  [disabled]="!!(row.cells[col.dateStr]?.isDayOff && !row.cells[col.dateStr]?.isOvertime)"
+                  [placeholder]="row.cells[col.dateStr]?.isDayOff ? 'Nghỉ' : '0'"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Wizard Navigation Footer -->
+    <ng-template pTemplate="footer">
+      <div class="wizard-footer">
+        <div class="wizard-footer__left">
+          <button
+            pButton
+            icon="pi pi-times"
+            label="Đóng"
+            class="p-button-text p-button-secondary"
+            (click)="showWizard.set(false)"
+          ></button>
+        </div>
+
+        <div class="wizard-footer__right">
+          <!-- Back button -->
+          <button
+            pButton
+            icon="pi pi-arrow-left"
+            label="Quay lại"
+            class="p-button-outlined p-button-secondary"
+            *ngIf="currentStep() > 1"
+            (click)="goToStep(currentStep() - 1)"
+          ></button>
+
+          <!-- Next button for Step 1 & 2 -->
+          <button
+            pButton
+            icon="pi pi-arrow-right"
+            iconPos="right"
+            label="Tiếp theo"
+            class="p-button-primary"
+            *ngIf="currentStep() < 3"
+            (click)="goToStep(currentStep() + 1)"
+          ></button>
+
+          <!-- Save button on Step 3 -->
+          <button
+            pButton
+            icon="pi pi-check"
+            label="Lưu kế hoạch"
+            class="p-button-success p-button-raised"
+            *ngIf="currentStep() === 3"
+            (click)="savePlan()"
+          ></button>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL: TÍNH TOÁN KẾ HOẠCH TỰ ĐỘNG (FORWARD / BACKWARD)                      -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showAutoCalcModal"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    header="Tính toán kế hoạch sản xuất tự động"
+  >
+    <div class="p-fluid">
+      <p class="text-sm text-600 mb-3">
+        Hệ thống sẽ tự động tính toán và điền số lượng cần sản xuất vào từng ngày/ca theo định mức công suất máy móc & lịch làm việc.
+      </p>
+
+      <div class="method-option-card" [class.selected]="autoCalcMethod() === 'FORWARD'" (click)="autoCalcMethod.set('FORWARD')">
+        <div class="flex align-items-center">
+          <input type="radio" name="calcMethod" value="FORWARD" [ngModel]="autoCalcMethod()" />
+          <div class="ml-3">
+            <div class="font-bold">Phân bổ tiến (Forward)</div>
+            <div class="text-xs text-500">
+              Ưu tiên lấp đầy các ngày sớm nhất từ đầu kỳ đến cuối kỳ cho đến khi hoàn thành số lượng.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-option-card mt-2" [class.selected]="autoCalcMethod() === 'BACKWARD'" (click)="autoCalcMethod.set('BACKWARD')">
+        <div class="flex align-items-center">
+          <input type="radio" name="calcMethod" value="BACKWARD" [ngModel]="autoCalcMethod()" />
+          <div class="ml-3">
+            <div class="font-bold">Phân bổ lùi (Backward)</div>
+            <div class="text-xs text-500">
+              Bắt đầu phân bổ từ hạn giao (ngày cuối kỳ) lùi dần về đầu kỳ để tối ưu chi phí lưu kho.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Hủy"
+        class="p-button-text p-button-secondary"
+        (click)="showAutoCalcModal.set(false)"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-play"
+        label="Chạy phân bổ"
+        class="p-button-success"
+        (click)="runAutoAllocation()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL: THIẾT LẬP LỊCH LÀM VIỆC (WORK CALENDAR)                              -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showCalendarModal"
+    [modal]="true"
+    [style]="{ width: '650px', maxHeight: '80vh' }"
+    header="Thiết lập lịch làm việc trong kỳ"
+  >
+    <div class="calendar-list-wrap">
+      <p class="text-xs text-600 mb-2">
+        Đánh dấu ngày nghỉ (hệ thống sẽ bỏ qua khi phân bổ) hoặc chọn tăng ca để cho phép phân bổ sản xuất vào ngày nghỉ.
+      </p>
+
+      <table class="calendar-config-table">
+        <thead>
+          <tr>
+            <th>Ngày</th>
+            <th>Thứ</th>
+            <th style="width: 120px; text-align: center">Ngày nghỉ</th>
+            <th style="width: 120px; text-align: center">Tăng ca (OT)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let day of workCalendarDays()" [class.is-sunday-row]="day.isSunday">
+            <td><strong>{{ day.dayLabel }}</strong> ({{ day.date }})</td>
+            <td>
+              <span [class.text-danger]="day.isSunday" class="font-bold">{{ day.dayOfWeekName }}</span>
+            </td>
+            <td style="text-align: center">
+              <input type="checkbox" [(ngModel)]="day.isDayOff" />
+            </td>
+            <td style="text-align: center">
+              <input type="checkbox" [(ngModel)]="day.isOvertime" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Hủy"
+        class="p-button-text p-button-secondary"
+        (click)="showCalendarModal.set(false)"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-check"
+        label="Áp dụng lịch"
+        class="p-button-primary"
+        (click)="saveWorkCalendar()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL: KIỂM TRA SL SẢN XUẤT (VALIDATION)                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showValidationModal"
+    [modal]="true"
+    [style]="{ width: '700px' }"
+    header="Kiểm tra số lượng sản xuất đã phân bổ"
+  >
+    <div *ngIf="validationResult() as vr">
+      <div
+        class="validation-summary-banner"
+        [class.is-valid]="vr.isValid"
+        [class.is-invalid]="!vr.isValid"
+      >
+        <i class="pi mr-2 text-xl" [class.pi-check-circle]="vr.isValid" [class.pi-exclamation-triangle]="!vr.isValid"></i>
+        <span>{{ vr.summaryMessage }}</span>
+      </div>
+
+      <table class="validation-table mt-3">
+        <thead>
+          <tr>
+            <th>Sản phẩm</th>
+            <th style="text-align: right">Nhu cầu</th>
+            <th style="text-align: right">Đã phân bổ</th>
+            <th style="text-align: right">Chênh lệch</th>
+            <th style="text-align: center">Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let det of vr.details">
+            <td>
+              <strong>{{ det.productCode }}</strong> - {{ det.productName }}
+            </td>
+            <td style="text-align: right">{{ det.requiredQuantity | number:'1.0-2' }}</td>
+            <td style="text-align: right" class="font-bold text-primary">{{ det.plannedQuantity | number:'1.0-2' }}</td>
+            <td style="text-align: right" class="font-bold">
+              <span *ngIf="det.difference === 0">0</span>
+              <span *ngIf="det.difference > 0" class="text-warning">+{{ det.difference | number:'1.0-2' }}</span>
+              <span *ngIf="det.difference < 0" class="text-danger">{{ det.difference | number:'1.0-2' }}</span>
+            </td>
+            <td style="text-align: center">
+              <p-tag
+                [value]="det.statusLabel"
+                [severity]="det.status === 'MATCH' ? 'success' : (det.status === 'DEFICIT' ? 'danger' : 'warn')"
+              ></p-tag>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Đóng"
+        class="p-button-primary"
+        (click)="showValidationModal.set(false)"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL: LẬP LỆNH SẢN XUẤT (AMIS BƯỚC 4)                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showGenerateOrdersModal"
+    [modal]="true"
+    [style]="{ width: '560px' }"
+    header="Lập Lệnh sản xuất từ Kế hoạch chi tiết"
+  >
+    <div *ngIf="generateOrdersPlan() as plan" class="p-fluid">
+      <div class="generate-info-banner">
+        <i class="pi pi-info-circle mr-2 text-primary"></i>
+        <span>
+          Tạo các bản ghi <strong>Lệnh sản xuất (ProductionOrder)</strong> loại MRP từ kế hoạch chi tiết
+          <strong>{{ plan.planCode }}</strong>.
+        </span>
+      </div>
+
+      <div class="form-group mt-3">
+        <label class="form-label font-bold">Hình thức gom lệnh *</label>
+        <div class="flex flex-column gap-2 mt-1">
+          <label class="radio-card" [class.selected]="generateOrdersGroupBy() === 'DAY'">
+            <input
+              type="radio"
+              name="genGroupBy"
+              value="DAY"
+              [(ngModel)]="generateOrdersGroupBy"
+            />
+            <div class="ml-2">
+              <div class="font-bold">Theo từng Ngày có kế hoạch (Khuyến nghị AMIS)</div>
+              <div class="text-xs text-500">Mỗi ngày có số lượng sản xuất sẽ tạo 1 lệnh sản xuất tương ứng.</div>
+            </div>
+          </label>
+
+          <label class="radio-card" [class.selected]="generateOrdersGroupBy() === 'ITEM'">
+            <input
+              type="radio"
+              name="genGroupBy"
+              value="ITEM"
+              [(ngModel)]="generateOrdersGroupBy"
+            />
+            <div class="ml-2">
+              <div class="font-bold">Gộp theo Sản phẩm cho cả kỳ</div>
+              <div class="text-xs text-500">Mỗi sản phẩm chỉ sinh 1 lệnh tổng với thời gian từ đầu kỳ đến cuối kỳ.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="generateOrdersAutoApprove" />
+          <span><strong>Tự động duyệt lệnh sản xuất ngay</strong> (Trạng thái Đã duyệt - Approved)</span>
+        </label>
+      </div>
+
+      <div class="form-group mt-3">
+        <label class="form-label">Ghi chú lệnh sản xuất</label>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="generateOrdersRemark"
+          placeholder="Nhập ghi chú cho các lệnh sản xuất..."
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Hủy"
+        class="p-button-text p-button-secondary"
+        (click)="showGenerateOrdersModal.set(false)"
+        [disabled]="generatingOrders()"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-check-circle"
+        label="Thực hiện lập lệnh"
+        class="p-button-success"
+        (click)="executeGenerateOrders()"
+        [loading]="generatingOrders()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL: XEM CHI TIẾT KẾ HOẠCH                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showDetailModal"
+    [modal]="true"
+    [maximizable]="true"
+    [style]="{ width: '90vw', maxWidth: '1400px', height: '85vh' }"
+    [header]="selectedPlan() ? 'Chi tiết Kế hoạch sản xuất chi tiết: ' + selectedPlan()!.planCode : 'Chi tiết kế hoạch'"
+  >
+    <div *ngIf="selectedPlan() as plan" class="detail-container">
+      <!-- Plan summary banner -->
+      <div class="detail-header-card">
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Số kế hoạch</div>
+          <div class="text-lg font-bold text-primary">{{ plan.planCode }}</div>
+        </div>
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Tên kế hoạch</div>
+          <div class="font-semibold">{{ plan.planName }}</div>
+        </div>
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Phân xưởng</div>
+          <div>{{ plan.workshopName || '—' }}</div>
+        </div>
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Kỳ thực hiện</div>
+          <div>{{ plan.fromDate | date:'dd/MM/yyyy' }} &rarr; {{ plan.toDate | date:'dd/MM/yyyy' }}</div>
+        </div>
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Trạng thái</div>
+          <p-tag [value]="plan.statusName" [severity]="getStatusTagSeverity(plan.status)"></p-tag>
+        </div>
+        <div class="detail-header-card__col">
+          <div class="text-xs text-500">Số lệnh SX đã sinh</div>
+          <span class="order-count-pill has-orders">{{ plan.productionOrderCount }}</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <p-tabs [value]="activeDetailTab()" (valueChange)="onDetailTabChange($event)">
+        <p-tablist>
+          <p-tab value="matrix">
+            <i class="pi pi-table mr-1"></i> Ma trận phân bổ sản xuất
+          </p-tab>
+          <p-tab value="demand">
+            <i class="pi pi-list mr-1"></i> Nhu cầu sản phẩm ({{ plan.items.length }})
+          </p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+          <!-- Tab 1: Matrix view -->
+          <p-tabpanel value="matrix">
+            <div class="allocation-matrix-wrap mt-2">
+              <table class="allocation-matrix-table readonly-matrix">
+                <thead>
+                  <tr>
+                    <th class="sticky-col col-product">Sản phẩm</th>
+                    <th class="sticky-col col-shift" *ngIf="plan.periodType === 'SHIFT'">Ca</th>
+                    <th class="sticky-col col-req text-right">Nhu cầu</th>
+                    <th class="sticky-col col-plan text-right">Đã lập</th>
+                    <th
+                      *ngFor="let col of matrixColumns()"
+                      class="date-header-cell"
+                      [class.is-day-off]="col.isDayOff"
+                      [class.is-sunday]="col.isSunday"
+                    >
+                      <div>{{ col.headerLabel }}</div>
+                      <small>{{ col.subLabel }}</small>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of matrixRows()">
+                    <td class="sticky-col col-product">
+                      <div class="font-bold">{{ row.productCode }}</div>
+                      <div class="text-xs text-500 truncate">{{ row.productName }}</div>
+                    </td>
+                    <td class="sticky-col col-shift" *ngIf="plan.periodType === 'SHIFT'">
+                      <p-tag [value]="row.shiftName || 'Ca 1'" severity="secondary"></p-tag>
+                    </td>
+                    <td class="sticky-col col-req text-right font-semibold">
+                      {{ row.requiredQuantity | number:'1.0-2' }}
+                    </td>
+                    <td class="sticky-col col-plan text-right font-bold text-primary">
+                      {{ getRowTotalPlanned(row) | number:'1.0-2' }}
+                    </td>
+                    <td
+                      *ngFor="let col of matrixColumns()"
+                      class="matrix-cell text-center"
+                      [class.cell-day-off]="row.cells[col.dateStr]?.isDayOff"
+                      [class.cell-has-value]="(row.cells[col.dateStr]?.plannedQuantity || 0) > 0"
+                    >
+                      <span *ngIf="(row.cells[col.dateStr]?.plannedQuantity || 0) > 0" class="font-bold">
+                        {{ row.cells[col.dateStr]?.plannedQuantity | number:'1.0-2' }}
+                      </span>
+                      <span *ngIf="(row.cells[col.dateStr]?.plannedQuantity || 0) === 0" class="text-400">
+                        {{ row.cells[col.dateStr]?.isDayOff ? '—' : '0' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Demand items -->
+          <p-tabpanel value="demand">
+            <p-table [value]="plan.items" styleClass="p-datatable-gridlines mt-2">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 50px">STT</th>
+                  <th>Mã sản phẩm</th>
+                  <th>Tên sản phẩm</th>
+                  <th>ĐVT</th>
+                  <th style="text-align: right">Nhu cầu cần SX</th>
+                  <th style="text-align: right">Tồn kho hiện tại</th>
+                  <th style="text-align: right">Đã phân bổ</th>
+                  <th style="text-align: right">Công suất định mức/ngày</th>
+                  <th>Ghi chú</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                <tr>
+                  <td style="text-align: center">{{ i + 1 }}</td>
+                  <td><strong>{{ item.productCode }}</strong></td>
+                  <td>{{ item.productName }}</td>
+                  <td>{{ item.unitName || '—' }}</td>
+                  <td style="text-align: right" class="font-bold">{{ item.requiredQuantity | number:'1.0-2' }}</td>
+                  <td style="text-align: right">{{ item.currentStock | number:'1.0-2' }}</td>
+                  <td style="text-align: right" class="font-bold text-primary">{{ item.plannedQuantity | number:'1.0-2' }}</td>
+                  <td style="text-align: right">{{ item.dailyCapacity | number:'1.0-2' }}</td>
+                  <td>{{ item.remark || '—' }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between align-items-center w-full">
+        <div>
+          <button
+            pButton
+            icon="pi pi-file-excel"
+            label="Xuất CSV"
+            class="p-button-outlined p-button-secondary"
+            *ngIf="selectedPlan()"
+            (click)="exportPlanToCsv(selectedPlan()!)"
+          ></button>
+        </div>
+        <div class="flex gap-2">
+          <ng-container *appHasPermission="PERMISSIONS.detailedProductionPlan.approve">
+            <button
+              pButton
+              icon="pi pi-cog"
+              label="Lập Lệnh sản xuất"
+              class="p-button-success"
+              *ngIf="selectedPlan()"
+              (click)="openGenerateOrdersModal(selectedPlan()!)"
+            ></button>
+          </ng-container>
+          <button
+            pButton
+            label="Đóng"
+            class="p-button-primary"
+            (click)="showDetailModal.set(false)"
+          ></button>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>
