@@ -16,7 +16,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { FactoryApiService } from '../../core/services/master-data-api.service';
-import { UserApiService, WorkCenterApiService, WorkshopApiService } from '../../core/services/organization-api.service';
+import { WorkCenterApiService, WorkshopApiService } from '../../core/services/organization-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { WORK_CENTER_STATUSES, WORK_CENTER_TYPES, WorkCenterDto, WorkCenterRequest, workCenterStatusOf } from '../../domain/models/organization.model';
@@ -24,6 +24,7 @@ import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'workcenter';
 
@@ -55,7 +56,7 @@ type EntityKind = 'workcenter';
 export class WorkCenterComponent extends PermissionAwarePage implements OnInit {
 	private readonly factoryApi = inject(FactoryApiService);
 	private readonly workshopApi = inject(WorkshopApiService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 
 	private readonly workCenterApi = inject(WorkCenterApiService);
 
@@ -67,10 +68,10 @@ export class WorkCenterComponent extends PermissionAwarePage implements OnInit {
 	readonly statusOf = workCenterStatusOf;
 
 	// ─── Lookups ────────────────────────────────────────────────────────────────
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const user = this.employeeApi.items().find(u => u.id === id);
+		return user ? `${user.employeeCode} · ${user.fullName}` : '';
 	}
 
 	factoryLabel(id?: number | null): string {
@@ -97,8 +98,8 @@ export class WorkCenterComponent extends PermissionAwarePage implements OnInit {
 		return item ? this.i18n.t(item.labelKey) : '';
 	}
 
-	readonly userOptions = computed(() =>
-		this.userApi.items().map(u => ({ label: `${u.code} · ${u.fullName}`, value: u.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items().map(u => ({ label: `${u.employeeCode} · ${u.fullName}`, value: u.id })));
 
 	readonly factoryOptions = computed(() =>
 		this.factoryApi.items().map(u => ({ label: `${u.factoryCode} · ${u.factoryName}`, value: u.id })));
@@ -163,7 +164,7 @@ export class WorkCenterComponent extends PermissionAwarePage implements OnInit {
 	reload(): void {
 		forkJoin({
 			workcenters: this.workCenterApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			workshops: this.workshopApi.load(),
 			factories: this.factoryApi.load(),
 		}).subscribe({

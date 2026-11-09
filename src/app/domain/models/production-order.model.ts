@@ -98,7 +98,7 @@ export interface ProductionOrderDto {
   statusName: string;
 
   batchNo?: string | null;
-  salesOrderNo?: string | null;
+  productionRequestNo?: string | null;
   remark?: string | null;
 
   materials?: ProductionOrderMaterialDto[];
@@ -122,7 +122,7 @@ export interface ProductionOrderCreateRequest {
   plannedEndDate?: string | null;
   priority: number;
   batchNo?: string | null;
-  salesOrderNo?: string | null;
+  productionRequestNo?: string | null;
   remark?: string | null;
   materials?: ProductionOrderMaterialDto[];
   operations?: ProductionOrderOperationDto[];
@@ -148,7 +148,7 @@ export interface ProductionOrderUpdateRequest {
   actualEndDate?: string | null;
   priority: number;
   batchNo?: string | null;
-  salesOrderNo?: string | null;
+  productionRequestNo?: string | null;
   remark?: string | null;
   materials?: ProductionOrderMaterialDto[];
   operations?: ProductionOrderOperationDto[];

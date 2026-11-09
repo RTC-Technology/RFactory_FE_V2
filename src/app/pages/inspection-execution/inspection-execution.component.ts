@@ -22,7 +22,6 @@ import { HasPermissionDirective } from '../../shared/directives/has-permission.d
 import { DefectApiService, InspectionExecutionApiService, InspectionItemApiService, InspectionPlanApiService, InspectionResultApiService } from '../../core/services/quality-api.service';
 import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { UserApiService } from '../../core/services/organization-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
 import { productStatusOf } from '../../domain/models/product.model';
@@ -30,6 +29,7 @@ import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { forkJoin, Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { EmployeeApiService } from '../../core/services/employee-api.service';
 
 type EntityKind = 'inspectionExecution' | 'inspectionResult';
 const DATETIME_LOCAL = "yyyy-MM-ddTHH:mm";
@@ -84,7 +84,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 	private readonly productApi = inject(ProductApiService);
 	private readonly unitApi = inject(UnitApiService);
 	private readonly authService = inject(AuthService);
-	private readonly userApi = inject(UserApiService);
+	private readonly employeeApi = inject(EmployeeApiService);
 	private readonly defectApi = inject(DefectApiService);
 
 	private readonly messages = inject(MessageService);
@@ -133,10 +133,10 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 		return inspectionItem ? `${inspectionItem.sequenceNo} · ${inspectionItem.inspectionMethod}` : '';
 	}
 
-	userLabel(id?: number | null): string {
+	employeeLabel(id?: number | null): string {
 		if (id == null) return '';
-		const user = this.userApi.items().find(u => u.id === id);
-		return user ? `${user.code} · ${user.fullName}` : '';
+		const user = this.employeeApi.items().find(u => u.id === id);
+		return user ? `${user.employeeCode} · ${user.fullName}` : '';
 	}
 	defectLabel(id?: number | null): string {
 		if (id == null) return '';
@@ -165,9 +165,9 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 		this.inspectionItemApi.items()
 			.map(r => ({ label: `${r.sequenceNo} · ${r.inspectionMethod}`, value: r.id })));
 
-	readonly userOptions = computed(() =>
-		this.userApi.items()
-			.map(r => ({ label: `${r.code} · ${r.fullName}`, value: r.id })));
+	readonly employeeOptions = computed(() =>
+		this.employeeApi.items()
+			.map(r => ({ label: `${r.employeeCode} · ${r.fullName}`, value: r.id })));
 
 	readonly defectOptions = computed(() =>
 		this.defectApi.items()
@@ -270,7 +270,7 @@ export class InspectionExecutionComponent extends PermissionAwarePage implements
 			inspectionExecutions: this.inspectionExecutionApi.load(),
 			inspectionResults: this.inspectionResultApi.load(),
 			products: this.productApi.load(),
-			users: this.userApi.load(),
+			employees: this.employeeApi.load(),
 			units: this.unitApi.load(),
 			defects: this.defectApi.load(),
 		}).subscribe({

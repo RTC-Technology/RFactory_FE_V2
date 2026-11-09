@@ -1,2 +1,9 @@
-.col-code { width: 130px; }
-.col-cat  { width: 160px; }
+@use '../../shared/styles/master-detail';
+
+.col-code {
+    width: 130px;
+}
+
+.col-cat {
+    width: 160px;
+}

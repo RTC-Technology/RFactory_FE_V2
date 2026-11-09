@@ -101,8 +101,8 @@
                                 <td class="col-name">{{ row.teamName || '—' }}</td>
                                 <!-- <td class="col-shortName">{{ row.shortName || '—' }}</td>
                                 <td class="col-englishName">{{ row.englishName || '—' }}</td> -->
-                                <td class="col-teamLeader">{{ userLabel(row.teamLeaderId) || '—' }}</td>
-                                <td class="col-deputyLeader">{{ userLabel(row.deputyLeaderId) || '—' }}</td>
+                                <td class="col-teamLeader">{{ employeeLabel(row.teamLeaderId) || '—' }}</td>
+                                <td class="col-deputyLeader">{{ employeeLabel(row.deputyLeaderId) || '—' }}</td>
                                 <!-- <td class="col-phone">{{ row.phone || '—' }}</td>
                                 <td class="col-email">{{ row.email || '—' }}</td>
                                 <td class="col-location">{{ row.location || '—' }}</td>
@@ -165,7 +165,7 @@
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedEmployee()?.id === row.id"
                                 (click)="selectEmployee(row)" (dblclick)="openEdit('productionTeamEmployee')">
-                                <td class="col-employee">{{ userLabel(row.employeeId) || '—' }}</td>
+                                <td class="col-employee">{{ employeeLabel(row.employeeId) || '—' }}</td>
                                 <td class="col-fromDate">{{ (row.fromDate | date) || '—' }}</td>
                                 <td class="col-toDate">{{ (row.toDate | date) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
@@ -299,7 +299,7 @@
                                 {{ i18n.t('productionTeam.teamLeader') }}
                                 <span class="req">*</span>
                             </label>
-                            <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                            <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                                       [(ngModel)]="form.teamLeaderId"
                                       [filter]="true" filterBy="label" [showClear]="true"
                                       appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.teamLeader.unset')" />
@@ -309,7 +309,7 @@
                                 {{ i18n.t('productionTeam.deputyLeader') }}
                                 <!-- <span class="req">*</span> -->
                             </label>
-                            <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                            <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                                       [(ngModel)]="form.deputyLeaderId"
                                       [filter]="true" filterBy="label" [showClear]="true"
                                       appendTo="body" class="w-full" [placeholder]="i18n.t('productionTeam.deputyLeader.unset')" />
@@ -392,7 +392,7 @@
                                     <tr class="row row--edit">
                                         <td class="col-idx">{{ i + 1 }}</td>
                                         <td class="col-employee">
-                                            <p-select [options]="userOptions()"
+                                            <p-select [options]="employeeOptions()"
                                                       optionLabel="label" optionValue="value"
                                                       [(ngModel)]="row.employeeId"
                                                       [filter]="true"

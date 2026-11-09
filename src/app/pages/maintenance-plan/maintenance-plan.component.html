@@ -132,7 +132,7 @@
                                     }
                                 </td>
                                 <td class="col-responsibleDepartment">{{ departmentLabel(row.responsibleDepartmentId) || '—' }}</td>
-                                <td class="col-responsibleEmployee">{{ userLabel(row.responsibleEmployeeId) || '—' }}</td>
+                                <td class="col-responsibleEmployee">{{ employeeLabel(row.responsibleEmployeeId) || '—' }}</td>
                                 <td class="col-remark">{{ row.remark || '—' }}</td>
                             </tr>
                         </ng-template>
@@ -316,7 +316,7 @@
                     {{ i18n.t('maintenancePlan.responsibleEmployee') }}
                     <span class="req">*</span>
                 </label>
-                <p-select [options]="userOptions()" optionLabel="label" optionValue="value"
+                <p-select [options]="employeeOptions()" optionLabel="label" optionValue="value"
                           [(ngModel)]="form.responsibleEmployeeId"
                           [filter]="true" filterBy="label" [showClear]="false"
                           appendTo="body" class="w-full" [placeholder]="i18n.t('maintenancePlan.responsibleEmployee.unset')" />

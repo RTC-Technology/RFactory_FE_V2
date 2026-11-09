@@ -140,6 +140,9 @@ export const PERMISSIONS = {
 
   detailedProductionPlan: crud('detailed-production-plan'),
 
+  productionRequest: crud('production-request'),
+  productionRequestItem: crud('production-request-item'),
+
   settings: {
     view: 'settings.view',
     edit: 'settings.edit',
