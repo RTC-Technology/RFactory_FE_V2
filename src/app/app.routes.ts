@@ -322,6 +322,20 @@ export const routes: Routes = [
 				},
 			},
 
+			//detailed-production-plans
+			{
+				path: 'detailed-production-plans',
+				loadComponent: () =>
+					import('./pages/detailed-production-plan/detailed-production-plan.component').then(m => m.DetailedProductionPlanComponent),
+				canActivate: [permissionGuard],
+				data: {
+					permissions: [
+						PERMISSIONS.detailedProductionPlan.view,
+					],
+					permissionMode: 'all',
+				},
+			},
+
 			//qr-code
 			{
 				path: 'qr-code',
