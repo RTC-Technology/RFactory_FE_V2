@@ -2,7 +2,7 @@
 <ng-template #toolbar let-kind="kind" let-perms="perms" let-canAdd="canAdd" let-hasSelection="hasSelection"
              let-showReload="showReload">
     <div class="toolbar">
-        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!hasSelection"
                 (click)="openCreate()">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <rect x="3" y="3" width="12" height="14" rx="1.5" />
@@ -42,7 +42,7 @@
         }
 
         <span class="tool__sep"></span>
-        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!canAdd"
+        <button *appHasPermission="perms.add" type="button" class="tool" [disabled]="!hasSelection"
                 (click)="openOrder()">
             <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <polygon points="6 3 20 12 6 21 6 3" />
@@ -165,6 +165,7 @@
                                 <th class="col-code">{{ i18n.t('productionRequestItem.sortOrder') }}</th>
                                 <th class="col-productCode">{{ i18n.t('productionRequestItem.productCode') }}</th>
                                 <th class="col-productName">{{ i18n.t('productionRequestItem.productName') }}</th>
+                                <th class="col-orderNo">{{ i18n.t('productionRequestItem.productionOrderNo') }}</th>
                                 <th class="col-unit">{{ i18n.t('productionRequestItem.unit') }}</th>
                                 <th class="col-requestedQuantity">{{ i18n.t('productionRequestItem.requestedQuantity') }}</th>
                                 <th class="col-plannedQuantity">{{ i18n.t('productionRequestItem.plannedQuantity') }}</th>
@@ -180,6 +181,13 @@
                                 <td class="col-code">{{ row.sortOrder || '—' }}</td>
                                 <td class="col-product">{{ row.productCode || '—' }}</td>
                                 <td class="col-productName">{{ row.productName || '—' }}</td>
+                                <td class="col-orderNo">
+                                    @if (row.productionOrderNo) {
+                                    <p-tag severity="info" [value]="row.productionOrderNo" [rounded]="true" />
+                                    } @else {
+                                    <span class="muted">—</span>
+                                    }
+                                </td>
                                 <td class="col-unit">{{ unitLabel(row.unitId) || '—' }}</td>
                                 <td class="col-requestedQuantity text-right">{{ row.requestedQuantity != null ? (row.requestedQuantity|number:'1.0-2') : 0 }}</td>
                                 <td class="col-plannedQuantity text-right">{{ row.plannedQuantity != null ? (row.plannedQuantity|number:'1.0-2') : 0 }}</td>
@@ -197,7 +205,7 @@
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="10">
+                                <td colspan="11">
                                     <p class="empty">
                                         {{ selectedRequest() ? i18n.t('productionRequestItem.empty') :
                                         i18n.t('productionRequestItem.emptyHint') }}
@@ -336,6 +344,7 @@
                             <th class="col-product">{{ i18n.t('productionRequestItem.product') }}</th>
                             <th class="col-productCode">{{ i18n.t('productionRequestItem.productCode') }}</th>
                             <th class="col-productName">{{ i18n.t('productionRequestItem.productName') }}</th>
+                            <th class="col-orderNo">{{ i18n.t('productionRequestItem.productionOrderNo') }}</th>
                             <th class="col-unit">{{ i18n.t('productionRequestItem.unit') }}</th>
                             <th class="col-requestedQuantity">{{ i18n.t('productionRequestItem.requestedQuantity') }}</th>
                             <th class="col-plannedQuantity">{{ i18n.t('productionRequestItem.plannedQuantity') }}</th>
@@ -410,6 +419,13 @@
                             </td>
                             <td class="col-productName">
                                 <input pInputText class="cell-input w-full" name="productName" [(ngModel)]="row.productName" autocomplete="off" />
+                            </td>
+                            <td class="col-orderNo">
+                                @if (row.productionOrderNo) {
+                                <p-tag severity="info" [value]="row.productionOrderNo" [rounded]="true" />
+                                } @else {
+                                <span class="muted">—</span>
+                                }
                             </td>
                             <td class="col-unit">
                                 <p-select [options]="unitOptions()"
@@ -504,7 +520,7 @@
                     </ng-template> -->
                     <ng-template #emptymessage>
                         <tr>
-                            <td colspan="13">
+                            <td colspan="14">
                                 <p class="empty">{{ i18n.t('productionRequestItem.emptyLine') }}</p>
                             </td>
                         </tr>
@@ -527,9 +543,19 @@
 <p-dialog [visible]="orderOpen()" (visibleChange)="orderOpen.set($event)" [modal]="true"
           [draggable]="false" [resizable]="false"
           [style]="{ width: '100vw', height: '100vh', margin: '0' }"
-          [contentStyle]="{ height: 'calc(100vh - 60px)', overflow: 'hidden' }">
+          [maximizable]="true"
+          [contentStyle]="{ height: 'calc(100vh - 65px)', padding: '0', display: 'flex', 'flex-direction': 'column', overflow: 'hidden' }">
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <i class="pi pi-briefcase text-primary font-bold"></i>
+            <span class="font-bold text-base">Danh sách Lệnh sản xuất</span>
+            <span *ngIf="selectedRequest() as req" class="text-sm text-500 font-normal">
+                — Yêu cầu SX: <strong class="text-primary">{{ req.requestNo }}</strong>
+            </span>
+        </div>
+    </ng-template>
     @if (orderOpen()) {
-    <app-production-order [_productionRequestDto]="selectedRequest()"></app-production-order>
+    <app-production-order [_productionRequestDto]="selectedRequest()" (closeDialog)="orderOpen.set(false)"></app-production-order>
     }
 </p-dialog>
 

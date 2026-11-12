@@ -1,355 +1,75 @@
-.production-order-page {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-height: 100%;
-}
+@use '../../shared/styles/master-detail';
 
-/* ── Page Header ────────────────────────────────────────────────────────── */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  &__left {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+:host ::ng-deep {
+  .col-lot {
+    width: 140px;
+    text-align: center;
   }
 
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
-    background: rgba(var(--primary-color-rgb, 59, 130, 246), 0.1);
-    color: var(--primary-color, #3b82f6);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    width: fit-content;
-
-    i {
-      font-size: 0.75rem;
-    }
+  .col-type {
+    width: 90px;
+    text-align: center;
   }
 
-  &__title {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-color, #1e293b);
-    line-height: 1.2;
+  .col-product {
+    min-width: 180px;
   }
 
-  &__subtitle {
-    margin: 0;
-    font-size: 0.875rem;
-    color: var(--text-secondary-color, #64748b);
+  .col-bom {
+    min-width: 160px;
   }
 
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-}
-
-/* ── Stats Grid ─────────────────────────────────────────────────────────── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  border-radius: 12px;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, #e2e8f0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  .col-line {
+    min-width: 130px;
   }
 
-  &__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    font-size: 1.25rem;
-    flex-shrink: 0;
+  .col-progress {
+    width: 195px;
+    min-width: 185px;
   }
 
-  &__body {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+  .col-date {
+    width: 160px;
   }
 
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary-color, #64748b);
+  .mr-1 { margin-right: 0.35rem !important; }
+  .mr-2 { margin-right: 0.5rem !important; }
+
+  .col-priority {
+    width: 100px;
+    text-align: center;
   }
 
-  &__val {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-color, #1e293b);
+  .col-status {
+    width: 110px;
+    text-align: center;
   }
 
-  &__progress-bar {
-    margin-top: 0.4rem;
-    width: 100%;
-    height: 6px;
-    background: var(--surface-ground, #f1f5f9);
-    border-radius: 9999px;
-    overflow: hidden;
-  }
+  .detail-table-wrap {
 
-  &__progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #8b5cf6, #a855f7);
-    border-radius: 9999px;
-    transition: width 0.4s ease;
-  }
-
-  &--blue {
-    .stat-card__icon {
-      background: rgba(59, 130, 246, 0.12);
-      color: #3b82f6;
-    }
-  }
-
-  &--amber {
-    .stat-card__icon {
-      background: rgba(245, 158, 11, 0.12);
-      color: #f59e0b;
-    }
-  }
-
-  &--green {
-    .stat-card__icon {
-      background: rgba(16, 185, 129, 0.12);
-      color: #10b989;
-    }
-  }
-
-  &--purple {
-    .stat-card__icon {
-      background: rgba(139, 92, 246, 0.12);
-      color: #8b5cf6;
+    .p-datatable-table,
+    table {
+      min-width: 100%;
     }
   }
 }
 
-/* ── Filter Bar ──────────────────────────────────────────────────────────── */
-.filter-card {
-  padding: 1rem 1.25rem;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.filter-item {
-  min-width: 170px;
-
-  &--grow {
-    flex-grow: 1;
-    min-width: 240px;
-  }
-}
-
-/* ── Table Container ─────────────────────────────────────────────────────── */
-.table-container {
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, #e2e8f0);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-
-  ::ng-deep .p-datatable-header {
-    background: transparent;
-    border: none;
-  }
-}
-
-.order-no-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  .order-no {
-    font-weight: 700;
-    color: var(--primary-color, #3b82f6);
-    font-family: monospace;
-    font-size: 0.875rem;
+.page {
+  .panel {
+    flex: 1;
   }
 
-  .batch-tag {
-    font-size: 0.7rem;
-    color: var(--text-secondary-color, #64748b);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-}
-
-.prod-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-
-  .prod-name {
-    font-weight: 600;
-    color: var(--text-color, #1e293b);
-  }
-
-  .prod-code {
-    font-size: 0.75rem;
-    color: var(--text-secondary-color, #64748b);
-  }
-}
-
-.line-cell {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.875rem;
-}
-
-.progress-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  .progress-bar-bg {
-    width: 100%;
-    height: 7px;
-    background: var(--surface-ground, #e2e8f0);
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    border-radius: 9999px;
-    transition: width 0.3s ease;
-
-    &--complete {
-      background: linear-gradient(90deg, #10b981, #34d399);
-    }
-  }
-
-  .progress-stats {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-  }
-
-  .progress-qty {
-    color: var(--text-secondary-color, #64748b);
-    strong {
-      color: var(--text-color, #1e293b);
-    }
-  }
-
-  .progress-pct {
-    font-weight: 600;
-  }
-
-  .scrap-hint {
-    font-size: 0.7rem;
-    color: #ef4444;
-  }
-}
-
-.dates-cell {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8rem;
-}
-
-.action-buttons {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.code-pill {
-  display: inline-block;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  background: var(--surface-ground, #f1f5f9);
-  color: var(--text-secondary-color, #475569);
-  font-family: monospace;
-  font-size: 0.75rem;
-  margin-right: 0.4rem;
-}
-
-.select-prod-item {
-  display: flex;
-  align-items: center;
-}
-
-/* ── Empty State ─────────────────────────────────────────────────────────── */
-.empty-state {
-  padding: 4rem 2rem;
-  text-align: center;
-
-  &__content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__icon {
-    font-size: 3rem;
-    color: var(--text-secondary-color, #94a3b8);
-    opacity: 0.5;
-  }
-
-  &__title {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-color, #1e293b);
-  }
-
-  &__hint {
-    margin: 0;
-    font-size: 0.875rem;
-    color: var(--text-secondary-color, #64748b);
+  &--embedded {
+    padding: 12px 20px 16px 20px;
+    box-sizing: border-box;
   }
 }
 
 /* ── Dialog Forms ────────────────────────────────────────────────────────── */
 .dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 0.5rem 0;
 }
 
@@ -429,6 +149,11 @@
 /* ── AMIS Production Order Dialog & Tabs ─────────────────────────────────── */
 .dialog-content-tabs {
   margin-top: -0.5rem;
+
+  ::ng-deep .p-tab {
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 .tab-count-badge {
@@ -482,16 +207,26 @@
 .detail-table-wrap {
   border: 1px solid var(--surface-border, #e2e8f0);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
 
-  table {
+  table,
+  .p-datatable-table {
+    width: 100% !important;
+    min-width: 100%;
     font-size: 0.8125rem;
   }
+}
 
-  input.p-inputtext-sm {
-    padding: 0.25rem 0.45rem;
-    font-size: 0.8125rem;
-  }
+.batch-pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  font-size: 0.75rem;
 }
 
 .type-badge {
@@ -527,12 +262,13 @@
 
 .stock-pill {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
+  padding: 4px 7px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 12.5px;
   font-weight: 600;
   text-align: right;
   width: 100%;
+  box-sizing: border-box;
 
   &--ok {
     background: #ecfdf5;
@@ -550,3 +286,100 @@
   }
 }
 
+/* ─── Table Progress Cell ─────────────────────────────────────────────────── */
+.progress-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+
+  .row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .qty {
+      color: var(--text-secondary);
+
+      strong {
+        color: var(--text-primary);
+      }
+
+      span {
+        color: var(--text-muted);
+        font-size: 11px;
+        margin-left: 2px;
+      }
+    }
+
+    .pct {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+  }
+
+  .track {
+    height: 5px;
+    background: var(--input-bg, #f1f5f9);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 99px;
+    overflow: hidden;
+
+    div {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s;
+    }
+  }
+
+  &.low {
+    .pct {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .track div {
+      background: #ef4444;
+    }
+  }
+
+  &.mid {
+    .pct {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .track div {
+      background: #3b82f6;
+    }
+  }
+
+  &.high {
+    .pct {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .track div {
+      background: #10b981;
+    }
+  }
+}
+
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 0.75rem !important;
+}
+
+.mt-4 {
+  margin-top: 1rem !important;
+}

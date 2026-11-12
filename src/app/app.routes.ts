@@ -311,6 +311,13 @@ export const routes: Routes = [
 			//production-orders
 			{
 				path: 'production-orders',
+				redirectTo: 'production-order',
+				pathMatch: 'full',
+
+			},
+			{
+				path: 'production-order',
+
 				loadComponent: () =>
 					import('./pages/production-order/production-order.component').then(m => m.ProductionOrderComponent),
 				canActivate: [permissionGuard],
