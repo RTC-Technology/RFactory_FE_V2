@@ -20,6 +20,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ProductionOrderComponent } from '../production-order/production-order.component';
+import { ProductionOrderApiService } from '../../core/services/production-order-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { UnitApiService, ProductApiService } from '../../core/services/product-api.service';
 import { SaleOrderApiService, SaleOrderItemApiService, SaleOrderPaymentScheduleApiService, ProductionRequestApiService, ProductionRequestItemApiService } from '../../core/services/production-api.service';
@@ -80,6 +81,7 @@ export class ProductionRequestComponent extends PermissionAwarePage implements O
 
 	private readonly productionRequestApi = inject(ProductionRequestApiService);
 	private readonly productionRequestItemApi = inject(ProductionRequestItemApiService);
+	private readonly productionOrderApi = inject(ProductionOrderApiService);
 
 	private readonly saleOrderApi = inject(SaleOrderApiService);
 	private readonly saleOrderItemApi = inject(SaleOrderItemApiService);
@@ -285,6 +287,7 @@ export class ProductionRequestComponent extends PermissionAwarePage implements O
 	readonly itemRows = signal<ProductionRequestItemDto[]>([]);
 
 	private _tempItemId = 0;
+	private _isGeneratingOrders = false;
 
 	readonly dialogTitle = computed(() =>
 		this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
@@ -330,7 +333,54 @@ export class ProductionRequestComponent extends PermissionAwarePage implements O
 	}
 
 	openOrder(): void {
-		this.orderOpen.set(true);
+		const req = this.selectedRequest();
+		if (!req) {
+			this.messages.add({
+				severity: 'warn',
+				summary: this.i18n.t('common.warn'),
+				detail: this.i18n.t('productionRequest.err.selectRequest') || 'Vui lòng chọn một Yêu cầu sản xuất.',
+				life: 3000,
+			});
+			return;
+		}
+
+		const items = this.productionRequestItems();
+		if (items.length === 0) {
+			this.messages.add({
+				severity: 'warn',
+				summary: this.i18n.t('common.warn'),
+				detail: this.i18n.t('productionRequest.err.noItems') || 'Yêu cầu sản xuất này chưa có chi tiết sản phẩm nào.',
+				life: 3000,
+			});
+			return;
+		}
+
+		const pendingItems = items.filter(d => !d.productionOrderNo);
+
+		if (pendingItems.length === 0) {
+			this.orderOpen.set(true);
+			return;
+		}
+
+		if (this._isGeneratingOrders) return;
+		this._isGeneratingOrders = true;
+
+		this.productionOrderApi.generateFromRequest(req.id).subscribe({
+			next: (createdOrders) => {
+				this._isGeneratingOrders = false;
+				this._ok(
+					this.i18n.t('productionRequest.ok.ordersCreated', { count: createdOrders.length })
+					|| `Đã tạo thành công ${createdOrders.length} Lệnh sản xuất.`
+				);
+				this.productionRequestItemApi.load().subscribe();
+				this.productionRequestApi.load().subscribe();
+				this.orderOpen.set(true);
+			},
+			error: (err: HttpErrorResponse) => {
+				this._isGeneratingOrders = false;
+				this._fail('Không thể tạo Lệnh sản xuất từ Yêu cầu sản xuất.', err);
+			},
+		});
 	}
 
 	openEdit(): void {
