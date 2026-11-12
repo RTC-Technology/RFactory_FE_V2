@@ -83,7 +83,7 @@ export class InventoryComponent extends PermissionAwarePage implements OnInit {
 
 	unitLabel(id?: number | null): string {
 		const unit = this.unitApi.items().find(u => u.id === id);
-		return unit ? (unit.symbol || unit.unitCode) : '';
+		return unit ? (unit.unitCode) : '';
 	}
 
 	productLabel(id?: number | null): string {
