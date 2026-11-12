@@ -24,7 +24,7 @@ import { forkJoin, Observable, throwError } from 'rxjs';
 import { SplitterModule } from 'primeng/splitter';
 import { SelectModule } from 'primeng/select';
 import { SplitStateService } from '../../core/services/split-state.service';
-import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
+import { ProductApiService, UnitApiService, UnitConversionApiService } from '../../core/services/product-api.service';
 import { productStatusOf } from '../../domain/models/product.model';
 import { PanelModule } from 'primeng/panel';
 import { CardModule } from 'primeng/card';
@@ -79,6 +79,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 
 	private readonly goodsReceiptApi = inject(GoodsReceiptApiService);
 	private readonly goodsReceiptDetailApi = inject(GoodsReceiptDetailApiService);
+	private readonly unitConversionApi = inject(UnitConversionApiService);
 
 	private readonly messages = inject(MessageService);
 	private readonly confirm = inject(ConfirmationService);
@@ -98,7 +99,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 
 	unitLabel(id?: number | null): string {
 		const unit = this.unitApi.items().find(u => u.id === id);
-		return unit ? (unit.symbol || unit.unitCode) : '';
+		return unit ? `${unit.unitCode}` : '';
 	}
 
 	productLabel(id?: number | null): string {
@@ -261,6 +262,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 			details: this.goodsReceiptDetailApi.load(),
 			products: this.productApi.load(),
 			units: this.unitApi.load(),
+			unitConversions: this.unitConversionApi.load(),
 			warehouse: this.warehouseApi.load(),
 			location: this.locationApi.load(),
 			supplier: this.supplierApi.load(),
@@ -372,6 +374,7 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 			this.goodsReceiptDetailApi.items()
 				.filter(d => d.goodsReceiptId === row.id)
 				.map(d => ({ ...d })));
+
 		this.dialogOpen.set(true);
 	}
 
@@ -391,8 +394,14 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 	onDetailProductChange(row: GoodsReceiptDetailDto, productId: number | null): void {
 		row.productId = productId ?? 0;
 		const product = this.productApi.items().find(p => p.id === productId);
-		row.unitId = product?.defaultUnitId ?? row.unitId;
+		row.defaultUnitId = product?.defaultUnitId ?? row.defaultUnitId;
+		this.onUnitChange(row);
 	}
+
+	// onDetailUnitChange(row: GoodsReceiptDetailDto, unitId: number | null): void {
+	// 	row.unitId = unitId ?? 0;
+	// 	this.onUnitChange(row);
+	// }
 
 	/** Received quantity tracks the ordered one until someone edits it apart. */
 	onDetailQuantityChange(row: GoodsReceiptDetailDto, quantity: number | null): void {
@@ -402,7 +411,81 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 			row.receivedQty = next;
 		}
 		row.quantity = next;
+		this.onUnitChange(row);
 	}
+
+	onUnitChange(row: GoodsReceiptDetailDto, unitId?: number | null): void {
+		if (unitId) row.unitId = unitId;
+
+
+		if (!row.unitId || !row.defaultUnitId) {
+			row.defaultQuantity = row.quantity;
+			return;
+		}
+
+		if (row.unitId == row.defaultUnitId) {
+			row.defaultQuantity = row.quantity;
+			return;
+		}
+
+		// 1. Tìm chiều thuận: unitId -> unitExchangeId
+		const unitConversion = this.unitConversionApi.items().find(x => x.fromUnitId == row.unitId && x.toUnitId == row.defaultUnitId);
+		if (unitConversion) {
+			if (unitConversion.formulaType == 1) row.defaultQuantity = (row.quantity ?? 0) * (unitConversion.multiplyValue ?? 0);
+			else if (unitConversion.divideValue && unitConversion.divideValue != 0) row.defaultQuantity = (row.quantity ?? 0) / unitConversion.divideValue;
+			else row.defaultQuantity = row.quantity;
+			return;
+		}
+
+		// 2. Tìm chiều nghịch: unitExchangeId -> unitId (đảo ngược phép tính)
+		const reverseConversion = this.unitConversionApi.items().find(x => x.fromUnitId == row.defaultUnitId && x.toUnitId == row.unitId);
+		if (reverseConversion) {
+			if (reverseConversion.formulaType == 1 && reverseConversion.multiplyValue) {
+				row.defaultQuantity = (row.quantity ?? 0) / reverseConversion.multiplyValue;
+			} else if (reverseConversion.divideValue && reverseConversion.divideValue != 0) {
+				row.defaultQuantity = (row.quantity ?? 0) * reverseConversion.divideValue;
+			} else {
+				row.defaultQuantity = row.quantity;
+			}
+			return;
+		}
+
+		row.defaultQuantity = row.quantity;
+	}
+
+	/** Khi người dùng nhập số lượng quy đổi, tự động tính ngược lại số lượng chính */
+	// onDetailQuantityExchangeChange(row: GoodsReceiptDetailDto, quantityExchange: number | null): void {
+	// 	row.quantityExchange = quantityExchange;
+	// 	if (!row.unitId || !row.unitExchangeId || quantityExchange == null) return;
+
+	// 	if (row.unitId == row.unitExchangeId) {
+	// 		row.quantity = quantityExchange;
+	// 		row.receivedQty = quantityExchange;
+	// 		return;
+	// 	}
+
+	// 	// 1. Chiều thuận: unitId -> unitExchangeId
+	// 	const conv = this.unitConversionApi.items().find(x => x.fromUnitId == row.unitId && x.toUnitId == row.unitExchangeId);
+	// 	if (conv) {
+	// 		if (conv.formulaType == 1 && conv.multiplyValue) {
+	// 			row.quantity = quantityExchange / conv.multiplyValue;
+	// 		} else if (conv.divideValue && conv.divideValue != 0) {
+	// 			row.quantity = quantityExchange * conv.divideValue;
+	// 		}
+	// 	} else {
+	// 		// 2. Chiều nghịch: unitExchangeId -> unitId
+	// 		const rev = this.unitConversionApi.items().find(x => x.fromUnitId == row.unitExchangeId && x.toUnitId == row.unitId);
+	// 		if (rev) {
+	// 			if (rev.formulaType == 1) {
+	// 				row.quantity = quantityExchange * (rev.multiplyValue ?? 0);
+	// 			} else if (rev.divideValue && rev.divideValue != 0) {
+	// 				row.quantity = quantityExchange / rev.divideValue;
+	// 			}
+	// 		}
+	// 	}
+
+	// 	row.receivedQty = row.quantity;
+	// }
 
 
 	save(): void {
@@ -526,6 +609,8 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 			remark: '',
 			receiptDate: null,
 			expireDate: null,
+			defaultUnitId: 0,
+			defaultQuantity: null as number | null,
 		};
 	}
 
@@ -652,6 +737,8 @@ export class GoodsReceiptComponent extends PermissionAwarePage implements OnInit
 				remark: row.remark?.trim() || null,
 				receiptDate: row.receiptDate,
 				expireDate: row.expireDate ? formatDate(row.expireDate, DATETIME_LOCAL, 'en-US') : null,
+				defaultUnitId: row.defaultUnitId ?? null,
+				defaultQuantity: row.defaultQuantity ?? null,
 			})),
 		};
 		return id ? this.goodsReceiptApi.update(id, body) : this.goodsReceiptApi.create(body);

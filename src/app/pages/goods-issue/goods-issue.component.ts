@@ -18,9 +18,9 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
 import { ConfirmationService, MessageService, SelectItem, SelectItemGroup } from 'primeng/api';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
-import { ProductApiService, UnitApiService } from '../../core/services/product-api.service';
+import { ProductApiService, UnitApiService, UnitConversionApiService } from '../../core/services/product-api.service';
 import { WarehouseApiService, WarehouseLocationApiService } from '../../core/services/warehouse-api.service';
-import { SupplierApiService } from '../../core/services/master-data-api.service';
+import { CustomerApiService, SupplierApiService } from '../../core/services/master-data-api.service';
 import { GoodsIssueApiService, GoodsIssueDetailApiService } from '../../core/services/goods-issue-api.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SplitStateService } from '../../core/services/split-state.service';
@@ -32,6 +32,7 @@ import { GoodsReceiptDetailApiService } from '../../core/services/goods-receipt-
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { productStatusOf } from '../../domain/models/product.model';
 import { InventoryApiService } from '../../core/services/inventory-api.service';
+import { Checkbox } from 'primeng/checkbox';
 
 type EntityKind = 'goodsIssue' | 'goodsIssueDetail';
 
@@ -63,7 +64,7 @@ interface LocationOption {
     code: string;
     name: string;
     availableQuantity: number;
-    disabled:boolean;
+    disabled: boolean;
 }
 
 interface SerialNoSelectItem extends SelectItem {
@@ -77,7 +78,7 @@ interface SerialNoSelectItem extends SelectItem {
         CommonModule, FormsModule,
         TableModule, SplitterModule, ButtonModule, DialogModule, ConfirmDialogModule, ToastModule,
         InputTextModule, TextareaModule, SelectModule, TagModule, ToggleSwitchModule,
-        HasPermissionDirective, PanelModule, CardModule, InputNumberModule, AutoCompleteModule
+        HasPermissionDirective, PanelModule, CardModule, InputNumberModule, AutoCompleteModule, Checkbox
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './goods-issue.component.html',
@@ -91,6 +92,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     private readonly locationApi = inject(WarehouseLocationApiService);
     // private readonly supplierApi = inject(SupplierApiService);
     private readonly inventoryApi = inject(InventoryApiService);
+    private readonly unitConversionApi = inject(UnitConversionApiService);
+    private readonly customerApi = inject(CustomerApiService);
 
     private readonly goodsIssueApi = inject(GoodsIssueApiService);
     private readonly goodsIssueDetailApi = inject(GoodsIssueDetailApiService);
@@ -103,6 +106,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     readonly filteredSerialNoGroups = signal<SelectItemGroup[]>([]);
 
     readonly loading = computed(() => this.goodsIssueApi.loading() || this.goodsIssueDetailApi.loading());
+
+    protected readonly Math = Math;
 
     /** Ordered the way the product screen's type picker will show them. */
     readonly types = computed(() =>
@@ -130,6 +135,11 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
     locationLabel(id?: number | null): string {
         const location = this.locationApi.items().find(l => l.id === id);
         return location ? `${location.warehouseLocationCode} · ${location.warehouseLocationName}` : '';
+    }
+
+    customerLabel(id?: number | null): string {
+        const customer = this.customerApi.items().find(l => l.id === id);
+        return customer ? `${customer.customerCode} · ${customer.customerName}` : '';
     }
 
     // supplierLabel(id?: number | null): string {
@@ -329,6 +339,11 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             .filter(w => w.isActive)
             .map(w => ({ label: `${w.warehouseCode} · ${w.warehouseName}`, value: w.id })));
 
+    readonly customerOptions = computed(() =>
+        this.customerApi.items()
+            .filter(w => w.isActive)
+            .map(w => ({ label: `${w.customerCode} · ${w.customerName}`, value: w.id })));
+
     // readonly locationOptions = computed(() =>
     //     this.locationApi.items()
     //         .filter(l => l.isActive)
@@ -380,7 +395,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
         const locations = this.inventoryApi.items()
             .filter(x => x.productId === productId)
             .map(p => ({
-                value: p.id,
+                value: p.locationId ?? 0,
                 label: `${p.warehouseLocationCode} · ${p.warehouseLocationName}`,
                 code: p.warehouseLocationCode ?? '',
                 name: p.warehouseLocationName ?? '',
@@ -388,7 +403,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
                 disabled: (p.availableQuantity ?? 0) <= 0,
             }));
 
-        console.log('locations:', locations);
+        // console.log('locations:', locations);
 
         return locations;
     };
@@ -456,6 +471,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             warehouse: this.warehouseApi.load(),
             location: this.locationApi.load(),
             inventorys: this.inventoryApi.load(),
+            unitConversions: this.unitConversionApi.load(),
+            customers: this.customerApi.load(),
         }).subscribe({
             error: (err: HttpErrorResponse) => this._fail(this.i18n.t('goodsIssue.err.load'), err),
         });
@@ -513,6 +530,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
      */
     readonly detailRows = signal<GoodsIssueDetailDto[]>([]);
     private _tempDetailId = 0;
+    _isExportByCustomer: 'subheader' | 'rowspan' | undefined = undefined;
 
     readonly dialogTitle = computed(() =>
         this.i18n.t(this.editingId() ? 'plant.dialog.edit' : 'plant.dialog.add', {
@@ -526,7 +544,33 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
      * and pull focus out of the cell being typed into.
      */
     detailTotal(): number {
-        return this.detailRows().reduce((sum, row) => sum + (row.quantity ?? 0) * (row.unitPrice ?? 0), 0);
+        return this.detailRows().reduce((sum, row) => sum + (row.defaultQuantity ?? 0) * (row.unitPrice ?? 0), 0);
+    }
+
+    defaultQuantityTotal(source: GoodsIssueDetailDto[], productId?: number | null): number {
+        if (source.length <= 0) return 0;
+
+        if (productId) {
+            const totalQuntity = source
+                .filter(x => x.productId == productId)
+                .reduce((sum, row) => sum + (row.defaultQuantity ?? 0), 0);
+
+            return totalQuntity;
+        }
+        return source.reduce((sum, row) => sum + (row.defaultQuantity ?? 0), 0);
+    }
+
+    quantityTotal(source: GoodsIssueDetailDto[], productId?: number | null): number {
+        if (source.length <= 0) return 0;
+
+        if (productId) {
+            const totalQuntity = source
+                .filter(x => x.productId == productId)
+                .reduce((sum, row) => sum + (row.quantity ?? 0), 0);
+
+            return totalQuntity;
+        }
+        return source.reduce((sum, row) => sum + (row.quantity ?? 0), 0);
     }
 
     openCreate(): void {
@@ -559,7 +603,11 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             approvedDate: row.approvedDate ?? null,
             postedBy: row.postedBy ?? null,
             postedDate: row.postedDate ?? null,
+            customerId: row.customerId ?? null,
         };
+
+        this._isExportByCustomer = row.isExportByCustomer ? 'subheader' : undefined;
+
         this.detailRows.set(
             this.goodsIssueDetailApi.items()
                 .filter(d => d.goodsIssueId === row.id)
@@ -571,6 +619,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
     addDetailRow(): void {
         this.detailRows.update(rows => [...rows, this._emptyDetailRow()]);
+        console.log('_isExportByCustomer:', this._isExportByCustomer);
     }
 
     removeDetailRow(row: GoodsIssueDetailDto): void {
@@ -584,19 +633,58 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
         row.productId = productId ?? 0;
         const product = this.productApi.items().find(p => p.id === productId);
         // const receipDetail = this.goodsReceiptDetailApi.items().find(p => p.productId === productId);
-        row.unitId = product?.defaultUnitId ?? row.unitId;
-
+        row.defaultUnitId = product?.defaultUnitId ?? row.defaultUnitId;
+        this.onUnitChange(row);
     }
 
-    /** Received quantity tracks the ordered one until someone edits it apart. */
-    // onDetailQuantityChange(row: GoodsIssueDetailDto, quantity: number | null): void {
-    //   const prev = row.quantity ?? 0;
-    //   const next = quantity ?? 0;
-    //   if (row.receivedQty === prev) {
-    //     row.receivedQty = next;
-    //   }
-    //   row.quantity = next;
-    // }
+    onDetailQuantityChange(row: GoodsIssueDetailDto, defaultQuantity: number | null): void {
+        // const prev = row.defaultQuantity ?? 0;
+        // const next = defaultQuantity ?? 0;
+        // if (row.receivedQty === prev) {
+        //     row.receivedQty = next;
+        // }
+        // row.defaultQuantity = next;
+        this.onUnitChange(row);
+    }
+
+    onUnitChange(row: GoodsIssueDetailDto, unitId?: number | null): void {
+
+        if (unitId) row.unitId = unitId;
+
+
+        if (!row.unitId || !row.defaultUnitId) {
+            row.quantity = 0;
+            return;
+        }
+
+        if (row.unitId == row.defaultUnitId) {
+            row.quantity = row.defaultQuantity;
+            return;
+        }
+
+        // 1. Tìm chiều thuận: defaultUnit -> unit
+        const unitConversion = this.unitConversionApi.items().find(x => x.fromUnitId == row.defaultUnitId && x.toUnitId == row.unitId);
+        if (unitConversion) {
+            if (unitConversion.formulaType == 1) row.quantity = (row.defaultQuantity ?? 0) * (unitConversion.multiplyValue ?? 0);
+            else if (unitConversion.divideValue && unitConversion.divideValue != 0) row.quantity = (row.defaultQuantity ?? 0) / unitConversion.divideValue;
+            else row.quantity = 0;
+            return;
+        }
+
+        // 2. Tìm chiều nghịch: unit -> defaultUnit (đảo ngược phép tính)
+        const reverseConversion = this.unitConversionApi.items().find(x => x.fromUnitId == row.unitId && x.toUnitId == row.defaultUnitId);
+        if (reverseConversion) {
+            if (reverseConversion.formulaType == 1 && reverseConversion.multiplyValue) {
+                row.quantity = (row.defaultQuantity ?? 0) / reverseConversion.multiplyValue;
+            } else if (reverseConversion.divideValue && reverseConversion.divideValue != 0) {
+                row.quantity = (row.defaultQuantity ?? 0) * reverseConversion.divideValue;
+            } else row.quantity = 0;
+
+            return;
+        }
+
+        row.quantity = 0;
+    }
 
 
     save(): void {
@@ -742,6 +830,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             approvedDate: null as string | null,
             postedBy: null as number | null,
             postedDate: null as string | null,
+            customerId: null as number | null,
         };
     }
 
@@ -754,9 +843,11 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             locationId: 0,
             lotNo: '',
             serialNo: '',
-            quantity: 1,
+            quantity: 0,
             unitPrice: 0,
             remark: '',
+            defaultUnitId: 0,
+            defaultQuantity: 1,
         };
     }
 
@@ -836,10 +927,10 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             const line = i + 1;
 
             if (!row.productId) return this.i18n.t('goodsIssueDetail.err.productRequired', { line });
-            if (!row.unitId) return this.i18n.t('goodsIssueDetail.err.unitRequired', { line });
+            if (!row.defaultUnitId) return this.i18n.t('goodsIssueDetail.err.unitRequired', { line });
             if (!row.locationId) return this.i18n.t('goodsIssueDetail.err.locationRequired', { line });
             if (!row.serialNo) return this.i18n.t('goodsIssueDetail.err.serialNoRequired', { line });
-            if (!row.quantity || row.quantity <= 0) return this.i18n.t('goodsIssueDetail.err.quantityRequired', { line });
+            if (!row.defaultQuantity || row.defaultQuantity <= 0) return this.i18n.t('goodsIssueDetail.err.quantityRequired', { line });
 
         }
 
@@ -860,6 +951,8 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
             approvedDate: this.form.approvedDate,
             postedBy: this.form.postedBy,
             postedDate: this.form.postedDate,
+            customerId: this.form.customerId ?? null,
+            isExportByCustomer: this._isExportByCustomer === 'subheader',
             // The whole line set every time: the backend replaces what it holds, which is how a
             // line the operator removed from the grid gets deleted.
             goodsIssueDetails: this.detailRows().map(row => ({
@@ -871,11 +964,14 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
                 locationId: row.locationId ?? null,
                 lotNo: row.lotNo?.trim() || null,
                 serialNo: row.serialNo?.trim() || null,
-                quantity: row.quantity ?? null,
+                quantity: row.quantity ?? 0,
                 unitPrice: row.unitPrice ?? null,
                 remark: row.remark?.trim() || null,
+                defaultUnitId: row.defaultUnitId,
+                defaultQuantity: row.defaultQuantity ?? 0
             })),
         };
+        console.log('body:', body);
         return id ? this.goodsIssueApi.update(id, body) : this.goodsIssueApi.create(body);
     }
 
@@ -907,6 +1003,7 @@ export class GoodsIssueComponent extends PermissionAwarePage implements OnInit {
 
             issueType: issue.issueType ?? 1,
             status: issue.status ?? 1,
+            isExportByCustomer: issue.isExportByCustomer,
         };
 
         return this.goodsIssueApi.update(id, body);

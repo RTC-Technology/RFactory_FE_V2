@@ -41,9 +41,11 @@ export interface GoodsReceiptDetailDto {
        productCode?: string | null;
        productName?: string | null;
        status?: number | null;
-       defaultUnitId?: number | null;
+       // defaultUnitId?: number | null;
        unitCode?: string | null;
        unitName?: string | null;
+       defaultUnitId: number;
+       defaultQuantity?: number | null;
 }
 
 

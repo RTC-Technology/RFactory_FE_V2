@@ -86,6 +86,7 @@
                         <ng-template #header>
                             <tr>
                                 <th class="col-issueNo">{{ i18n.t('goodsIssue.issueNo') }}</th>
+                                <th class="col-customer">{{ i18n.t('goodsIssue.customer') }}</th>
                                 <th class="col-issueType">{{ i18n.t('goodsIssue.issueType') }}</th>
                                 <th class="col-warehouseId">{{ i18n.t('goodsIssue.warehouse') }}</th>
                                 <th class="col-reference">{{ i18n.t('goodsIssue.referenceType') }}</th>
@@ -102,7 +103,13 @@
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedIssue()?.id === row.id"
                                 (click)="selectIssue(row)" (dblclick)="openEdit()">
-                                <td class="col-issueNo">{{ row.issueNo || '—' }}</td>
+                                <td class="col-issueNo">
+                                    <div>{{row.issueNo || '—' }}</div>
+                                    @if(row.isExportByCustomer){a
+                                    <p-tag [severity]="'success'" [value]="i18n.t('goodsIssueDetail.exportByCustomer')" [rounded]="true" />
+                                    }
+                                </td>
+                                <td class="col-customer">{{ customerLabel(row.customerId) || '—' }}</td>
                                 <td class="col-issueType">{{ issueTypeLabel(row.issueType || '—') }}</td>
                                 <td class="col-warehouseId">{{ warehouseLabel(row.warehouseId) || '—' }}</td>
                                 <td class="col-reference">{{ row.referenceType || '—' }}</td>
@@ -119,7 +126,7 @@
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="12">
+                                <td colspan="13">
                                     <p class="empty">{{ i18n.t('goodsIssue.empty') }}</p>
                                 </td>
                             </tr>
@@ -141,30 +148,51 @@
                 </div>
 
                 <div class="table-scroll">
-                    <p-table #detailtTable [value]="issueDetail()" [showGridlines]="true" class="grid">
+                    <p-table #detailtTable [value]="issueDetail()" [showGridlines]="true" class="grid"
+                             [scrollable]="true" scrollHeight="flex"
+                             [rowGroupMode]="selectedIssue()?.isExportByCustomer ?'subheader':undefined" groupRowsBy="productId">
                         <ng-template #header>
                             <tr>
                                 <th class="col-productId">{{ i18n.t('goodsIssueDetail.product') }}</th>
+                                <th class="col-unitId">{{ i18n.t('goodsIssueDetail.defaultUnit') }}</th>
+                                <th class="col-quantity">{{ i18n.t('goodsIssueDetail.defaultQuantity') }}</th>
                                 <th class="col-unitId">{{ i18n.t('goodsIssueDetail.unit') }}</th>
+                                <th class="col-quantity">{{ i18n.t('goodsIssueDetail.quantity') }}</th>
                                 <th class="col-locationId">{{ i18n.t('goodsIssueDetail.location') }}</th>
                                 <th class="col-lotNo">{{ i18n.t('goodsIssueDetail.lotNo') }}</th>
                                 <th class="col-serialNo">{{ i18n.t('goodsIssueDetail.serialNo') }}</th>
-                                <th class="col-quantity">{{ i18n.t('goodsIssueDetail.quantity') }}</th>
                                 <th class="col-unitPrice">{{ i18n.t('goodsIssueDetail.unitPrice') }}</th>
                                 <th class="col-remark">{{ i18n.t('goodsIssueDetail.remark') }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #groupheader let-row>
+                            <tr pRowGroupHeader>
+                                <td colspan="11">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold">{{ productLabel(row.productId) || '—' }}: </span>
+                                        <p-tag [severity]="'secondary'" [value]="(defaultQuantityTotal(issueDetail(),row.productId) | number:'1.0-2') + ' ' + unitLabel(row.defaultUnitId)" [rounded]="true" /> /
+                                        <p-tag [severity]="'warn'" [value]="(quantityTotal(issueDetail(),row.productId) |number:'1.0-2')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />|
+                                        <p-tag [severity]="'warn'" [value]="(Math.ceil(quantityTotal(issueDetail(),row.productId)) |number:'1.0-0')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />
+                                    </div>
+                                </td>
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
                             <tr class="row" [class.row--selected]="selectedDetail()?.id === row.id"
                                 (click)="selectDetail(row)" (dblclick)="openEdit()">
                                 <td class="col-productId">{{ productLabel(row.productId) || '—' }}</td>
+                                <td class="col-unitId">{{ unitLabel(row.defaultUnitId) || '—' }}</td>
+                                <td class="col-quantity">
+                                    {{ row.defaultQuantity != null ? (row.defaultQuantity | number:'1.0-2') : '—'}}
+                                </td>
                                 <td class="col-unitId">{{ unitLabel(row.unitId) || '—' }}</td>
+                                <td class="col-quantity">
+                                    {{ row.defaultQuantity != null ? (row.quantity | number:'1.0-2') : '—'}}
+                                </td>
                                 <td class="col-locationId">{{ locationLabel(row.locationId) || '—' }}</td>
                                 <td class="col-lotNo">{{ row.lotNo || '—' }}</td>
                                 <td class="col-serialNo">{{ row.serialNo || '—' }}</td>
-                                <td class="col-quantity">
-                                    {{ row.quantity != null ? (row.quantity | number:'1.0-2') : '—'}}
-                                </td>
+
                                 <td class="col-unitPrice">
                                     {{ row.unitPrice != null ? (row.unitPrice | number:'1.0-2') :'—' }}
                                 </td>
@@ -173,7 +201,7 @@
                         </ng-template>
                         <ng-template #emptymessage>
                             <tr>
-                                <td colspan="9">
+                                <td colspan="11">
                                     <p class="empty">
                                         {{ selectedIssue() ? i18n.t('goodsIssueDetail.emptyLine') :
                                         i18n.t('goodsIssueDetail.emptyLineHint') }}
@@ -227,7 +255,12 @@
                           class="w-full" />
             </div>
         </div>
-
+        <div class="field">
+            <label for="gi-customerId">{{ i18n.t('goodsIssue.customer') }}</label>
+            <p-select inputId="gi-customerId" [options]="customerOptions()" optionLabel="label" optionValue="value"
+                      [(ngModel)]="form.customerId" [placeholder]="i18n.t('goodsIssue.customer.unset')" appendTo="body"
+                      class="w-full" [showClear]="true" />
+        </div>
         <div class="field-row">
             <div class="field">
                 <label for="gi-referenceType">{{ i18n.t('goodsIssue.referenceType') }}</label>
@@ -268,9 +301,17 @@
 
         <section class="panel lines">
             <div class="panel__head">
-                <h2 class="panel__title">{{ i18n.t('goodsIssueDetail.title') }}</h2>
-                <span class="panel__scope">{{ i18n.t('goodsIssueDetail.lineCount', { count: detailRows().length })
-                    }}</span>
+                <div [ngStyle]="{'display':'flex','align-items':'center','gap':'8px'}">
+                    <h2 class="panel__title">{{ i18n.t('goodsIssueDetail.title') }}</h2>
+                    <span class="panel__scope">{{ i18n.t('goodsIssueDetail.lineCount', { count: detailRows().length })}}</span> |
+                    <div class="field field--inline">
+                        <p-checkbox inputId="_isExportByCustomer"
+                                    [binary]="true"
+                                    [ngModel]="_isExportByCustomer === 'subheader'"
+                                    (ngModelChange)="_isExportByCustomer = $event ? 'subheader' : undefined" />
+                        <label for="_isExportByCustomer">{{ i18n.t('goodsIssueDetail.exportByCustomer') }}</label>
+                    </div>
+                </div>
                 <button type="button" class="lines__add" (click)="addDetailRow()">
                     <svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -282,7 +323,8 @@
 
             <div class="lines__scroll">
                 <p-table [value]="detailRows()" dataKey="id" [showGridlines]="true" class="grid grid--edit"
-                         scrollable="true" scrollHeight="flex">
+                         scrollable="true" scrollHeight="flex" rowG
+                         [rowGroupMode]="_isExportByCustomer" groupRowsBy="productId">
                     <ng-template #header>
                         <tr>
                             <th class="col-idx">#</th>
@@ -290,9 +332,21 @@
                                 {{ i18n.t('goodsIssueDetail.product') }}
                                 <span class="req">*</span>
                             </th>
-                            <th class="col-unit">
-                                {{ i18n.t('goodsIssueDetail.unit') }}
+                            <th class="col-unitId">
+                                {{ i18n.t('goodsIssueDetail.defaultUnit') }}
                                 <span class="req">*</span>
+                            </th>
+                            <th class="col-quantity">
+                                {{ i18n.t('goodsIssueDetail.defaultQuantity') }}
+                                <span class="req">*</span>
+                            </th>
+                            <th class="col-unitId">
+                                {{ i18n.t('goodsIssueDetail.unit') }}
+                                <!-- <span class="req">*</span> -->
+                            </th>
+                            <th class="col-quantity">
+                                {{ i18n.t('goodsIssueDetail.quantity') }}
+                                <!-- <span class="req">*</span> -->
                             </th>
                             <th class="col-location">
                                 {{ i18n.t('goodsIssueDetail.location') }}
@@ -303,16 +357,24 @@
                                 {{ i18n.t('goodsIssueDetail.serialNo') }}
                                 <span class="req">*</span>
                             </th>
-                            <th class="col-quantity">
-                                {{ i18n.t('goodsIssueDetail.quantity') }}
-                                <span class="req">*</span>
-                            </th>
+
                             <th class="col-unitPrice">{{ i18n.t('goodsIssueDetail.unitPrice') }}</th>
                             <th class="col-remark">{{ i18n.t('goodsIssueDetail.remark') }}</th>
                             <th class="col-act">{{ i18n.t('common.actions') }}</th>
                         </tr>
                     </ng-template>
-
+                    <ng-template #groupheader let-row>
+                        <tr pRowGroupHeader>
+                            <td colspan="12">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold">{{ productLabel(row.productId) || '—' }}: </span>
+                                    <p-tag [severity]="'secondary'" [value]="(defaultQuantityTotal(detailRows(),row.productId) | number:'1.0-2') + ' ' + unitLabel(row.defaultUnitId)" [rounded]="true" /> /
+                                    <p-tag [severity]="'warn'" [value]="(quantityTotal(detailRows(),row.productId) |number:'1.0-2')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />|
+                                    <p-tag [severity]="'warn'" [value]="(Math.ceil(quantityTotal(detailRows(),row.productId)) |number:'1.0-0')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
                     <ng-template #body let-row let-i="rowIndex">
                         <tr class="row row--edit">
                             <td class="col-idx">{{ i + 1 }}</td>
@@ -362,15 +424,39 @@
 
                             <td class="col-unit">
                                 <p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
-                                          [ngModel]="row.unitId || null" (ngModelChange)="row.unitId = $event ?? 0"
-                                          [filter]="true" filterBy="label"
+                                          [(ngModel)]="row.defaultUnitId" (ngModelChange)="onUnitChange(row, $event)"
+                                          [filter]="true" filterBy="label" disabled=""
                                           [placeholder]="i18n.t('goodsIssueDetail.selectUnit')" appendTo="body"
                                           class="w-full" />
                             </td>
 
+                            <td class="col-quantity">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num"
+                                               [(ngModel)]="row.defaultQuantity" (ngModelChange)="onUnitChange(row)"
+                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+                            <td class="col-unit">
+                                <p-select [options]="unitOptions()" optionLabel="label" optionValue="value"
+                                          [(ngModel)]="row.unitId" (ngModelChange)="onUnitChange(row, $event)"
+                                          [filter]="true" filterBy="label" [showClear]="true"
+                                          [placeholder]="i18n.t('goodsIssueDetail.selectUnit')" appendTo="body"
+                                          class="w-full" />
+                            </td>
+
+                            <td class="col-quantity">
+                                <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.quantity"
+                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
+                            </td>
+
                             <td class="col-location">
                                 <p-select [options]="locationOptions(row.productId)" optionLabel="label"
-                                          optionValue="value" optionDisabled="disabled" [ngModel]="row.locationId || null"
+                                          optionValue="value" optionDisabled="disabled" [(ngModel)]="row.locationId"
                                           (ngModelChange)="row.locationId = $event ?? 0" [filter]="true" filterBy="label"
                                           [placeholder]="i18n.t('goodsIssueDetail.selectLocation')" optionLabel="label"
                                           optionValue="value" class="w-full md:w-56" appendTo="body"
@@ -379,10 +465,7 @@
                                         <div class="picker-row picker-row--head">
                                             <span class="picker-cell">{{ i18n.t('inventory.locationCode') }}</span>
                                             <span class="picker-cell">{{ i18n.t('inventory.locationName') }}</span>
-                                            <span class="picker-cell">{{
-                                                i18n.t('inventory.availableQuantity')
-                                                }}</span>
-
+                                            <span class="picker-cell">{{i18n.t('inventory.availableQuantity')}}</span>
                                         </div>
                                     </ng-template>
 
@@ -391,7 +474,7 @@
                                             <span class="picker-cell picker-cell--code">{{ opt.code }}</span>
                                             <span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
                                             <span class="picker-cell">
-                                                {{ opt.availableQuantity}}
+                                                {{ opt.availableQuantity | number:'1.0-2'}}
                                             </span>
                                         </div>
                                     </ng-template>
@@ -436,14 +519,14 @@
                                 </p-autocomplete>
                             </td>
 
-                            <td class="col-quantity">
-                                <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.quantity"
-                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
-                            </td>
+
 
                             <td class="col-unitPrice">
                                 <p-inputnumber inputStyleClass="cell-input cell-input--num" [(ngModel)]="row.unitPrice"
-                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0" />
+                                               mode="decimal" [showButtons]="true" inputId="minmax-buttons" [min]="0"
+                                               [minFractionDigits]="2"
+                                               [maxFractionDigits]="2"
+                                               locale="en-US" />
                             </td>
 
                             <td class="col-remark">
@@ -466,7 +549,7 @@
 
                     <ng-template #footer>
                         <tr class="lines__total">
-                            <td colspan="7">{{ i18n.t('goodsIssueDetail.total') }}</td>
+                            <td colspan="9">{{ i18n.t('goodsIssueDetail.total') }}</td>
                             <td class="col-unitPrice">{{ detailTotal() | number: '1.0-2' }}</td>
                             <td colspan="2"></td>
                         </tr>
@@ -474,7 +557,7 @@
 
                     <ng-template #emptymessage>
                         <tr>
-                            <td colspan="10">
+                            <td colspan="12">
                                 <p class="empty">{{ i18n.t('goodsIssueDetail.emptyLine') }}</p>
                             </td>
                         </tr>

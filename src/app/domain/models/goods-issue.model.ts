@@ -12,6 +12,8 @@ export interface GoodsIssueDto {
     approvedDate?: string | null;
     postedBy?: number | null;
     postedDate?: string | null;
+    customerId?: number | null;
+    isExportByCustomer: boolean;
 }
 
 export enum GoodsReceiptStatus {
@@ -30,9 +32,11 @@ export interface GoodsIssueDetailDto {
     locationId: number;
     lotNo?: string | null;
     serialNo?: string | null;
-    quantity?: number | null;
+    quantity: number;
     unitPrice?: number | null;
     remark?: string | null;
+    defaultUnitId: number;
+    defaultQuantity: number;
 }
 
 export type GoodsIssueRequest = Omit<GoodsIssueDto, 'id'> & {
