@@ -247,11 +247,11 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 					value: p.id,
 					label: this.productLabel(p.productId),
 					productId: p.productId,
-					unit: this.unitLabel(p.unitId),
+					unit: this.unitLabel(p.defaultUnitId),
 					location: this.locationLabel(p.locationId),
 					lotNo: p.lotNo || '',
 					serialNo: p.serialNo || '',
-					quantity: p.quantity || 0,
+					quantity: p.defaultQuantity || 0,
 				};
 			});
 	};
@@ -608,7 +608,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 						x => x.productId === detail.productId
 					);
 
-					const qty = detail.quantity ?? 0;
+					const qty = detail.defaultQuantity ?? 0;
 
 					if (existing) {
 						existing.requiredQty = (existing.requiredQty ?? 0) + qty;
@@ -618,7 +618,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 						result.push({
 							id: 0,
 							productId: detail.productId,
-							unitId: detail.unitId,
+							unitId: detail.defaultUnitId,
 							requiredQty: qty,
 							allocatedQty: qty,
 							pickedQty: 0,
@@ -664,7 +664,7 @@ export class PickingPlanComponent extends PermissionAwarePage implements OnInit 
 	onSourceDetailChange(row: PickingPlanItemSourceDto, sourceDetailId: number | null): void {
 		const sourceDetail = this.goodsIssueDetailApi.items().find(p => p.id === sourceDetailId);
 		// console.log('sourceDetail?.quantity:', sourceDetail);
-		row.requiredQty = sourceDetail?.quantity ?? row.requiredQty;
+		row.requiredQty = sourceDetail?.defaultQuantity ?? row.requiredQty;
 	}
 
 	// ─── ticket grid ──────────────────────────────────────────────────────────────

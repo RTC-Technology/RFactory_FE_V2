@@ -951,6 +951,9 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'goodsReceiptDetail.selectLocation': { vi: 'Chọn vị trí kho…', en: 'Pick a location…' },
 	'goodsReceiptDetail.expireDate': { vi: 'Ngày hết hạn', en: 'Expire Date' },
 
+	'goodsReceiptDetail.defaultUnit': { vi: 'Đvt mặc định', en: 'Unit Exchange' },
+	'goodsReceiptDetail.defaultQuantity': { vi: 'SL quy đổi', en: 'Quantity Exchange' },
+
 	'goodsReceiptDetail.err.linesRequired': {
 		vi: 'Phiếu nhập phải có ít nhất một sản phẩm.',
 		en: 'A goods receipt needs at least one product line.',
@@ -1184,6 +1187,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'goodsIssue.empty': { vi: 'Không có phiếu xuất nào.', en: 'No goods issue found.' },
 
 	'goodsIssue.issueNo': { vi: 'Mã phiếu', en: 'Issue No' },
+	'goodsIssue.customer': { vi: 'Khách hàng', en: 'Customer' },
 	'goodsIssue.issueType': { vi: 'Loại phiếu xuất', en: 'Issue Type' },
 	'goodsIssue.warehouse': { vi: 'Kho', en: 'Warehouse' },
 	'goodsIssue.referenceType': { vi: 'Loại tham chiếu', en: 'Reference Type' },
@@ -1199,6 +1203,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'goodsIssue.status.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
 	'goodsIssue.err.load': { vi: 'Không tải được dữ liệu phiếu xuất.', en: 'Could not load the goods issue data.' },
 	'goodsIssue.warehouse.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
+	'goodsIssue.customer.unset': { vi: '— Chưa đặt —', en: '— Not set —' },
 	'goodsIssue.status.purchase': {
 		vi: 'Mua hàng',
 		en: 'Purchase',
@@ -1254,7 +1259,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'goodsIssueDetail.location': { vi: 'Vị trí kho', en: 'Location' },
 	'goodsIssueDetail.lotNo': { vi: 'Số lô', en: 'Lot No' },
 	'goodsIssueDetail.serialNo': { vi: 'Số serial', en: 'Serial No' },
-	'goodsIssueDetail.quantity': { vi: 'Số lượng', en: 'Quantity' },
+	'goodsIssueDetail.quantity': { vi: 'SL quy đổi', en: 'Quantity' },
 	'goodsIssueDetail.unitPrice': { vi: 'Đơn giá', en: 'Unit Price' },
 	'goodsIssueDetail.remark': { vi: 'Ghi chú', en: 'Remark' },
 	'goodsIssueDetail.emptyLine': { vi: 'Phiếu xuất này chưa có sản phẩm nào.', en: 'This goods issue has no details yet.' },
@@ -1268,6 +1273,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'goodsIssueDetail.noProduct': { vi: 'Không tìm thấy sản phẩm.', en: 'No product found.' },
 	'goodsIssueDetail.total': { vi: 'Tổng tiền', en: 'Total' },
 	'goodsIssueDetail.selectLocation': { vi: 'Chọn vị trí kho…', en: 'Pick a location…' },
+
+	'goodsIssueDetail.defaultUnit': { vi: 'Đvt mặc định', en: 'Default Unit' },
+	'goodsIssueDetail.defaultQuantity': { vi: 'Số lượng xuất', en: 'Quantity' },
+	'goodsIssueDetail.exportByCustomer': { vi: 'Xuất theo khách', en: 'Export by Customer' },
 
 	'goodsIssueDetail.err.linesRequired': {
 		vi: 'Phiếu xuất phải có ít nhất một sản phẩm.',
@@ -4292,7 +4301,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionOrder.stat.completed': { vi: 'Hoàn thành', en: 'Completed' },
 	'productionOrder.stat.completionRate': { vi: 'Tỷ lệ hoàn thành', en: 'Completion Rate' },
 
-	// ─── Production Order Details (AMIS Guide Features) ──────────────────────
+	// ─── Production Order Details ( Guide Features) ──────────────────────
 	'productionOrder.orderType': { vi: 'Loại lệnh', en: 'Order Type' },
 	'productionOrder.type.mts': { vi: 'Kế hoạch tổng thể (MTS)', en: 'Make to Stock (MTS)' },
 	'productionOrder.type.mto': { vi: 'Đơn đặt hàng (MTO)', en: 'Make to Order (MTO)' },

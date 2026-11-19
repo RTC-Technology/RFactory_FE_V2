@@ -216,11 +216,11 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 					productId: p.productId,
 					// productCode: this.productCode(p.productId),
 					// productName: this.productName(p.productId),
-					unitId: p.unitId,
+					unitId: p.defaultUnitId,
 					// unitName: this.unitLabel(p.unitId),
 					// lotNo: p.lotNo || '',
 					serialNo: p.serialNo || '',
-					quantity: p.quantity || 0,
+					quantity: p.defaultQuantity || 0,
 				};
 			});
 	};
@@ -547,15 +547,15 @@ export class DeliveryNoteComponent extends PermissionAwarePage implements OnInit
 		const detail = this.goodsIssueDetailApi.items().find(p => p.id === id);
 
 		const product = this.productApi.items().find(x => x.id == detail?.productId);
-		const unit = this.unitApi.items().find(x => x.id == detail?.unitId);
+		const unit = this.unitApi.items().find(x => x.id == detail?.defaultUnitId);
 
 		row.productId = detail?.productId ?? row.productId;
 		row.productCode = product?.productCode ?? row.productCode;
 		row.productName = product?.productName ?? row.productName;
-		row.unitId = detail?.unitId ?? row.unitId;
+		row.unitId = detail?.defaultQuantity ?? row.unitId;
 		row.unitName = unit?.unitName ?? row.unitName;
-		row.orderedQty = detail?.quantity ?? row.orderedQty;
-		row.deliveredQty = detail?.quantity ?? row.deliveredQty;
+		row.orderedQty = detail?.defaultQuantity ?? row.orderedQty;
+		row.deliveredQty = detail?.defaultQuantity ?? row.deliveredQty;
 	}
 
 
