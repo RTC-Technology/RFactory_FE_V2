@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +16,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { PERMISSIONS } from '../../core/auth/permissions';
 import { PermissionAwarePage } from '../../core/auth/permission-aware-page';
+import { TabService } from '../../core/services/tab.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { MachineApiService } from '../../core/services/equipment-api.service';
 import { CustomerApiService, LineApiService } from '../../core/services/master-data-api.service';
@@ -69,6 +70,8 @@ import { ProductionRequestDto, SalesOrderDto } from '../../domain/models/product
 export class ProductionOrderComponent extends PermissionAwarePage implements OnInit {
 	// readonly _saleOrderDto = input<SalesOrderDto | null>(null);
 	readonly _productionRequestDto = input<ProductionRequestDto | null>(null);
+	readonly closeDialog = output<void>();
+	private readonly tabService = inject(TabService, { optional: true });
 
 	readonly api = inject(ProductionOrderApiService);
 	readonly productApi = inject(ProductApiService);
@@ -141,17 +144,72 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 	progressBatchNo = signal<string>('');
 	progressRemark = signal<string>('');
 
+	// Dropdown options filtered by the selected product
+	readonly availableBoms = computed(() => {
+		const prodId = this.formProductId();
+		if (!prodId) return [];
+		const currentBomId = this.formBomId();
+		return this.bomApi.items().filter(b =>
+			b.productId === prodId && (b.isActive !== false || b.id === currentBomId)
+		);
+	});
+
+	readonly availableRoutings = computed(() => {
+		const prodId = this.formProductId();
+		if (!prodId) return [];
+		const currentRoutingId = this.formRoutingId();
+		return this.routingApi.items().filter(r =>
+			r.productId === prodId && (r.isActive !== false || r.id === currentRoutingId)
+		);
+	});
+
 	// ─── Statistics ───────────────────────────────────────────────────────────
-	readonly totalOrders = computed(() => this.orders().length);
-	readonly inProgressOrders = computed(() => this.orders().filter(o => o.status === 3).length);
-	readonly completedOrders = computed(() => this.orders().filter(o => o.status === 4).length);
-	readonly totalPlannedQty = computed(() => this.orders().reduce((sum, o) => sum + (o.plannedQuantity || 0), 0));
-	readonly totalCompletedQty = computed(() => this.orders().reduce((sum, o) => sum + (o.completedQuantity || 0), 0));
+	readonly scopedOrders = computed(() => {
+		const reqNo = this._productionRequestDto()?.requestNo;
+		if (reqNo) {
+			return this.orders().filter(o => o.productionRequestNo === reqNo);
+		}
+		return this.orders();
+	});
+
+	readonly totalOrders = computed(() => this.scopedOrders().length);
+	readonly inProgressOrders = computed(() => this.scopedOrders().filter(o => o.status === 3).length);
+	readonly completedOrders = computed(() => this.scopedOrders().filter(o => o.status === 4).length);
+	readonly totalPlannedQty = computed(() => this.scopedOrders().reduce((sum, o) => sum + (o.plannedQuantity || 0), 0));
+	readonly totalCompletedQty = computed(() => this.scopedOrders().reduce((sum, o) => sum + (o.completedQuantity || 0), 0));
 	readonly overallProgress = computed(() => {
 		const planned = this.totalPlannedQty();
 		if (planned <= 0) return 0;
 		return Math.round(Math.min(100, (this.totalCompletedQty() / planned) * 100));
 	});
+
+	readonly isEmbedded = computed(() => !!this._productionRequestDto());
+
+	customerLabel(id?: number | null, fallbackName?: string | null): string {
+		if (id != null) {
+			const customer = this.customerApi.items().find(u => u.id === id);
+			if (customer) return `${customer.customerCode} - ${customer.customerName}`;
+		}
+		return fallbackName || '';
+	}
+
+	selectOrder(order: ProductionOrderDto): void {
+		if (this.selectedOrder()?.id === order.id) {
+			this.selectedOrder.set(null);
+		} else {
+			this.selectedOrder.set(order);
+		}
+	}
+
+	openInMainTab(): void {
+		this.closeDialog.emit();
+		this.tabService?.openTab({
+			id: 'production-orders',
+			title: this.i18n.t('productionOrder.title') || 'Lệnh sản xuất',
+			route: '/production-order',
+			icon: 'workspace',
+		});
+	}
 
 	// Duration in hours
 	readonly calculatedDuration = computed(() => {
@@ -173,8 +231,11 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		const prodId = this.filterProductId();
 		const lineId = this.filterLineId();
 		const query = this.searchKeyword().toLowerCase().trim();
+		const reqNo = this._productionRequestDto()?.requestNo;
 
-		return this.orders().filter(order => {
+
+		const list = this.orders().filter(order => {
+			if (reqNo && order.productionRequestNo !== reqNo) return false;
 			if (status != null && order.status !== status) return false;
 			if (priority != null && order.priority !== priority) return false;
 			if (orderType != null && order.orderType !== orderType) return false;
@@ -186,9 +247,17 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 				const matchProd = (order.productCode?.toLowerCase().includes(query) || order.productName?.toLowerCase().includes(query));
 				const matchBatch = order.batchNo?.toLowerCase().includes(query);
 				const matchSo = order.productionRequestNo?.toLowerCase().includes(query);
-				if (!matchNo && !matchDesc && !matchProd && !matchBatch && !matchSo) return false;
+				const matchCust = order.customerName?.toLowerCase().includes(query);
+				if (!matchNo && !matchDesc && !matchProd && !matchBatch && !matchSo && !matchCust) return false;
 			}
 			return true;
+		});
+
+		return list.sort((a, b) => {
+			const custA = a.customerId ?? 0;
+			const custB = b.customerId ?? 0;
+			if (custA !== custB) return custA - custB;
+			return (a.orderNo || '').localeCompare(b.orderNo || '');
 		});
 	});
 
@@ -226,6 +295,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		this.employeeApi.load().subscribe();
 		this.customerApi.load().subscribe();
 		this.unitApi.load().subscribe();
+
 	}
 
 	statusInfo(status: number) {
@@ -255,15 +325,23 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 	// ─── AMIS Feature Interactions ───────────────────────────────────────────
 	onProductChange(productId: number | null): void {
 		this.formProductId.set(productId);
-		if (!productId) return;
+		if (!productId) {
+			this.formUnitId.set(null);
+			this.formBomId.set(null);
+			this.formMaterials.set([]);
+			this.formRoutingId.set(null);
+			this.formOperations.set([]);
+			return;
+		}
 
 		const prod = this.productApi.items().find(p => p.id === productId);
 		if (prod?.defaultUnitId) {
 			this.formUnitId.set(prod.defaultUnitId);
 		}
 
-		// Auto-suggest BOM for product
-		const matchingBom = this.bomApi.items().find(b => b.productId === productId);
+		// Auto-suggest BOM for product (prefer active BOM)
+		const matchingBom = this.bomApi.items().find(b => b.productId === productId && b.isActive !== false)
+			|| this.bomApi.items().find(b => b.productId === productId);
 		if (matchingBom) {
 			this.formBomId.set(matchingBom.id);
 			this.loadBomMaterialsPreview(matchingBom.id, this.formPlannedQty());
@@ -272,8 +350,9 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 			this.formMaterials.set([]);
 		}
 
-		// Auto-suggest Routing for product
-		const matchingRouting = this.routingApi.items().find(r => r.productId === productId);
+		// Auto-suggest Routing for product (prefer active Routing)
+		const matchingRouting = this.routingApi.items().find(r => r.productId === productId && r.isActive !== false)
+			|| this.routingApi.items().find(r => r.productId === productId);
 		if (matchingRouting) {
 			this.formRoutingId.set(matchingRouting.id);
 			this.loadRoutingOperationsPreview(matchingRouting.id);
@@ -421,7 +500,9 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		this.formPlannedEndDate.set(formatDate(nextWeek, 'yyyy-MM-ddTHH:mm', 'en'));
 		this.formActualStartDate.set('');
 		this.formActualEndDate.set('');
-		this.formPriority.set(2); // Normal
+		const reqPriority = this._productionRequestDto()?.priority;
+		const initialPriority = reqPriority === 1 ? 4 : reqPriority === 2 ? 3 : reqPriority === 4 ? 1 : 2;
+		this.formPriority.set(initialPriority);
 		this.formBatchNo.set(`LOT-${formatDate(now, 'yyyyMMdd', 'en')}`);
 		this.formProductionRequestNo.set(this._productionRequestDto()?.requestNo ?? '');
 		this.formRemark.set('');
@@ -435,35 +516,37 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		this.showDialog.set(true);
 	}
 
-	openEdit(order: ProductionOrderDto): void {
+	openEdit(order?: ProductionOrderDto): void {
+		const target = order || this.selectedOrder();
+		if (!target) return;
 		this.dialogMode.set('edit');
-		this.selectedOrder.set(order);
+		this.selectedOrder.set(target);
 		this.activeDialogTab.set('general');
 
-		this.formOrderNo.set(order.orderNo);
-		this.formOrderType.set(order.orderType || 4);
-		this.formDescription.set(order.description || '');
-		this.formProductId.set(order.productId);
-		this.formUnitId.set(order.unitId ?? null);
-		this.formBomId.set(order.bomId ?? null);
-		this.formRoutingId.set(order.routingId ?? null);
-		this.formLineId.set(order.lineId ?? null);
-		this.formWorkCenterId.set(order.workCenterId ?? null);
-		this.formCustomerId.set(order.customerId ?? null);
-		this.formPlannedQty.set(order.plannedQuantity);
-		this.formCompletedQty.set(order.completedQuantity);
-		this.formScrapQty.set(order.scrapQuantity);
-		this.formPlannedStartDate.set(order.plannedStartDate ? formatDate(order.plannedStartDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
-		this.formPlannedEndDate.set(order.plannedEndDate ? formatDate(order.plannedEndDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
-		this.formActualStartDate.set(order.actualStartDate ? formatDate(order.actualStartDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
-		this.formActualEndDate.set(order.actualEndDate ? formatDate(order.actualEndDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
-		this.formPriority.set(order.priority);
-		this.formBatchNo.set(order.batchNo || '');
-		this.formProductionRequestNo.set(order.productionRequestNo || '');
-		this.formRemark.set(order.remark || '');
+		this.formOrderNo.set(target.orderNo);
+		this.formOrderType.set(target.orderType || 4);
+		this.formDescription.set(target.description || '');
+		this.formProductId.set(target.productId);
+		this.formUnitId.set(target.unitId ?? null);
+		this.formBomId.set(target.bomId ?? null);
+		this.formRoutingId.set(target.routingId ?? null);
+		this.formLineId.set(target.lineId ?? null);
+		this.formWorkCenterId.set(target.workCenterId ?? null);
+		this.formCustomerId.set(target.customerId ?? null);
+		this.formPlannedQty.set(target.plannedQuantity);
+		this.formCompletedQty.set(target.completedQuantity);
+		this.formScrapQty.set(target.scrapQuantity);
+		this.formPlannedStartDate.set(target.plannedStartDate ? formatDate(target.plannedStartDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
+		this.formPlannedEndDate.set(target.plannedEndDate ? formatDate(target.plannedEndDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
+		this.formActualStartDate.set(target.actualStartDate ? formatDate(target.actualStartDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
+		this.formActualEndDate.set(target.actualEndDate ? formatDate(target.actualEndDate, 'yyyy-MM-ddTHH:mm', 'en') : '');
+		this.formPriority.set(target.priority);
+		this.formBatchNo.set(target.batchNo || '');
+		this.formProductionRequestNo.set(target.productionRequestNo || '');
+		this.formRemark.set(target.remark || '');
 
 		// Fetch full order details with materials and operations
-		this.api.getById(order.id).subscribe({
+		this.api.getById(target.id).subscribe({
 			next: detailed => {
 				if (detailed) {
 					this.formMaterials.set(detailed.materials ?? []);
@@ -471,8 +554,8 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 				}
 			},
 			error: () => {
-				this.formMaterials.set(order.materials ?? []);
-				this.formOperations.set(order.operations ?? []);
+				this.formMaterials.set(target.materials ?? []);
+				this.formOperations.set(target.operations ?? []);
 			},
 		});
 
@@ -486,6 +569,14 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		}
 		if (this.formPlannedQty() <= 0) {
 			this._showError(this.i18n.t('common.error'), this.i18n.t('productionOrder.err.plannedQtyRequired'));
+			return;
+		}
+		if (this.formBomId() && !this.availableBoms().some(b => b.id === this.formBomId())) {
+			this._showError(this.i18n.t('common.error'), 'Định mức BOM đã chọn không thuộc về sản phẩm này');
+			return;
+		}
+		if (this.formRoutingId() && !this.availableRoutings().some(r => r.id === this.formRoutingId())) {
+			this._showError(this.i18n.t('common.error'), 'Quy trình Routing đã chọn không thuộc về sản phẩm này');
 			return;
 		}
 
@@ -568,16 +659,21 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		});
 	}
 
-	askDelete(order: ProductionOrderDto): void {
+	askDelete(order?: ProductionOrderDto): void {
+		const target = order || this.selectedOrder();
+		if (!target) return;
 		this.confirm.confirm({
 			header: this.i18n.t('productionOrder.confirm.deleteTitle'),
-			message: this.i18n.t('productionOrder.confirm.deleteMessage', { orderNo: order.orderNo }),
+			message: this.i18n.t('productionOrder.confirm.deleteMessage', { orderNo: target.orderNo }),
 			icon: 'pi pi-exclamation-triangle',
 			acceptButtonProps: { severity: 'danger' },
 			accept: () => {
-				this.api.delete(order.id).subscribe({
+				this.api.delete(target.id).subscribe({
 					next: () => {
 						this._showSuccess(this.i18n.t('productionOrder.ok.deleted'));
+						if (this.selectedOrder()?.id === target.id) {
+							this.selectedOrder.set(null);
+						}
 						this.refresh();
 					},
 					error: err => this._showError(this.i18n.t('common.error'), err?.error?.message || err?.message),

@@ -89,6 +89,19 @@ export class ProductionOrderApiService {
       );
   }
 
+  generateFromRequest(requestId: number): Observable<ProductionOrderDto[]> {
+    return this.http
+      .post<ApiResponse<ProductionOrderDto[]>>(`${this.baseUrl}/generate-from-request/${requestId}`, {})
+      .pipe(
+        map(res => res.data ?? []),
+        tap(createdOrders => {
+          if (createdOrders.length > 0) {
+            this.items.update(list => [...createdOrders, ...list]);
+          }
+        })
+      );
+  }
+
   delete(id: number): Observable<boolean> {
     return this.http
       .delete<ApiResponse<boolean>>(`${this.baseUrl}/${id}`)

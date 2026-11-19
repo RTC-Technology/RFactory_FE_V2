@@ -4257,7 +4257,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionOrder.actualStartDate': { vi: 'Bắt đầu TT', en: 'Actual Start' },
 	'productionOrder.actualEndDate': { vi: 'Kết thúc TT', en: 'Actual End' },
 	'productionOrder.batchNo': { vi: 'Số lô (Batch / Lot)', en: 'Batch / Lot No' },
-	'productionOrder.salesOrderNo': { vi: 'Đơn hàng bán (SO)', en: 'Sales Order No' },
+	'productionOrder.salesOrderNo': { vi: 'Số yêu cầu', en: 'Request No' },
 	'productionOrder.remark': { vi: 'Ghi chú', en: 'Remark' },
 	'productionOrder.status.draft': { vi: 'Nháp', en: 'Draft' },
 	'productionOrder.status.released': { vi: 'Đã duyệt', en: 'Released' },
@@ -4578,5 +4578,10 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionRequestItem.status.inProgress': { vi: 'Đang sản xuất', en: 'In Progress' },
 	'productionRequestItem.status.completed': { vi: 'Hoàn thành', en: 'Completed' },
 	'productionRequestItem.status.cancelled': { vi: 'Đã hủy', en: 'Cancelled' },
+	'productionRequestItem.productionOrderNo': { vi: 'Mã lệnh sản xuất', en: 'Production Order No.' },
+	'productionRequest.confirmCreateOrders': { vi: 'Yêu cầu sản xuất "{requestNo}" có {count} sản phẩm chưa tạo Lệnh sản xuất. Bạn có muốn tạo các Lệnh sản xuất tương ứng không?', en: 'Production request "{requestNo}" has {count} item(s) without production orders. Do you want to create them now?' },
+	'productionRequest.ok.ordersCreated': { vi: 'Đã tạo thành công {count} Lệnh sản xuất.', en: 'Successfully created {count} production order(s).' },
+	'productionRequest.err.noItems': { vi: 'Yêu cầu sản xuất này chưa có chi tiết sản phẩm nào.', en: 'This production request has no items.' },
+	'productionRequest.err.selectRequest': { vi: 'Vui lòng chọn một yêu cầu sản xuất.', en: 'Please select a production request.' },
 };
 

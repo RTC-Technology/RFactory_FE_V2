@@ -147,6 +147,7 @@ export interface ProductionRequestItemDto {
     requiredDate?: string | null;
     status: number;
     sortOrder: number;
+    productionOrderNo?: string | null;
     remark?: string | null;
 }
 

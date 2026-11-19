@@ -1,458 +1,250 @@
 <p-toast></p-toast>
 <p-confirmdialog></p-confirmdialog>
 
-<div class="production-order-page">
-	<!-- ── Header ────────────────────────────────────────────────────────── -->
-	<header class="page-header">
-		<div class="page-header__left">
-			<div class="page-header__badge">
-				<i class="pi pi-briefcase"></i>
-				<span>MES Manufacturing Execution</span>
-			</div>
-			<h1 class="page-header__title">{{ i18n.t('productionOrder.title') }}</h1>
-			<p class="page-header__subtitle">{{ i18n.t('productionOrder.subtitle') }}</p>
+<div class="page" [class.page--embedded]="isEmbedded()">
+	<section class="panel">
+		<div class="panel__head">
+			<h2 class="panel__title">{{ i18n.t('productionOrder.title') }}</h2>
+			@if (_productionRequestDto(); as t) {
+			<span class="panel__scope">
+				{{ i18n.t('productionRequest.scopeOf', { name: t.requestNo || '—' }) }}
+			</span>
+			}
+			<span class="panel__count">{{ filteredOrders().length }}</span>
 		</div>
 
-		<div class="page-header__actions">
-			<p-button
-					  icon="pi pi-refresh"
-					  [label]="i18n.t('common.reload')"
-					  severity="secondary"
-					  [outlined]="true"
-					  [loading]="loading()"
-					  (onClick)="refresh()"></p-button>
+		<div class="toolbar">
+			<button *appHasPermission="perms.productionOrder.add" type="button" class="tool" (click)="openCreate()">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+					<rect x="3" y="3" width="12" height="14" rx="1.5" />
+					<line x1="19" y1="9" x2="19" y2="17" />
+					<line x1="15" y1="13" x2="23" y2="13" />
+				</svg>
+				<span>{{ i18n.t('common.add') }}</span>
+			</button>
+			<button *appHasPermission="perms.productionOrder.edit" type="button" class="tool"
+				[disabled]="!selectedOrder()" (click)="openEdit(selectedOrder()!)">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M4 3h9l4 4v3" />
+					<path d="M4 3v18h13v-6" />
+					<path d="M20.5 12.5a1.6 1.6 0 0 1 2.3 2.3L18 19.5l-3 .8.8-3z" />
+				</svg>
+				<span>{{ i18n.t('common.edit') }}</span>
+			</button>
+			<button *appHasPermission="perms.productionOrder.delete" type="button" class="tool tool--danger"
+				[disabled]="!selectedOrder() || selectedOrder()?.status === 3" (click)="askDelete(selectedOrder()!)">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+					<line x1="6" y1="6" x2="18" y2="18" />
+					<line x1="18" y1="6" x2="6" y2="18" />
+				</svg>
+				<span>{{ i18n.t('common.delete') }}</span>
+			</button>
 
-			<p-button
-					  *appHasPermission="'production-order.add'"
-					  icon="pi pi-plus"
-					  [label]="i18n.t('common.add')"
-					  severity="primary"
-					  (onClick)="openCreate()"></p-button>
+			<span class="tool__sep"></span>
+			<button type="button" class="tool" [disabled]="loading()" (click)="refresh()">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+					<polyline points="23 4 23 10 17 10" />
+					<polyline points="1 20 1 14 7 14" />
+					<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+				</svg>
+				<span>{{ i18n.t('common.reload') }}</span>
+			</button>
+
+			@if (selectedOrder(); as ord) {
+			<span class="tool__sep"></span>
+			<button *ngIf="ord.status === 1" type="button" class="tool" (click)="release(ord)"
+				title="{{ i18n.t('productionOrder.action.release') }}">
+				<svg class="tool__ico text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+					stroke-width="2">
+					<polyline points="20 6 9 17 4 12" />
+				</svg>
+				<span>{{ i18n.t('productionOrder.action.release') }}</span>
+			</button>
+			<button *ngIf="ord.status === 2 || ord.status === 7" type="button" class="tool" (click)="start(ord)"
+				title="{{ ord.status === 7 ? i18n.t('productionOrder.action.resume') : i18n.t('productionOrder.action.start') }}">
+				<svg class="tool__ico text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+					stroke-width="2">
+					<polygon points="5 3 19 12 5 21 5 3" />
+				</svg>
+				<span>{{ ord.status === 7 ? i18n.t('productionOrder.action.resume') :
+					i18n.t('productionOrder.action.start') }}</span>
+			</button>
+			<button *ngIf="ord.status === 3" type="button" class="tool" (click)="pause(ord)"
+				title="{{ i18n.t('productionOrder.action.pause') }}">
+				<svg class="tool__ico text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+					stroke-width="2">
+					<rect x="6" y="4" width="4" height="16" />
+					<rect x="14" y="4" width="4" height="16" />
+				</svg>
+				<span>{{ i18n.t('productionOrder.action.pause') }}</span>
+			</button>
+			<button *ngIf="ord.status === 2 || ord.status === 3 || ord.status === 7" type="button" class="tool"
+				(click)="openProgress(ord)" title="{{ i18n.t('productionOrder.action.recordProgress') }}">
+				<svg class="tool__ico text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+					stroke-width="2">
+					<circle cx="12" cy="12" r="10" />
+					<line x1="12" y1="8" x2="12" y2="16" />
+					<line x1="8" y1="12" x2="16" y2="12" />
+				</svg>
+				<span>{{ i18n.t('productionOrder.action.recordProgress') }}</span>
+			</button>
+			<button *ngIf="ord.status === 3" type="button" class="tool tool--success" (click)="complete(ord)"
+				title="{{ i18n.t('productionOrder.action.complete') }}">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+					<polyline points="22 4 12 14.01 9 11.01" />
+				</svg>
+				<span>{{ i18n.t('productionOrder.action.complete') }}</span>
+			</button>
+			<button *appHasPermission="perms.productionOrder.add" type="button" class="tool" (click)="duplicate(ord)"
+				title="{{ i18n.t('productionOrder.action.duplicate') }}">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+					<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+					<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+				</svg>
+				<span>Nhân bản</span>
+			</button>
+			<button *ngIf="ord.status === 1 || ord.status === 2" type="button" class="tool tool--danger"
+				(click)="cancel(ord)" title="{{ i18n.t('productionOrder.action.cancel') }}">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="12" cy="12" r="10" />
+					<line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+				</svg>
+				<span>{{ i18n.t('productionOrder.action.cancel') }}</span>
+			</button>
+			}
+
+			@if (isEmbedded()) {
+			<button type="button" class="tool ml-auto" (click)="openInMainTab()"
+				title="Mở trang Lệnh SX trên tab chính">
+				<svg class="tool__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+					<polyline points="15 3 21 3 21 9" />
+					<line x1="10" y1="14" x2="21" y2="3" />
+				</svg>
+				<span>Mở tab</span>
+			</button>
+			}
+
+			<input class="tool-search" [class.ml-auto]="!isEmbedded()" type="search"
+				[placeholder]="i18n.t('common.search')" [attr.aria-label]="i18n.t('common.search')"
+				[ngModel]="searchKeyword()" (ngModelChange)="searchKeyword.set($event)" />
 		</div>
-	</header>
 
-	<!-- ── Stats Overview ────────────────────────────────────────────────── -->
-	<section class="stats-grid">
-		<div class="stat-card stat-card--blue">
-			<div class="stat-card__icon"><i class="pi pi-list"></i></div>
-			<div class="stat-card__body">
-				<span class="stat-card__label">{{ i18n.t('productionOrder.stat.total') }}</span>
-				<span class="stat-card__val">{{ totalOrders() }}</span>
-			</div>
-		</div>
+		<div class="table-scroll">
+			<p-table #orderTable [value]="filteredOrders()" [showGridlines]="true" class="grid" [scrollable]="true"
+				scrollHeight="flex" rowGroupMode="subheader" groupRowsBy="customerId">
+				<ng-template #header>
+					<tr>
+						<th class="col-code">{{ i18n.t('productionOrder.orderNo') }}</th>
+						<th class="col-lot" style="width: 140px; text-align: center">{{
+							i18n.t('productionOrder.batchNo') }}</th>
+						<th class="col-type" style="width: 90px; text-align: center">{{
+							i18n.t('productionOrder.orderType') }}</th>
+						<th class="col-product">{{ i18n.t('productionOrder.product') }}</th>
+						<th class="col-bom">{{ i18n.t('productionOrder.bom') }} & Routing</th>
+						<th class="col-line">{{ i18n.t('productionOrder.line') }}</th>
+						<th class="col-progress" style="width: 195px">{{ i18n.t('productionOrder.progress') }}</th>
+						<th class="col-date" style="width: 160px">{{ i18n.t('productionOrder.dates') }}</th>
+						<th class="col-priority" style="width: 100px; text-align: center">{{
+							i18n.t('productionOrder.priority') }}</th>
+						<th class="col-status" style="width: 110px; text-align: center">{{
+							i18n.t('productionOrder.status') }}</th>
+					</tr>
+				</ng-template>
 
-		<div class="stat-card stat-card--amber">
-			<div class="stat-card__icon"><i class="pi pi-spin pi-spinner"></i></div>
-			<div class="stat-card__body">
-				<span class="stat-card__label">{{ i18n.t('productionOrder.stat.inProgress') }}</span>
-				<span class="stat-card__val">{{ inProgressOrders() }}</span>
-			</div>
-		</div>
-
-		<div class="stat-card stat-card--green">
-			<div class="stat-card__icon"><i class="pi pi-check-circle"></i></div>
-			<div class="stat-card__body">
-				<span class="stat-card__label">{{ i18n.t('productionOrder.stat.completed') }}</span>
-				<span class="stat-card__val">{{ completedOrders() }}</span>
-			</div>
-		</div>
-
-		<div class="stat-card stat-card--purple">
-			<div class="stat-card__icon"><i class="pi pi-chart-line"></i></div>
-			<div class="stat-card__body">
-				<span class="stat-card__label">{{ i18n.t('productionOrder.stat.completionRate') }}</span>
-				<span class="stat-card__val">{{ overallProgress() }}%</span>
-				<div class="stat-card__progress-bar">
-					<div class="stat-card__progress-fill" [style.width.%]="overallProgress()"></div>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- ── Filter Bar ────────────────────────────────────────────────────── -->
-	<section class="filter-card">
-		<div class="filter-bar">
-			<!-- Search Input -->
-			<div class="filter-item filter-item--grow">
-				<span class="p-input-icon-left w-full">
-					<i class="pi pi-search"></i>
-					<input
-						   pInputText
-						   type="text"
-						   class="w-full"
-						   [placeholder]="i18n.t('common.search') + ' mã lệnh, sản phẩm, số lô...'"
-						   [ngModel]="searchKeyword()"
-						   (ngModelChange)="searchKeyword.set($event)" />
-				</span>
-			</div>
-
-			<!-- Order Type Filter -->
-			<div class="filter-item">
-				<p-select
-						  [options]="orderTypeOptions"
-						  optionLabel="labelKey"
-						  optionValue="value"
-						  [showClear]="true"
-						  [placeholder]="i18n.t('productionOrder.orderType')"
-						  [ngModel]="filterOrderType()"
-						  (ngModelChange)="filterOrderType.set($event)"
-						  styleClass="w-full">
-					<ng-template pTemplate="selectedItem" let-selected>
-						<span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
-					</ng-template>
-					<ng-template pTemplate="item" let-item>
-						<span>{{ i18n.t(item.labelKey) }}</span>
-					</ng-template>
-				</p-select>
-			</div>
-
-			<!-- Status Filter -->
-			<div class="filter-item">
-				<p-select
-						  [options]="statusOptions"
-						  optionLabel="labelKey"
-						  optionValue="value"
-						  [showClear]="true"
-						  [placeholder]="i18n.t('productionOrder.status')"
-						  [ngModel]="filterStatus()"
-						  (ngModelChange)="filterStatus.set($event)"
-						  styleClass="w-full">
-					<ng-template pTemplate="selectedItem" let-selected>
-						<span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
-					</ng-template>
-					<ng-template pTemplate="item" let-item>
-						<p-tag [severity]="item.severity" [value]="i18n.t(item.labelKey)"></p-tag>
-					</ng-template>
-				</p-select>
-			</div>
-
-			<!-- Priority Filter -->
-			<div class="filter-item">
-				<p-select
-						  [options]="priorityOptions"
-						  optionLabel="labelKey"
-						  optionValue="value"
-						  [showClear]="true"
-						  [placeholder]="i18n.t('productionOrder.priority')"
-						  [ngModel]="filterPriority()"
-						  (ngModelChange)="filterPriority.set($event)"
-						  styleClass="w-full">
-					<ng-template pTemplate="selectedItem" let-selected>
-						<span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
-					</ng-template>
-					<ng-template pTemplate="item" let-item>
-						<p-tag [severity]="item.severity" [value]="i18n.t(item.labelKey)"></p-tag>
-					</ng-template>
-				</p-select>
-			</div>
-
-			<!-- Product Filter -->
-			<div class="filter-item">
-				<p-select
-						  [options]="productApi.items()"
-						  optionLabel="productName"
-						  optionValue="id"
-						  [showClear]="true"
-						  [filter]="true"
-						  filterBy="productCode,productName"
-						  [placeholder]="i18n.t('productionOrder.product')"
-						  [ngModel]="filterProductId()"
-						  (ngModelChange)="filterProductId.set($event)"
-						  styleClass="w-full">
-					<ng-template pTemplate="item" let-prod>
-						<span>{{ prod.productCode }} - {{ prod.productName }}</span>
-					</ng-template>
-				</p-select>
-			</div>
-
-			<!-- Line Filter -->
-			<div class="filter-item">
-				<p-select
-						  [options]="lineApi.items()"
-						  optionLabel="lineName"
-						  optionValue="id"
-						  [showClear]="true"
-						  [placeholder]="i18n.t('productionOrder.line')"
-						  [ngModel]="filterLineId()"
-						  (ngModelChange)="filterLineId.set($event)"
-						  styleClass="w-full"></p-select>
-			</div>
-		</div>
-	</section>
-
-	<!-- ── Data Table ────────────────────────────────────────────────────── -->
-	<main class="table-card">
-		<p-table
-				 [value]="filteredOrders()"
-				 [loading]="loading()"
-				 [paginator]="true"
-				 [rows]="10"
-				 [rowsPerPageOptions]="[10, 25, 50]"
-				 styleClass="p-datatable-sm p-datatable-striped"
-				 [tableStyle]="{ 'min-width': '1100px' }">
-			<ng-template pTemplate="header">
-				<tr>
-					<th style="width: 160px">{{ i18n.t('productionOrder.orderNo') }}</th>
-					<th>{{ i18n.t('productionOrder.product') }}</th>
-					<th>{{ i18n.t('productionOrder.bom') }} & Routing</th>
-					<th>{{ i18n.t('productionOrder.line') }}</th>
-					<th style="width: 170px">{{ i18n.t('productionOrder.progress') }}</th>
-					<th style="width: 160px">{{ i18n.t('productionOrder.dates') }}</th>
-					<th style="width: 110px">{{ i18n.t('productionOrder.priority') }}</th>
-					<th style="width: 120px">{{ i18n.t('productionOrder.status') }}</th>
-					<th style="width: 180px; text-align: right">{{ i18n.t('common.actions') }}</th>
-				</tr>
-			</ng-template>
-
-			<ng-template pTemplate="body" let-order>
-				<tr class="order-row">
-					<!-- Order No & Type -->
-					<td>
-						<div class="order-code-cell">
-							<span class="order-no-pill">{{ order.orderNo }}</span>
-							<span class="type-badge">{{ orderTypeInfo(order.orderType).code }}</span>
-						</div>
-						<div *ngIf="order.batchNo" class="order-batch-sub">
-							<i class="pi pi-tag text-muted"></i> {{ order.batchNo }}
-						</div>
-					</td>
-
-					<!-- Product -->
-					<td>
-						<div class="product-info-cell">
-							<span class="product-name font-semibold">{{ order.productName || '—' }}</span>
-							<span class="product-code text-muted font-mono text-xs">{{ order.productCode }}</span>
-							<span *ngIf="order.customerName" class="customer-tag">
-								<i class="pi pi-user"></i> {{ order.customerName }}
-							</span>
-						</div>
-					</td>
-
-					<!-- BOM & Routing -->
-					<td>
-						<div class="bom-routing-cell">
-							<span *ngIf="order.bomCode" class="bom-tag" [pTooltip]="order.bomName">
-								<i class="pi pi-box"></i> {{ order.bomCode }} (v{{ order.bomVersion || '1' }})
-							</span>
-							<span *ngIf="order.routingVersion" class="routing-tag">
-								<i class="pi pi-directions"></i> Routing v{{ order.routingVersion }}
-							</span>
-							<span *ngIf="!order.bomCode && !order.routingVersion" class="text-muted text-xs">—</span>
-						</div>
-					</td>
-
-					<!-- Line & Work Center -->
-					<td>
-						<div class="line-cell">
-							<span class="line-name">{{ order.lineName || order.lineCode || '—' }}</span>
-							<span *ngIf="order.workCenterName" class="wc-name text-muted text-xs">
-								{{ order.workCenterName }}
-							</span>
-						</div>
-					</td>
-
-					<!-- Planned vs Completed Quantity -->
-					<td>
-						<div class="progress-cell">
-							<div class="progress-nums">
-								<span class="completed-val">{{ order.completedQuantity | number }}</span>
-								<span class="divider">/</span>
-								<span class="planned-val font-semibold">{{ order.plannedQuantity | number }}</span>
-								<span *ngIf="order.unitName" class="unit-val text-muted text-xs">{{ order.unitName }}</span>
-							</div>
-							<div class="progress-bar-wrap">
-								<div
-									 class="progress-bar-fill"
-									 [style.width.%]="order.progressPercentage"
-									 [ngClass]="{
-                    'fill--low': order.progressPercentage < 30,
-                    'fill--mid': order.progressPercentage >= 30 && order.progressPercentage < 80,
-                    'fill--high': order.progressPercentage >= 80
-                  }"></div>
-							</div>
-							<div class="progress-footer">
-								<span class="percent-label">{{ order.progressPercentage }}%</span>
-								<span *ngIf="order.scrapQuantity > 0" class="scrap-label text-danger">
-									<i class="pi pi-times-circle"></i> {{ order.scrapQuantity }} phế phẩm
+				<ng-template #groupheader let-row>
+					<tr pRowGroupHeader>
+						<td colspan="10">
+							<div class="flex items-center gap-2">
+								<span class="font-bold">
+									{{ i18n.t('customer.title') }}: {{ customerLabel(row.customerId, row.customerName)
+									|| 'Chung / Nội bộ' }}
 								</span>
 							</div>
-						</div>
-					</td>
+						</td>
+					</tr>
+				</ng-template>
 
-					<!-- Dates & Duration -->
-					<td>
-						<div class="dates-cell">
-							<div *ngIf="order.plannedStartDate" class="date-row">
-								<i class="pi pi-calendar-plus text-muted text-xs"></i>
-								<span>{{ order.plannedStartDate | date : 'dd/MM/yy HH:mm' }}</span>
+				<ng-template #body let-row>
+					<tr class="row" [class.row--selected]="selectedOrder()?.id === row.id" (click)="selectOrder(row)"
+						(dblclick)="openEdit(row)">
+						<td class="col-code font-semibold text-primary">
+							{{ row.orderNo }}
+						</td>
+						<td class="col-lot text-center">
+							<span *ngIf="row.batchNo" class="batch-pill font-mono">{{ row.batchNo }}</span>
+							<span *ngIf="!row.batchNo" class="muted">—</span>
+						</td>
+						<td class="col-type text-center">
+							<span class="type-badge">{{ orderTypeInfo(row.orderType).code }}</span>
+						</td>
+						<td class="col-product">
+							<div class="font-semibold">{{ row.productName || '—' }}</div>
+							<div class="text-xs text-muted font-mono">{{ row.productCode }}</div>
+						</td>
+						<td class="col-bom">
+							<div *ngIf="row.bomCode" class="text-xs">
+								<i class="pi pi-box mr-2"></i>{{ row.bomCode }} (v{{ row.bomVersion || '1' }})
 							</div>
-							<div *ngIf="order.plannedEndDate" class="date-row">
-								<i class="pi pi-calendar-times text-muted text-xs"></i>
-								<span>{{ order.plannedEndDate | date : 'dd/MM/yy HH:mm' }}</span>
+							<div *ngIf="row.routingVersion" class="text-xs text-muted">
+								<i class="pi pi-directions mr-2"></i>Routing v{{ row.routingVersion }}
 							</div>
-							<span *ngIf="order.durationHours" class="duration-badge">
-								<i class="pi pi-clock"></i> {{ order.durationHours }}h
-							</span>
-							<span *ngIf="!order.plannedStartDate && !order.plannedEndDate" class="text-muted text-xs">—</span>
-						</div>
-					</td>
+							<span *ngIf="!row.bomCode && !row.routingVersion" class="muted">—</span>
+						</td>
+						<td class="col-line">
+							<div>{{ row.lineName || row.lineCode || '—' }}</div>
+							<div *ngIf="row.workCenterName" class="text-xs text-muted">{{ row.workCenterName }}</div>
+						</td>
+						<td class="col-progress">
+							<div class="progress-cell"
+								[ngClass]="row.progressPercentage >= 80 ? 'high' : (row.progressPercentage >= 30 ? 'mid' : 'low')">
+								<div class="row-top">
+									<span class="qty">
+										<strong>{{ row.completedQuantity | number }}</strong> / {{ row.plannedQuantity |
+										number }}
+										<span *ngIf="row.unitName">{{ row.unitName }}</span>
+									</span>
+									<span class="pct">{{ row.progressPercentage }}%</span>
+								</div>
+								<div class="track">
+									<div [style.width.%]="row.progressPercentage"></div>
+								</div>
+							</div>
+						</td>
+						<td class="col-date text-xs">
+							<div *ngIf="row.plannedStartDate"><i class="pi pi-calendar mr-1"></i>{{ row.plannedStartDate
+								| date:'dd/MM/yy HH:mm' }}</div>
+							<div *ngIf="row.plannedEndDate" class="text-muted"><i class="pi pi-flag mr-1"></i>{{
+								row.plannedEndDate | date:'dd/MM/yy HH:mm' }}</div>
+							<span *ngIf="!row.plannedStartDate && !row.plannedEndDate" class="muted">—</span>
+						</td>
+						<td class="col-priority text-center">
+							<p-tag [severity]="priorityInfo(row.priority).severity"
+								[value]="i18n.t(priorityInfo(row.priority).labelKey)" [rounded]="true" />
+						</td>
+						<td class="col-status text-center">
+							<p-tag [severity]="statusInfo(row.status).severity"
+								[value]="i18n.t(statusInfo(row.status).labelKey)" [rounded]="true" />
+						</td>
+					</tr>
+				</ng-template>
 
-					<!-- Priority -->
-					<td>
-						<p-tag
-							   [severity]="priorityInfo(order.priority).severity"
-							   [value]="i18n.t(priorityInfo(order.priority).labelKey)"></p-tag>
-					</td>
-
-					<!-- Status -->
-					<td>
-						<p-tag
-							   [severity]="statusInfo(order.status).severity"
-							   [value]="i18n.t(statusInfo(order.status).labelKey)"></p-tag>
-					</td>
-
-					<!-- Actions -->
-					<td style="text-align: right">
-						<div class="row-actions">
-							<!-- Approve / Release (if Draft) -->
-							<p-button
-									  *ngIf="order.status === 1"
-									  icon="pi pi-check"
-									  severity="info"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.release')"
-									  (onClick)="release(order)"></p-button>
-
-							<!-- Start (if Released) -->
-							<p-button
-									  *ngIf="order.status === 2"
-									  icon="pi pi-play"
-									  severity="warn"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.start')"
-									  (onClick)="start(order)"></p-button>
-
-							<!-- Pause (if InProgress) -->
-							<p-button
-									  *ngIf="order.status === 3"
-									  icon="pi pi-pause"
-									  severity="secondary"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.pause')"
-									  (onClick)="pause(order)"></p-button>
-
-							<!-- Resume (if Paused) -->
-							<p-button
-									  *ngIf="order.status === 7"
-									  icon="pi pi-play"
-									  severity="warn"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.resume')"
-									  (onClick)="start(order)"></p-button>
-
-							<!-- Record Output / Progress -->
-							<p-button
-									  *ngIf="order.status === 2 || order.status === 3 || order.status === 7"
-									  icon="pi pi-plus-circle"
-									  severity="success"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.recordProgress')"
-									  (onClick)="openProgress(order)"></p-button>
-
-							<!-- Complete (if InProgress) -->
-							<p-button
-									  *ngIf="order.status === 3"
-									  icon="pi pi-verified"
-									  severity="success"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.complete')"
-									  (onClick)="complete(order)"></p-button>
-
-							<!-- Edit / Details -->
-							<p-button
-									  *appHasPermission="'production-order.edit'"
-									  icon="pi pi-pencil"
-									  severity="secondary"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('common.edit')"
-									  (onClick)="openEdit(order)"></p-button>
-
-							<!-- Duplicate -->
-							<p-button
-									  *appHasPermission="'production-order.add'"
-									  icon="pi pi-copy"
-									  severity="secondary"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.duplicate')"
-									  (onClick)="duplicate(order)"></p-button>
-
-							<!-- Cancel (if Draft or Released) -->
-							<p-button
-									  *ngIf="order.status === 1 || order.status === 2"
-									  icon="pi pi-ban"
-									  severity="danger"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [pTooltip]="i18n.t('productionOrder.action.cancel')"
-									  (onClick)="cancel(order)"></p-button>
-
-							<!-- Delete -->
-							<p-button
-									  *appHasPermission="'production-order.delete'"
-									  icon="pi pi-trash"
-									  severity="danger"
-									  [text]="true"
-									  [rounded]="true"
-									  size="small"
-									  [disabled]="order.status === 3"
-									  [pTooltip]="i18n.t('common.delete')"
-									  (onClick)="askDelete(order)"></p-button>
-						</div>
-					</td>
-				</tr>
-			</ng-template>
-
-			<!-- Empty State -->
-			<ng-template pTemplate="emptymessage">
-				<tr>
-					<td colspan="9" class="empty-state">
-						<div class="empty-state__content">
-							<i class="pi pi-inbox empty-state__icon"></i>
-							<p class="empty-state__title">{{ i18n.t('productionOrder.empty') }}</p>
-							<p class="empty-state__hint">{{ i18n.t('productionOrder.emptyHint') }}</p>
-						</div>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
-	</main>
+				<ng-template #emptymessage>
+					<tr>
+						<td colspan="10">
+							<p class="empty">{{ i18n.t('productionOrder.empty') }}</p>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		</div>
+	</section>
 
 	<!-- ── Create / Edit Dialog with AMIS Tabs ───────────────────────────── -->
-	<p-dialog
-			  [(visible)]="showDialog"
-			  [modal]="true"
-			  [draggable]="false"
-			  [resizable]="false"
-			  [style]="{ width: '920px', maxWidth: '96vw', height: '90vh' }"
-			  styleClass="custom-dialog"
-			  [header]="dialogMode() === 'create' ? i18n.t('productionOrder.dialog.add') : i18n.t('productionOrder.dialog.edit')">
+	<p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false" [resizable]="false"
+		[style]="{ width: '92vw', maxWidth: '1440px', height: '90vh' }" styleClass="custom-dialog"
+		[header]="dialogMode() === 'create' ? i18n.t('productionOrder.dialog.add') : i18n.t('productionOrder.dialog.edit')">
 		<div class="dialog-content-tabs">
 			<p-tabs [value]="activeDialogTab()" (valueChange)="onTabChange($event)">
 				<p-tablist>
@@ -480,13 +272,9 @@
 								<!-- Order Type (MTS / MTO / MRP / Other) -->
 								<div class="form-group">
 									<label class="form-label required">{{ i18n.t('productionOrder.orderType') }}</label>
-									<p-select
-											  [options]="orderTypeOptions"
-											  optionLabel="labelKey"
-											  optionValue="value"
-											  [ngModel]="formOrderType()"
-											  (ngModelChange)="formOrderType.set($event)"
-											  styleClass="w-full">
+									<p-select [options]="orderTypeOptions" optionLabel="labelKey" optionValue="value"
+										[ngModel]="formOrderType()" (ngModelChange)="formOrderType.set($event)"
+										styleClass="w-full" appendTo="body">
 										<ng-template pTemplate="selectedItem" let-selected>
 											<span *ngIf="selected">{{ i18n.t(selected.labelKey) }}</span>
 										</ng-template>
@@ -499,29 +287,19 @@
 								<!-- Order No -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.orderNo') }}</label>
-									<input
-										   pInputText
-										   type="text"
-										   class="w-full"
-										   [placeholder]="i18n.t('productionOrder.orderNoPlaceholder')"
-										   [disabled]="dialogMode() === 'edit'"
-										   [ngModel]="formOrderNo()"
-										   (ngModelChange)="formOrderNo.set($event)" />
+									<input pInputText type="text" class="w-full"
+										[placeholder]="i18n.t('productionOrder.orderNoPlaceholder')"
+										[disabled]="dialogMode() === 'edit'" [ngModel]="formOrderNo()"
+										(ngModelChange)="formOrderNo.set($event)" />
 								</div>
 
 								<!-- Product Selection -->
 								<div class="form-group">
 									<label class="form-label required">{{ i18n.t('productionOrder.product') }}</label>
-									<p-select
-											  [options]="productApi.items()"
-											  optionLabel="productName"
-											  optionValue="id"
-											  [filter]="true"
-											  filterBy="productCode,productName"
-											  placeholder="Chọn sản phẩm..."
-											  [ngModel]="formProductId()"
-											  (ngModelChange)="onProductChange($event)"
-											  styleClass="w-full">
+									<p-select [options]="productApi.items()" optionLabel="productName" optionValue="id"
+										[filter]="true" filterBy="productCode,productName"
+										placeholder="Chọn sản phẩm..." [ngModel]="formProductId()"
+										(ngModelChange)="onProductChange($event)" styleClass="w-full" appendTo="body">
 										<ng-template pTemplate="selectedItem" let-selected>
 											<div *ngIf="selected" class="select-prod-item">
 												<span class="code-pill">{{ selected.productCode }}</span>
@@ -539,28 +317,30 @@
 
 								<!-- Planned Quantity -->
 								<div class="form-group">
-									<label class="form-label required">{{ i18n.t('productionOrder.plannedQty') }}</label>
-									<p-inputnumber
-												   class="w-full"
-												   [min]="1"
-												   [ngModel]="formPlannedQty()"
-												   (ngModelChange)="onPlannedQtyChange($event)"></p-inputnumber>
+									<label class="form-label required">{{ i18n.t('productionOrder.plannedQty')
+										}}</label>
+									<p-inputnumber class="w-full" [min]="1" [ngModel]="formPlannedQty()"
+										(ngModelChange)="onPlannedQtyChange($event)"></p-inputnumber>
 								</div>
 
 								<!-- BOM Selection -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.bom') }}</label>
-									<p-select
-											  [options]="bomApi.items()"
-											  optionLabel="bomName"
-											  optionValue="id"
-											  [showClear]="true"
-											  placeholder="Chọn định mức BOM..."
-											  [ngModel]="formBomId()"
-											  (ngModelChange)="onBomChange($event)"
-											  styleClass="w-full">
+									<p-select [options]="availableBoms()" optionLabel="bomName" optionValue="id"
+										[showClear]="true" [disabled]="!formProductId() || availableBoms().length === 0"
+										[placeholder]="!formProductId() ? 'Vui lòng chọn sản phẩm trước...' : (availableBoms().length === 0 ? 'Sản phẩm chưa có định mức BOM' : 'Chọn định mức BOM...')"
+										[ngModel]="formBomId()" (ngModelChange)="onBomChange($event)"
+										styleClass="w-full" appendTo="body">
+										<ng-template pTemplate="selectedItem" let-b>
+											<span *ngIf="b">{{ b.bomCode }} - {{ b.bomName }} (v{{ b.version || '1'
+												}})</span>
+										</ng-template>
 										<ng-template pTemplate="item" let-b>
-											<span>{{ b.bomCode }} - {{ b.bomName }} (v{{ b.version }})</span>
+											<div class="flex items-center justify-between w-full">
+												<span>{{ b.bomCode }} - {{ b.bomName }} (v{{ b.version || '1' }})</span>
+												<span *ngIf="b.isActive"
+													class="text-xs text-green-600 font-semibold ml-2"></span>
+											</div>
 										</ng-template>
 									</p-select>
 								</div>
@@ -568,17 +348,21 @@
 								<!-- Routing Selection -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.routing') }}</label>
-									<p-select
-											  [options]="routingApi.items()"
-											  optionLabel="version"
-											  optionValue="id"
-											  [showClear]="true"
-											  placeholder="Chọn quy trình công nghệ..."
-											  [ngModel]="formRoutingId()"
-											  (ngModelChange)="onRoutingChange($event)"
-											  styleClass="w-full">
+									<p-select [options]="availableRoutings()" optionLabel="version" optionValue="id"
+										[showClear]="true"
+										[disabled]="!formProductId() || availableRoutings().length === 0"
+										[placeholder]="!formProductId() ? 'Vui lòng chọn sản phẩm trước...' : (availableRoutings().length === 0 ? 'Sản phẩm chưa có quy trình Routing' : 'Chọn quy trình công nghệ...')"
+										[ngModel]="formRoutingId()" (ngModelChange)="onRoutingChange($event)"
+										styleClass="w-full" appendTo="body">
+										<ng-template pTemplate="selectedItem" let-r>
+											<span *ngIf="r">Routing v{{ r.version || '1' }}</span>
+										</ng-template>
 										<ng-template pTemplate="item" let-r>
-											<span>Routing v{{ r.version }}</span>
+											<div class="flex items-center justify-between w-full">
+												<span>Routing v{{ r.version || '1' }}</span>
+												<span *ngIf="r.isActive"
+													class="text-xs text-green-600 font-semibold ml-2"></span>
+											</div>
 										</ng-template>
 									</p-select>
 								</div>
@@ -586,40 +370,27 @@
 								<!-- Production Line -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.line') }}</label>
-									<p-select
-											  [options]="lineApi.items()"
-											  optionLabel="lineName"
-											  optionValue="id"
-											  [showClear]="true"
-											  placeholder="Chọn dây chuyền sản xuất..."
-											  [ngModel]="formLineId()"
-											  (ngModelChange)="formLineId.set($event)"
-											  styleClass="w-full"></p-select>
+									<p-select [options]="lineApi.items()" optionLabel="lineName" optionValue="id"
+										[showClear]="true" placeholder="Chọn dây chuyền sản xuất..."
+										[ngModel]="formLineId()" (ngModelChange)="formLineId.set($event)"
+										styleClass="w-full" appendTo="body"></p-select>
 								</div>
 
 								<!-- Work Center / Tổ sản xuất -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.workCenter') }}</label>
-									<p-select
-											  [options]="workCenterApi.items()"
-											  optionLabel="workCenterName"
-											  optionValue="id"
-											  [showClear]="true"
-											  placeholder="Chọn tổ / phân xưởng..."
-											  [ngModel]="formWorkCenterId()"
-											  (ngModelChange)="formWorkCenterId.set($event)"
-											  styleClass="w-full"></p-select>
+									<p-select [options]="workCenterApi.items()" optionLabel="workCenterName"
+										optionValue="id" [showClear]="true" placeholder="Chọn tổ / phân xưởng..."
+										[ngModel]="formWorkCenterId()" (ngModelChange)="formWorkCenterId.set($event)"
+										styleClass="w-full" appendTo="body"></p-select>
 								</div>
 
 								<!-- Planned Start Date -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.plannedStartDate') }}</label>
-									<input
-										   pInputText
-										   type="datetime-local"
-										   class="w-full"
-										   [ngModel]="formPlannedStartDate()"
-										   (ngModelChange)="formPlannedStartDate.set($event)" />
+									<input pInputText type="datetime-local" class="w-full"
+										[ngModel]="formPlannedStartDate()"
+										(ngModelChange)="formPlannedStartDate.set($event)" />
 								</div>
 
 								<!-- Planned End Date (Hạn sản xuất) -->
@@ -630,26 +401,20 @@
 											<i class="pi pi-clock"></i> {{ calculatedDuration() }} giờ
 										</span>
 									</div>
-									<input
-										   pInputText
-										   type="datetime-local"
-										   class="w-full"
-										   [ngModel]="formPlannedEndDate()"
-										   (ngModelChange)="formPlannedEndDate.set($event)" />
+									<input pInputText type="datetime-local" class="w-full"
+										[ngModel]="formPlannedEndDate()"
+										(ngModelChange)="formPlannedEndDate.set($event)" />
 								</div>
 
 								<!-- Priority -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.priority') }}</label>
-									<p-select
-											  [options]="priorityOptions"
-											  optionLabel="labelKey"
-											  optionValue="value"
-											  [ngModel]="formPriority()"
-											  (ngModelChange)="formPriority.set($event)"
-											  styleClass="w-full">
+									<p-select [options]="priorityOptions" optionLabel="labelKey" optionValue="value"
+										[ngModel]="formPriority()" (ngModelChange)="formPriority.set($event)"
+										styleClass="w-full" appendTo="body">
 										<ng-template pTemplate="selectedItem" let-selected>
-											<p-tag *ngIf="selected" [severity]="selected.severity" [value]="i18n.t(selected.labelKey)"></p-tag>
+											<p-tag *ngIf="selected" [severity]="selected.severity"
+												[value]="i18n.t(selected.labelKey)"></p-tag>
 										</ng-template>
 										<ng-template pTemplate="item" let-item>
 											<p-tag [severity]="item.severity" [value]="i18n.t(item.labelKey)"></p-tag>
@@ -660,64 +425,44 @@
 								<!-- Customer -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.customer') }}</label>
-									<p-select
-											  [options]="customerApi.items()"
-											  optionLabel="customerName"
-											  optionValue="id"
-											  [showClear]="true"
-											  placeholder="Khách hàng đặt hàng..."
-											  [ngModel]="formCustomerId()"
-											  (ngModelChange)="formCustomerId.set($event)"
-											  styleClass="w-full"></p-select>
+									<p-select [options]="customerApi.items()" optionLabel="customerName"
+										optionValue="id" [showClear]="true" placeholder="Khách hàng đặt hàng..."
+										[ngModel]="formCustomerId()" (ngModelChange)="formCustomerId.set($event)"
+										styleClass="w-full" appendTo="body"></p-select>
 								</div>
 
 								<!-- Batch No (Lot) -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.batchNo') }}</label>
-									<input
-										   pInputText
-										   type="text"
-										   class="w-full"
-										   placeholder="Số lô thành phẩm (VD: LOT-20261013-01)..."
-										   [ngModel]="formBatchNo()"
-										   (ngModelChange)="formBatchNo.set($event)" />
+									<input pInputText type="text" class="w-full"
+										placeholder="Số lô thành phẩm (VD: LOT-20261013-01)..."
+										[ngModel]="formBatchNo()" (ngModelChange)="formBatchNo.set($event)" />
 								</div>
 
 								<!-- Sales Order No -->
 								<div class="form-group">
 									<label class="form-label">{{ i18n.t('productionOrder.salesOrderNo') }}</label>
-									<input
-										   pInputText
-										   type="text"
-										   class="w-full"
-										   placeholder="Mã đơn hàng bán tham chiếu (SO-xxx)..."
-										   [ngModel]="formProductionRequestNo()"
-										   (ngModelChange)="formProductionRequestNo.set($event)" />
+									<input pInputText type="text" class="w-full"
+										placeholder="Mã đơn hàng bán tham chiếu (SO-xxx)..."
+										[ngModel]="formProductionRequestNo()"
+										(ngModelChange)="formProductionRequestNo.set($event)" />
 								</div>
 							</div>
 
 							<!-- Description -->
-							<div class="form-group mt-3">
+							<div class="form-group">
 								<label class="form-label">{{ i18n.t('productionOrder.description') }}</label>
-								<input
-									   pInputText
-									   type="text"
-									   class="w-full"
-									   placeholder="Mô tả tóm tắt lệnh sản xuất..."
-									   [ngModel]="formDescription()"
-									   (ngModelChange)="formDescription.set($event)" />
+								<input pInputText type="text" class="w-full"
+									placeholder="Mô tả tóm tắt lệnh sản xuất..." [ngModel]="formDescription()"
+									(ngModelChange)="formDescription.set($event)" />
 							</div>
 
 							<!-- Remark -->
-							<div class="form-group mt-3">
+							<div class="form-group">
 								<label class="form-label">{{ i18n.t('productionOrder.remark') }}</label>
-								<textarea
-										  pTextarea
-										  rows="2"
-										  class="w-full"
-										  placeholder="Ghi chú yêu cầu kỹ thuật, lưu ý sản xuất..."
-										  [ngModel]="formRemark()"
-										  (ngModelChange)="formRemark.set($event)"></textarea>
+								<textarea pTextarea rows="2" class="w-full"
+									placeholder="Ghi chú yêu cầu kỹ thuật, lưu ý sản xuất..." [ngModel]="formRemark()"
+									(ngModelChange)="formRemark.set($event)"></textarea>
 							</div>
 						</div>
 					</p-tabpanel>
@@ -728,44 +473,40 @@
 							<div class="tab-info-banner">
 								<i class="pi pi-info-circle text-primary"></i>
 								<span>
-									Định mức NVL tính toán tự động theo công thức: <strong>SL theo định mức = Định mức x SL sản xuất</strong>.
+									Định mức NVL tính toán tự động theo công thức: <strong>SL theo định mức = Định mức x
+										SL sản xuất</strong>.
 									Bạn có thể bổ sung dòng vật tư ngoài định mức, xóa hoặc chỉnh sửa trực tiếp.
 								</span>
 							</div>
 
 							<div class="tab-toolbar">
-								<p-button
-										  icon="pi pi-sync"
-										  [label]="i18n.t('productionOrder.materials.resetBom')"
-										  severity="secondary"
-										  [outlined]="true"
-										  size="small"
-										  [disabled]="!formBomId()"
-										  (onClick)="resetMaterialsToBom()"></p-button>
+								<p-button icon="pi pi-sync" [label]="i18n.t('productionOrder.materials.resetBom')"
+									severity="secondary" [outlined]="true" size="small" [disabled]="!formBomId()"
+									(onClick)="resetMaterialsToBom()"></p-button>
 
-								<p-button
-										  icon="pi pi-plus"
-										  [label]="i18n.t('productionOrder.materials.addRow')"
-										  severity="primary"
-										  [outlined]="true"
-										  size="small"
-										  (onClick)="addMaterialRow()"></p-button>
+								<p-button icon="pi pi-plus" [label]="i18n.t('productionOrder.materials.addRow')"
+									severity="primary" [outlined]="true" size="small"
+									(onClick)="addMaterialRow()"></p-button>
 							</div>
 
 							<div class="detail-table-wrap">
-								<p-table
-										 [value]="formMaterials()"
-										 styleClass="p-datatable-sm p-datatable-gridlines"
-										 [tableStyle]="{ 'min-width': '800px' }">
+								<p-table [value]="formMaterials()" [showGridlines]="true" class="grid grid--edit"
+									[tableStyle]="{ 'width': '100%', 'min-width': '1000px' }">
 									<ng-template pTemplate="header">
 										<tr>
-											<th style="width: 40px">#</th>
-											<th style="min-width: 220px">{{ i18n.t('productionOrder.materials.material') }}</th>
-											<th style="width: 90px">{{ i18n.t('productionOrder.materials.normQty') }}</th>
-											<th style="width: 120px">{{ i18n.t('productionOrder.materials.requiredQty') }}</th>
-											<th style="width: 110px">{{ i18n.t('productionOrder.materials.currentStock') }}</th>
-											<th style="width: 160px">{{ i18n.t('productionOrder.materials.warehouse') }}</th>
-											<th style="width: 140px">{{ i18n.t('productionOrder.remark') }}</th>
+											<th style="width: 45px; text-align: center">#</th>
+											<th style="width: 320px; min-width: 320px">{{
+												i18n.t('productionOrder.materials.material') }}</th>
+											<th style="width: 110px; min-width: 110px; text-align: right">{{
+												i18n.t('productionOrder.materials.normQty') }}</th>
+											<th style="width: 130px; min-width: 130px; text-align: right">{{
+												i18n.t('productionOrder.materials.requiredQty') }}</th>
+											<th style="width: 110px; min-width: 110px; text-align: right">{{
+												i18n.t('productionOrder.materials.currentStock') }}</th>
+											<th style="width: 200px; min-width: 190px">{{
+												i18n.t('productionOrder.materials.warehouse') }}</th>
+											<th style="width: 180px; min-width: 160px">{{
+												i18n.t('productionOrder.remark') }}</th>
 											<th style="width: 50px; text-align: center"></th>
 										</tr>
 									</ng-template>
@@ -774,44 +515,33 @@
 										<tr>
 											<td>{{ ri + 1 }}</td>
 											<td>
-												<p-select
-														  [options]="productApi.items()"
-														  optionLabel="productName"
-														  optionValue="id"
-														  [filter]="true"
-														  filterBy="productCode,productName"
-														  [(ngModel)]="mat.productId"
-														  (ngModelChange)="onMaterialProductSelected(mat, $event)"
-														  styleClass="w-full p-inputtext-sm">
+												<p-select [options]="productApi.items()" optionLabel="productName"
+													optionValue="id" [filter]="true" filterBy="productCode,productName"
+													[(ngModel)]="mat.productId"
+													(ngModelChange)="onMaterialProductSelected(mat, $event)"
+													class="w-full" placeholder="Chọn NVL..." appendTo="body">
 													<ng-template pTemplate="selectedItem" let-selected>
-														<span *ngIf="selected" class="font-medium text-xs">{{ selected.productCode }} - {{ selected.productName }}</span>
+														<span *ngIf="selected" class="font-medium text-xs">{{
+															selected.productCode }} - {{ selected.productName }}</span>
 													</ng-template>
 													<ng-template pTemplate="item" let-p>
-														<span class="text-xs">{{ p.productCode }} - {{ p.productName }}</span>
+														<span class="text-xs">{{ p.productCode }} - {{ p.productName
+															}}</span>
 													</ng-template>
 												</p-select>
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="number"
-													   step="0.0001"
-													   class="w-full text-right p-inputtext-sm"
-													   [(ngModel)]="mat.normQuantity"
-													   (ngModelChange)="onNormQtyChange(mat)" />
+												<input pInputText type="number" step="0.0001"
+													class="cell-input cell-input--num" [(ngModel)]="mat.normQuantity"
+													(ngModelChange)="onNormQtyChange(mat)" />
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="number"
-													   step="0.01"
-													   class="w-full text-right font-semibold p-inputtext-sm text-primary"
-													   [(ngModel)]="mat.requiredQuantity" />
+												<input pInputText type="number" step="0.01"
+													class="cell-input cell-input--num font-semibold text-primary"
+													[(ngModel)]="mat.requiredQuantity" />
 											</td>
 											<td>
-												<span
-													  class="stock-pill"
-													  [ngClass]="{
+												<span class="stock-pill" [ngClass]="{
                             'stock-pill--ok': (mat.currentStock || 0) >= (mat.requiredQuantity || 0),
                             'stock-pill--warn': (mat.currentStock || 0) < (mat.requiredQuantity || 0) && (mat.currentStock || 0) > 0,
                             'stock-pill--zero': !(mat.currentStock > 0)
@@ -820,31 +550,18 @@
 												</span>
 											</td>
 											<td>
-												<p-select
-														  [options]="warehouseApi.items()"
-														  optionLabel="warehouseName"
-														  optionValue="id"
-														  [showClear]="true"
-														  [(ngModel)]="mat.warehouseId"
-														  styleClass="w-full p-inputtext-sm"
-														  placeholder="Chọn kho..."></p-select>
+												<p-select [options]="warehouseApi.items()" optionLabel="warehouseName"
+													optionValue="id" [showClear]="true" [(ngModel)]="mat.warehouseId"
+													class="w-full" placeholder="Chọn kho..." appendTo="body"></p-select>
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="text"
-													   class="w-full p-inputtext-sm"
-													   [(ngModel)]="mat.remark"
-													   placeholder="Ghi chú..." />
+												<input pInputText type="text" class="cell-input"
+													[(ngModel)]="mat.remark" placeholder="Ghi chú..." />
 											</td>
 											<td style="text-align: center">
-												<p-button
-														  icon="pi pi-trash"
-														  severity="danger"
-														  [text]="true"
-														  [rounded]="true"
-														  size="small"
-														  (onClick)="removeMaterialRow(ri)"></p-button>
+												<p-button icon="pi pi-trash" severity="danger" [text]="true"
+													[rounded]="true" size="small"
+													(onClick)="removeMaterialRow(ri)"></p-button>
 											</td>
 										</tr>
 									</ng-template>
@@ -852,7 +569,8 @@
 									<ng-template pTemplate="emptymessage">
 										<tr>
 											<td colspan="8" class="text-center p-4 text-muted">
-												{{ i18n.t('productionOrder.materials.empty') }}. Chọn BOM để tự động tải hoặc nhấn "Thêm dòng NVL".
+												{{ i18n.t('productionOrder.materials.empty') }}. Chọn BOM để tự động tải
+												hoặc nhấn "Thêm dòng NVL".
 											</td>
 										</tr>
 									</ng-template>
@@ -867,35 +585,37 @@
 							<div class="tab-info-banner">
 								<i class="pi pi-info-circle text-primary"></i>
 								<span>
-									Các công đoạn sản xuất tuần tự theo quy trình công nghệ (Routing). Bạn có thể gán tổ, máy móc, và người thực hiện cho từng công đoạn.
+									Các công đoạn sản xuất tuần tự theo quy trình công nghệ (Routing). Bạn có thể gán
+									tổ, máy móc, và người thực hiện cho từng công đoạn.
 								</span>
 							</div>
 
 							<div class="tab-toolbar">
-								<p-button
-										  icon="pi pi-plus"
-										  [label]="i18n.t('productionOrder.operations.addRow')"
-										  severity="primary"
-										  [outlined]="true"
-										  size="small"
-										  (onClick)="addOperationRow()"></p-button>
+								<p-button icon="pi pi-plus" [label]="i18n.t('productionOrder.operations.addRow')"
+									severity="primary" [outlined]="true" size="small"
+									(onClick)="addOperationRow()"></p-button>
 							</div>
 
 							<div class="detail-table-wrap">
-								<p-table
-										 [value]="formOperations()"
-										 styleClass="p-datatable-sm p-datatable-gridlines"
-										 [tableStyle]="{ 'min-width': '840px' }">
+								<p-table [value]="formOperations()" [showGridlines]="true" class="grid grid--edit"
+									[tableStyle]="{ 'width': '100%', 'min-width': '1200px' }">
 									<ng-template pTemplate="header">
 										<tr>
-											<th style="width: 50px">STT</th>
-											<th style="width: 120px">{{ i18n.t('productionOrder.operations.opCode') }}</th>
-											<th style="min-width: 160px">{{ i18n.t('productionOrder.operations.opName') }}</th>
-											<th style="width: 160px">{{ i18n.t('productionOrder.operations.workCenter') }}</th>
-											<th style="width: 150px">{{ i18n.t('productionOrder.operations.machine') }}</th>
-											<th style="width: 150px">{{ i18n.t('productionOrder.operations.employee') }}</th>
-											<th style="width: 160px">{{ i18n.t('productionOrder.plannedStartDate') }}</th>
-											<th style="width: 160px">{{ i18n.t('productionOrder.plannedEndDate') }}</th>
+											<th style="width: 50px; text-align: center">STT</th>
+											<th style="width: 140px; min-width: 130px">{{
+												i18n.t('productionOrder.operations.opCode') }}</th>
+											<th style="width: 220px; min-width: 200px">{{
+												i18n.t('productionOrder.operations.opName') }}</th>
+											<th style="width: 200px; min-width: 180px">{{
+												i18n.t('productionOrder.operations.workCenter') }}</th>
+											<th style="width: 200px; min-width: 180px">{{
+												i18n.t('productionOrder.operations.machine') }}</th>
+											<th style="width: 200px; min-width: 180px">{{
+												i18n.t('productionOrder.operations.employee') }}</th>
+											<th style="width: 190px; min-width: 180px">{{
+												i18n.t('productionOrder.plannedStartDate') }}</th>
+											<th style="width: 190px; min-width: 180px">{{
+												i18n.t('productionOrder.plannedEndDate') }}</th>
 											<th style="width: 50px; text-align: center"></th>
 										</tr>
 									</ng-template>
@@ -904,71 +624,41 @@
 										<tr>
 											<td class="text-center font-bold">{{ op.sequence || (ri + 1) }}</td>
 											<td>
-												<input
-													   pInputText
-													   type="text"
-													   class="w-full p-inputtext-sm font-mono"
-													   [(ngModel)]="op.operationCode" />
+												<input pInputText type="text" class="cell-input font-mono"
+													[(ngModel)]="op.operationCode" />
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="text"
-													   class="w-full p-inputtext-sm"
-													   [(ngModel)]="op.operationName" />
+												<input pInputText type="text" class="cell-input"
+													[(ngModel)]="op.operationName" />
 											</td>
 											<td>
-												<p-select
-														  [options]="workCenterApi.items()"
-														  optionLabel="workCenterName"
-														  optionValue="id"
-														  [showClear]="true"
-														  [(ngModel)]="op.workCenterId"
-														  styleClass="w-full p-inputtext-sm"
-														  placeholder="Chọn tổ..."></p-select>
+												<p-select [options]="workCenterApi.items()" optionLabel="workCenterName"
+													optionValue="id" [showClear]="true" [(ngModel)]="op.workCenterId"
+													class="w-full" placeholder="Chọn tổ..." appendTo="body"></p-select>
 											</td>
 											<td>
-												<p-select
-														  [options]="machineApi.items()"
-														  optionLabel="machineName"
-														  optionValue="id"
-														  [showClear]="true"
-														  [(ngModel)]="op.machineId"
-														  styleClass="w-full p-inputtext-sm"
-														  placeholder="Chọn máy..."></p-select>
+												<p-select [options]="machineApi.items()" optionLabel="machineName"
+													optionValue="id" [showClear]="true" [(ngModel)]="op.machineId"
+													class="w-full" placeholder="Chọn máy..." appendTo="body"></p-select>
 											</td>
 											<td>
-												<p-select
-														  [options]="employeeApi.items()"
-														  optionLabel="fullName"
-														  optionValue="id"
-														  [showClear]="true"
-														  [(ngModel)]="op.assignedEmployeeId"
-														  styleClass="w-full p-inputtext-sm"
-														  placeholder="Người làm..."></p-select>
+												<p-select [options]="employeeApi.items()" optionLabel="fullName"
+													optionValue="id" [showClear]="true"
+													[(ngModel)]="op.assignedEmployeeId" class="w-full"
+													placeholder="Người làm..." appendTo="body"></p-select>
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="datetime-local"
-													   class="w-full p-inputtext-sm"
-													   [(ngModel)]="op.plannedStartDate" />
+												<input pInputText type="datetime-local" class="cell-input"
+													[(ngModel)]="op.plannedStartDate" />
 											</td>
 											<td>
-												<input
-													   pInputText
-													   type="datetime-local"
-													   class="w-full p-inputtext-sm"
-													   [(ngModel)]="op.plannedEndDate" />
+												<input pInputText type="datetime-local" class="cell-input"
+													[(ngModel)]="op.plannedEndDate" />
 											</td>
 											<td style="text-align: center">
-												<p-button
-														  icon="pi pi-trash"
-														  severity="danger"
-														  [text]="true"
-														  [rounded]="true"
-														  size="small"
-														  (onClick)="removeOperationRow(ri)"></p-button>
+												<p-button icon="pi pi-trash" severity="danger" [text]="true"
+													[rounded]="true" size="small"
+													(onClick)="removeOperationRow(ri)"></p-button>
 											</td>
 										</tr>
 									</ng-template>
@@ -976,7 +666,8 @@
 									<ng-template pTemplate="emptymessage">
 										<tr>
 											<td colspan="9" class="text-center p-4 text-muted">
-												{{ i18n.t('productionOrder.operations.empty') }}. Chọn Routing để tự động nạp công đoạn.
+												{{ i18n.t('productionOrder.operations.empty') }}. Chọn Routing để tự
+												động nạp công đoạn.
 											</td>
 										</tr>
 									</ng-template>
@@ -989,37 +680,28 @@
 		</div>
 
 		<ng-template pTemplate="footer">
-			<p-button
-					  [label]="i18n.t('common.cancel')"
-					  severity="secondary"
-					  [text]="true"
-					  (onClick)="showDialog.set(false)"></p-button>
-			<p-button
-					  [label]="i18n.t('common.save')"
-					  severity="primary"
-					  icon="pi pi-check"
-					  (onClick)="save()"></p-button>
+			<p-button [label]="i18n.t('common.cancel')" severity="secondary" [text]="true"
+				(onClick)="showDialog.set(false)"></p-button>
+			<p-button [label]="i18n.t('common.save')" severity="primary" icon="pi pi-check"
+				(onClick)="save()"></p-button>
 		</ng-template>
 	</p-dialog>
 
 	<!-- ── Record Output & Scrap Dialog ───────────────────────────────────── -->
-	<p-dialog
-			  [(visible)]="showProgressDialog"
-			  [modal]="true"
-			  [draggable]="false"
-			  [resizable]="false"
-			  [style]="{ width: '480px', maxWidth: '95vw' }"
-			  styleClass="custom-dialog"
-			  [header]="i18n.t('productionOrder.dialog.progress')">
+	<p-dialog [(visible)]="showProgressDialog" [modal]="true" [draggable]="false" [resizable]="false"
+		[style]="{ width: '480px', maxWidth: '95vw' }" styleClass="custom-dialog"
+		[header]="i18n.t('productionOrder.dialog.progress')">
 		<div *ngIf="selectedOrder() as order" class="progress-dialog-content">
 			<div class="order-summary-box">
 				<div class="order-summary-header">
 					<span class="order-title">{{ order.orderNo }}</span>
-					<p-tag [severity]="statusInfo(order.status).severity" [value]="i18n.t(statusInfo(order.status).labelKey)"></p-tag>
+					<p-tag [severity]="statusInfo(order.status).severity"
+						[value]="i18n.t(statusInfo(order.status).labelKey)"></p-tag>
 				</div>
 				<p class="order-prod">{{ order.productName }} ({{ order.productCode }})</p>
 				<div class="order-metrics">
-					<span>Đã hoàn thành: <strong>{{ order.completedQuantity | number }}</strong> / {{ order.plannedQuantity | number }}</span>
+					<span>Đã hoàn thành: <strong>{{ order.completedQuantity | number }}</strong> / {{
+						order.plannedQuantity | number }}</span>
 					<span class="text-success font-bold">{{ order.progressPercentage }}%</span>
 				</div>
 			</div>
@@ -1027,57 +709,35 @@
 			<div class="form-grid mt-3">
 				<div class="form-group">
 					<label class="form-label required">Số lượng đạt vừa sản xuất (+)</label>
-					<p-inputnumber
-								   class="w-full"
-								   [min]="0"
-								   [ngModel]="progressCompletedDelta()"
-								   (ngModelChange)="progressCompletedDelta.set($event)"></p-inputnumber>
+					<p-inputnumber class="w-full" [min]="0" [ngModel]="progressCompletedDelta()"
+						(ngModelChange)="progressCompletedDelta.set($event)"></p-inputnumber>
 				</div>
 
 				<div class="form-group">
 					<label class="form-label">Số lượng phế phẩm / lỗi (+)</label>
-					<p-inputnumber
-								   class="w-full"
-								   [min]="0"
-								   [ngModel]="progressScrapDelta()"
-								   (ngModelChange)="progressScrapDelta.set($event)"></p-inputnumber>
+					<p-inputnumber class="w-full" [min]="0" [ngModel]="progressScrapDelta()"
+						(ngModelChange)="progressScrapDelta.set($event)"></p-inputnumber>
 				</div>
 			</div>
 
 			<div class="form-group mt-3">
 				<label class="form-label">{{ i18n.t('productionOrder.batchNo') }}</label>
-				<input
-					   pInputText
-					   type="text"
-					   class="w-full"
-					   placeholder="Cập nhật số lô..."
-					   [ngModel]="progressBatchNo()"
-					   (ngModelChange)="progressBatchNo.set($event)" />
+				<input pInputText type="text" class="w-full" placeholder="Cập nhật số lô..."
+					[ngModel]="progressBatchNo()" (ngModelChange)="progressBatchNo.set($event)" />
 			</div>
 
 			<div class="form-group mt-3">
 				<label class="form-label">{{ i18n.t('productionOrder.remark') }}</label>
-				<textarea
-						  pTextarea
-						  rows="2"
-						  class="w-full"
-						  placeholder="Ghi chú đợt sản xuất (ca, người vận hành)..."
-						  [ngModel]="progressRemark()"
-						  (ngModelChange)="progressRemark.set($event)"></textarea>
+				<textarea pTextarea rows="2" class="w-full" placeholder="Ghi chú đợt sản xuất (ca, người vận hành)..."
+					[ngModel]="progressRemark()" (ngModelChange)="progressRemark.set($event)"></textarea>
 			</div>
 		</div>
 
 		<ng-template pTemplate="footer">
-			<p-button
-					  [label]="i18n.t('common.cancel')"
-					  severity="secondary"
-					  [text]="true"
-					  (onClick)="showProgressDialog.set(false)"></p-button>
-			<p-button
-					  [label]="i18n.t('common.save')"
-					  severity="success"
-					  icon="pi pi-check"
-					  (onClick)="saveProgress()"></p-button>
+			<p-button [label]="i18n.t('common.cancel')" severity="secondary" [text]="true"
+				(onClick)="showProgressDialog.set(false)"></p-button>
+			<p-button [label]="i18n.t('common.save')" severity="success" icon="pi pi-check"
+				(onClick)="saveProgress()"></p-button>
 		</ng-template>
 	</p-dialog>
 </div>
