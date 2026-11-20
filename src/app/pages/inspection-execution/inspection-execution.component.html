@@ -90,16 +90,28 @@
                                 <th class="col-remark">{{ i18n.t('inspectionExecution.remark') }}</th>
                             </tr>
                         </ng-template>
-                        <ng-template #groupheader let-row>
+                        <ng-template #groupheader let-row let-expanded="expanded">
                             <tr pRowGroupHeader>
                                 <td colspan="12">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold"> {{ inspectionPlanLabel(row.inspectionPlanId) || '—' }}</span>
-                                    </div>
+                                    <button
+                                            type="button"
+                                            pButton
+                                            pRipple
+                                            [pRowToggler]="row"
+                                            text
+                                            rounded
+                                            plain
+                                            class="mr-2"
+                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                                    </button>
+                                    <span class="font-bold"> {{ inspectionPlanLabel(row.inspectionPlanId) || '—' }}</span>
+                                    <!-- <div class="flex items-center gap-2">
+                                    </div> -->
                                 </td>
                             </tr>
                         </ng-template>
-                        <ng-template #body let-row>
+                        <!-- <ng-template #body let-row> -->
+                        <ng-template #expandedrow let-row>
                             <tr class="row" [class.row--selected]="selectedExecution()?.id === row.id"
                                 (click)="selectExecution(row)" (dblclick)="openEdit()">
                                 <td class="col-code">{{ row.executionNo || '—' }}</td>

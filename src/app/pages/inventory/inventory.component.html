@@ -81,7 +81,9 @@
 
                 <div class="table-scroll">
                     <p-table #inventoryTable [value]="inventory()" [showGridlines]="true" class="grid"
-                             rowGroupMode="subheader" groupRowsBy="locationId" [globalFilterFields]="filterFields.inventory"
+                             [scrollable]="true" scrollHeight="flex"
+                             rowGroupMode="subheader" groupRowsBy="locationId"
+                             [globalFilterFields]="filterFields.inventory"
                              (onFilter)="onFiltered('inventory', $event.filteredValue)">
                         <ng-template #header>
                             <tr>
@@ -98,12 +100,23 @@
                             </tr>
                         </ng-template>
 
-                        <ng-template #groupheader let-row>
+                        <ng-template #groupheader let-row let-expanded="expanded">
                             <tr pRowGroupHeader>
                                 <td colspan="12">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold">{{ locationLabel(row.locationId || '—') }}</span>
-                                    </div>
+                                    <button
+                                            type="button"
+                                            pButton
+                                            pRipple
+                                            [pRowToggler]="row"
+                                            text
+                                            rounded
+                                            plain
+                                            class="mr-2"
+                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                                    </button>
+                                    <span class="font-bold">{{ locationLabel(row.locationId || '—') }}</span>
+                                    <!-- <div class="flex items-center gap-2">
+                                    </div> -->
                                 </td>
                             </tr>
                         </ng-template>
@@ -116,7 +129,9 @@
                                 </td>
                             </tr>
                         </ng-template>
-                        <ng-template #body let-row>
+                        <!-- <ng-template #body let-row> -->
+                        <ng-template #expandedrow let-row>
+
                             <tr class="row" [class.row--selected]="selectedInventory()?.id === row.id"
                                 (click)="selectInventory(row)">
                                 <td class="col-product">{{ productLabel(row.productId || '—')}}</td>
@@ -166,7 +181,8 @@
                 </div>
 
                 <div class="table-scroll">
-                    <p-table #transactionTable [value]="transaction()" [showGridlines]="true" class="grid">
+                    <p-table #transactionTable [value]="transaction()" [showGridlines]="true" class="grid"
+                             [scrollable]="true" scrollHeight="flex">
                         <ng-template #header>
                             <tr>
                                 <th class="col-transactionNo">{{ i18n.t('inventoryTransaction.transactionNo') }}</th>

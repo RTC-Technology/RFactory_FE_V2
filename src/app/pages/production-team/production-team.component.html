@@ -84,16 +84,28 @@
                                 <th class="col-workshop">{{ i18n.t('productionTeam.workshop') }}</th> -->
                             </tr>
                         </ng-template>
-                        <ng-template #groupheader let-row>
+                        <ng-template #groupheader let-row let-expanded="expanded">
                             <tr pRowGroupHeader>
                                 <td colspan="6">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold">{{ i18n.t('department.title') }}: {{ departmentLabel(row.departmentId) || '—' }}</span>
-                                    </div>
+                                    <button
+                                            type="button"
+                                            pButton
+                                            pRipple
+                                            [pRowToggler]="row"
+                                            text
+                                            rounded
+                                            plain
+                                            class="mr-2"
+                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                                    </button>
+                                    <span class="font-bold">{{ i18n.t('department.title') }}: {{ departmentLabel(row.departmentId) || '—' }}</span>
+                                    <!-- <div class="flex items-center gap-2">
+                                    </div> -->
                                 </td>
                             </tr>
                         </ng-template>
-                        <ng-template #body let-row>
+                        <!-- <ng-template #body let-row> -->
+                        <ng-template #expandedrow let-row>
                             <tr class="row" [class.row--selected]="selectedTeam()?.id === row.id"
                                 (click)="selectTeam(row)" (dblclick)="openEdit('productionTeam')">
                                 <td class="col-code">{{ row.sortOrder || '—' }}</td>

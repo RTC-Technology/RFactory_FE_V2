@@ -150,7 +150,8 @@
                 <div class="table-scroll">
                     <p-table #detailtTable [value]="issueDetail()" [showGridlines]="true" class="grid"
                              [scrollable]="true" scrollHeight="flex"
-                             [rowGroupMode]="selectedIssue()?.isExportByCustomer ?'subheader':undefined" groupRowsBy="productId">
+                             [rowGroupMode]="selectedIssue()?.isExportByCustomer ?'subheader':undefined" groupRowsBy="productId"
+                             expandableRowGroups expandAllGroups>
                         <ng-template #header>
                             <tr>
                                 <th class="col-productId">{{ i18n.t('goodsIssueDetail.product') }}</th>
@@ -165,19 +166,33 @@
                                 <th class="col-remark">{{ i18n.t('goodsIssueDetail.remark') }}</th>
                             </tr>
                         </ng-template>
-                        <ng-template #groupheader let-row>
+                        <ng-template #groupheader let-row let-expanded="expanded">
                             <tr pRowGroupHeader>
                                 <td colspan="11">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold">{{ productLabel(row.productId) || '—' }}: </span>
-                                        <p-tag [severity]="'secondary'" [value]="(defaultQuantityTotal(issueDetail(),row.productId) | number:'1.0-2') + ' ' + unitLabel(row.defaultUnitId)" [rounded]="true" /> /
-                                        <p-tag [severity]="'warn'" [value]="(quantityTotal(issueDetail(),row.productId) |number:'1.0-2')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />|
-                                        <p-tag [severity]="'warn'" [value]="(Math.ceil(quantityTotal(issueDetail(),row.productId)) |number:'1.0-0')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />
-                                    </div>
+
+                                    <button
+                                            type="button"
+                                            pButton
+                                            pRipple
+                                            [pRowToggler]="row"
+                                            text
+                                            rounded
+                                            plain
+                                            class="mr-2"
+                                            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+                                    </button>
+
+                                    <span class="font-bold">{{ productLabel(row.productId) || '—' }}: </span>
+                                    <p-tag [severity]="'secondary'" [value]="(defaultQuantityTotal(issueDetail(),row.productId) | number:'1.0-2') + ' ' + unitLabel(row.defaultUnitId)" [rounded]="true" /> /
+                                    <p-tag [severity]="'warn'" [value]="(quantityTotal(issueDetail(),row.productId) |number:'1.0-2')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />|
+                                    <p-tag [severity]="'warn'" [value]="(Math.ceil(quantityTotal(issueDetail(),row.productId)) |number:'1.0-0')  + ' ' + unitLabel(row.unitId)" [rounded]="true" />
+                                    <!-- <div class="flex items-center gap-2">
+                                    </div> -->
                                 </td>
                             </tr>
                         </ng-template>
-                        <ng-template #body let-row>
+                        <!-- <ng-template #body let-row> -->
+                        <ng-template #expandedrow let-row>
                             <tr class="row" [class.row--selected]="selectedDetail()?.id === row.id"
                                 (click)="selectDetail(row)" (dblclick)="openEdit()">
                                 <td class="col-productId">{{ productLabel(row.productId) || '—' }}</td>
