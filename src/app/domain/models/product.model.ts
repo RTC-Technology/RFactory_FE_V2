@@ -219,3 +219,13 @@ export interface RoutingOperationDto {
 
 export type RoutingOperationRequest = Omit<RoutingOperationDto, 'id'>;
 
+export interface ProductOption {
+	value: number;
+	label: string;
+	code: string;
+	name: string;
+	unit: string;
+	drawingNo: string;
+	statusLabel: string;
+	statusSeverity: 'success' | 'danger' | undefined;
+}

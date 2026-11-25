@@ -122,7 +122,7 @@ export class ProductionRequestComponent extends PermissionAwarePage implements O
 	productLabel(id?: number | null): string {
 		if (id == null) return '';
 		const product = this.productApi.items().find(u => u.id === id);
-		return product ? `${product.productCode}` : '';
+		return product ? `${product.productCode} . ${product.productName}` : '';
 	}
 
 	unitLabel(id?: number | null): string {

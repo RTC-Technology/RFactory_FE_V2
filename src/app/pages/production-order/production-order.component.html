@@ -192,8 +192,7 @@
 							<span class="type-badge">{{ orderTypeInfo(row.orderType).code }}</span>
 						</td>
 						<td class="col-product">
-							<div class="font-semibold">{{ row.productName || '—' }}</div>
-							<div class="text-xs text-muted font-mono">{{ row.productCode }}</div>
+							{{productLabel(row.productId) || '—'}}
 						</td>
 						<td class="col-bom">
 							<div *ngIf="row.bomCode" class="text-xs">
@@ -308,7 +307,7 @@
 								<!-- Product Selection -->
 								<div class="form-group">
 									<label class="form-label required">{{ i18n.t('productionOrder.product') }}</label>
-									<p-select [options]="productApi.items()" optionLabel="productName" optionValue="id"
+									<!-- <p-select [options]="productApi.items()" optionLabel="productName" optionValue="id"
 											  [filter]="true" filterBy="productCode,productName"
 											  placeholder="Chọn sản phẩm..." [ngModel]="formProductId()"
 											  (ngModelChange)="onProductChange($event)" styleClass="w-full" appendTo="body">
@@ -322,6 +321,48 @@
 											<div class="select-prod-item">
 												<span class="code-pill">{{ prod.productCode }}</span>
 												<span>{{ prod.productName }}</span>
+											</div>
+										</ng-template>
+									</p-select> -->
+
+									<p-select [options]="productOptions()"
+											  optionLabel="label"
+											  optionValue="value"
+											  [ngModel]="formProductId()"
+											  (ngModelChange)="onProductChange($event)"
+											  [filter]="true"
+											  filterBy="label"
+											  [placeholder]="i18n.t('productionRequestItem.product.unset')"
+											  appendTo="body"
+											  class="w-full">
+										<ng-template #header>
+											<div class="picker-row picker-row--head">
+												<span class="picker-cell">{{ i18n.t('product.code') }}</span>
+												<span class="picker-cell">{{ i18n.t('product.name') }}</span>
+												<span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+													}}</span>
+												<span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+												<span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+													}}</span>
+											</div>
+										</ng-template>
+
+										<ng-template #item let-opt>
+											<div class="picker-row">
+												<span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+												<span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+												<span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+												<span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+													{{ opt.drawingNo || '—' }}
+												</span>
+												<span class="picker-cell picker-cell--center">
+													@if (opt.statusLabel) {
+													<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+														   [rounded]="true" />
+													} @else {
+													<span class="picker-cell--muted">—</span>
+													}
+												</span>
 											</div>
 										</ng-template>
 									</p-select>
@@ -527,7 +568,7 @@
 										<tr>
 											<td>{{ ri + 1 }}</td>
 											<td>
-												<p-select [options]="productApi.items()" optionLabel="productName"
+												<!-- <p-select [options]="productApi.items()" optionLabel="productName"
 														  optionValue="id" [filter]="true" filterBy="productCode,productName"
 														  [(ngModel)]="mat.productId"
 														  (ngModelChange)="onMaterialProductSelected(mat, $event)"
@@ -539,6 +580,47 @@
 													<ng-template pTemplate="item" let-p>
 														<span class="text-xs">{{ p.productCode }} - {{ p.productName
 															}}</span>
+													</ng-template>
+												</p-select> -->
+												<p-select [options]="productOptions()"
+														  optionLabel="label"
+														  optionValue="value"
+														  [(ngModel)]="mat.productId"
+														  (ngModelChange)="onMaterialProductSelected(mat, $event)"
+														  [filter]="true"
+														  filterBy="label"
+														  [placeholder]="i18n.t('productionRequestItem.product.unset')"
+														  appendTo="body"
+														  class="w-full">
+													<ng-template #header>
+														<div class="picker-row picker-row--head">
+															<span class="picker-cell">{{ i18n.t('product.code') }}</span>
+															<span class="picker-cell">{{ i18n.t('product.name') }}</span>
+															<span class="picker-cell picker-cell--center">{{ i18n.t('product.unit')
+																}}</span>
+															<span class="picker-cell">{{ i18n.t('product.drawingNo') }}</span>
+															<span class="picker-cell picker-cell--center">{{ i18n.t('common.status')
+																}}</span>
+														</div>
+													</ng-template>
+
+													<ng-template #item let-opt>
+														<div class="picker-row">
+															<span class="picker-cell picker-cell--code">{{ opt.code }}</span>
+															<span class="picker-cell" [title]="opt.name">{{ opt.name }}</span>
+															<span class="picker-cell picker-cell--center">{{ opt.unit || '—' }}</span>
+															<span class="picker-cell picker-cell--muted" [title]="opt.drawingNo">
+																{{ opt.drawingNo || '—' }}
+															</span>
+															<span class="picker-cell picker-cell--center">
+																@if (opt.statusLabel) {
+																<p-tag [severity]="opt.statusSeverity" [value]="opt.statusLabel"
+																	   [rounded]="true" />
+																} @else {
+																<span class="picker-cell--muted">—</span>
+																}
+															</span>
+														</div>
 													</ng-template>
 												</p-select>
 											</td>
@@ -614,10 +696,12 @@
 									<ng-template pTemplate="header">
 										<tr>
 											<th style="width: 50px; text-align: center">STT</th>
+
 											<th style="width: 140px; min-width: 130px">{{
-												i18n.t('productionOrder.operations.opCode') }}</th>
-											<th style="width: 220px; min-width: 200px">{{
-												i18n.t('productionOrder.operations.opName') }}</th>
+												i18n.t('productionOrder.operations') }}</th>
+											<!-- <th style="width: 220px; min-width: 200px">{{
+												i18n.t('productionOrder.operations.opName') }}</th> -->
+
 											<th style="width: 200px; min-width: 180px">{{
 												i18n.t('productionOrder.operations.workCenter') }}</th>
 											<th style="width: 200px; min-width: 180px">{{
@@ -636,13 +720,23 @@
 										<tr>
 											<td class="text-center font-bold">{{ op.sequence || (ri + 1) }}</td>
 											<td>
-												<input pInputText type="text" class="cell-input font-mono"
-													   [(ngModel)]="op.operationCode" />
+												<p-select [options]="routingOpOptions()"
+														  optionLabel="label" optionValue="value" class="w-full"
+														  [(ngModel)]="op.routingOperationId"
+														  (ngModelChange)="onRoutingOperationChange($event,op)"
+														  [filter]="true"
+														  filterBy="label"
+														  appendTo="body"
+														  [placeholder]="i18n.t('productionRequestItem.salesOrderItem.unset')" />
+
+												<!-- <p-select [options]="routingOpOptions()" optionLabel="workCenterName"
+														  optionValue="id" [showClear]="true" [(ngModel)]="op.workCenterId"
+														  class="w-full" placeholder="Chọn tổ..." appendTo="body"></p-select> -->
 											</td>
-											<td>
+											<!-- <td>
 												<input pInputText type="text" class="cell-input"
 													   [(ngModel)]="op.operationName" />
-											</td>
+											</td> -->
 											<td>
 												<p-select [options]="workCenterApi.items()" optionLabel="workCenterName"
 														  optionValue="id" [showClear]="true" [(ngModel)]="op.workCenterId"
