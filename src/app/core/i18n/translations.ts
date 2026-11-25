@@ -4330,6 +4330,7 @@ export const TRANSLATIONS: Record<string, Record<Lang, string>> = {
 	'productionOrder.operations.seq': { vi: 'STT', en: 'Seq' },
 	'productionOrder.operations.opCode': { vi: 'Mã công đoạn', en: 'Operation Code' },
 	'productionOrder.operations.opName': { vi: 'Tên công đoạn', en: 'Operation Name' },
+	'productionOrder.operations': { vi: 'Công đoạn', en: 'Operation' },
 	'productionOrder.operations.workCenter': { vi: 'Tổ / Phân xưởng', en: 'Work Center' },
 	'productionOrder.operations.machine': { vi: 'Máy sản xuất', en: 'Machine' },
 	'productionOrder.operations.employee': { vi: 'Người thực hiện', en: 'Operator' },

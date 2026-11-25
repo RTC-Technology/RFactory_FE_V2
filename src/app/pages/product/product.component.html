@@ -98,15 +98,28 @@
 									</tr>
 								</ng-template>
 
-								<ng-template #groupheader let-row>
-									<tr pRowGroupHeader [ngStyle]="{ 'background-color':'#dee2e6'}">
+								<ng-template #groupheader let-row let-expanded="expanded">
+									<tr pRowGroupHeader>
 										<td colspan="21">
-											<div class="flex items-center gap-2">
-												<span class="font-bold">
-													{{ productGroupLabel(row.productGroupId ) || '—' }}
-													({{calculateProductTotal(row.productGroupId) | number:'1.0-2' }})
-												</span>
-											</div>
+
+											<button
+													type="button"
+													pButton
+													pRipple
+													[pRowToggler]="row"
+													text
+													rounded
+													plain
+													class="mr-2"
+													[icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+											</button>
+
+											<span class="font-bold">
+												{{ productGroupLabel(row.productGroupId ) || '—' }}
+												({{calculateProductTotal(row.productGroupId) | number:'1.0-2' }})
+											</span>
+											<!-- <div class="flex items-center gap-2">
+											</div> -->
 										</td>
 									</tr>
 								</ng-template>
@@ -120,7 +133,8 @@
 												</tr>
 											</ng-template> -->
 
-								<ng-template #body let-row>
+								<!-- <ng-template #body let-row> -->
+								<ng-template #expandedrow let-row>
 									<tr class="row" [class.row--selected]="selectedProduct()?.id === row.id"
 										(click)="selectProduct(row)" (dblclick)="openEdit('product')">
 										<td class="col-productCode">

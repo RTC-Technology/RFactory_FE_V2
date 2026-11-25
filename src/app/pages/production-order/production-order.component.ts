@@ -21,7 +21,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { MachineApiService } from '../../core/services/equipment-api.service';
 import { CustomerApiService, LineApiService } from '../../core/services/master-data-api.service';
 import { WorkCenterApiService } from '../../core/services/organization-api.service';
-import { BomApiService, ProductApiService, RoutingApiService, UnitApiService } from '../../core/services/product-api.service';
+import { BomApiService, ProductApiService, RoutingApiService, RoutingOperationApiService, UnitApiService } from '../../core/services/product-api.service';
 import { ProductionOrderApiService } from '../../core/services/production-order-api.service';
 import { WarehouseApiService } from '../../core/services/warehouse-api.service';
 import { HasPermissionDirective } from '../../shared/directives/has-permission.directive';
@@ -42,6 +42,7 @@ import {
 } from '../../domain/models/production-order.model';
 import { EmployeeApiService } from '../../core/services/employee-api.service';
 import { ProductionRequestDto, SalesOrderDto } from '../../domain/models/production.model';
+import { ProductOption, productStatusOf } from '../../domain/models/product.model';
 
 @Component({
 	selector: 'app-production-order',
@@ -77,6 +78,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 	readonly productApi = inject(ProductApiService);
 	readonly bomApi = inject(BomApiService);
 	readonly routingApi = inject(RoutingApiService);
+	readonly routingOpApi = inject(RoutingOperationApiService);
 	readonly lineApi = inject(LineApiService);
 	readonly workCenterApi = inject(WorkCenterApiService);
 	readonly machineApi = inject(MachineApiService);
@@ -161,6 +163,40 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		return this.routingApi.items().filter(r =>
 			r.productId === prodId && (r.isActive !== false || r.id === currentRoutingId)
 		);
+	});
+
+	// ─── Lookups ────────────────────────────────────────────────────────────────
+
+	productLabel(id?: number | null): string {
+		if (id == null) return '';
+		const product = this.productApi.items().find(u => u.id === id);
+		return product ? `${product.productCode} . ${product.productName}` : '';
+	}
+
+	routingOpLabel(id?: number | null): string {
+		if (id == null) return '';
+		const routing = this.routingOpApi.items().find(u => u.id === id);
+		return routing ? `${routing.routingOperationCode} . ${routing.routingOperationName}` : '';
+	}
+
+	readonly routingOpOptions = computed(() =>
+		this.routingOpApi.items().map(u => ({ label: `${u.routingOperationCode} · ${u.routingOperationName}`, value: u.id })));
+
+	readonly productOptions = computed<ProductOption[]>(() => {
+		const units = new Map(this.unitApi.items().map(u => [u.id, u.symbol || u.unitCode]));
+		return this.productApi.items().map(p => {
+			const status = productStatusOf(p.status);
+			return {
+				value: p.id,
+				label: `${p.productCode} · ${p.productName}`,
+				code: p.productCode,
+				name: p.productName,
+				unit: (p.defaultUnitId != null ? units.get(p.defaultUnitId) : '') ?? '',
+				drawingNo: p.drawingNo ?? '',
+				statusLabel: status ? this.i18n.t(status.labelKey) : '',
+				statusSeverity: status?.severity,
+			};
+		});
 	});
 
 	// ─── Statistics ───────────────────────────────────────────────────────────
@@ -288,6 +324,7 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 		this.productApi.load().subscribe();
 		this.bomApi.load().subscribe();
 		this.routingApi.load().subscribe();
+		this.routingOpApi.load().subscribe();
 		this.lineApi.load().subscribe();
 		this.workCenterApi.load().subscribe();
 		this.machineApi.load().subscribe();
@@ -393,6 +430,16 @@ export class ProductionOrderComponent extends PermissionAwarePage implements OnI
 			}));
 			this.formMaterials.set(updated);
 		}
+	}
+
+	onRoutingOperationChange(routingOperationId: number | null, row: ProductionOrderOperationDto): void {
+
+		if (!routingOperationId) return;
+		const routingOp = this.routingOpApi.items().find(r => r.id === routingOperationId);
+
+		row.sequence = routingOp?.sequence ?? row.sequence;
+		row.operationCode = routingOp?.routingOperationCode ?? row.operationCode;
+		row.operationName = routingOp?.routingOperationName ?? row.operationName;
 	}
 
 	loadBomMaterialsPreview(bomId: number, qty: number): void {

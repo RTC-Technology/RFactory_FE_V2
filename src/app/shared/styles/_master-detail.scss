@@ -627,8 +627,16 @@
 /* ─── PrimeNG surface alignment ───────────────────────────────────────────── */
 :host ::ng-deep {
 
-	.p-datatable-scrollable-table>.p-datatable-tbody>.p-datatable-row-group-header {
+	.p-datatable-row-group-header {
 		background-color: #dee2e6 !important;
+	}
+
+	.p-datatable-row-group-header>td {
+		padding: 0 .5em !important;
+	}
+
+	.mr-2 {
+		margin-right: 0.5rem !important;
 	}
 
 	/* Rows here are edited in place, not selected, so drop the pointer affordance and
